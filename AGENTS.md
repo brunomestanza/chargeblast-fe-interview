@@ -64,6 +64,8 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 
 ## Delivery and Review Workflow
 
+- Whenever implementing or validating a delivery involving visual design, UI polish, interactions, transitions, motion, or animations, you MUST use both the `web-animation-design` (animations.dev) and `emil-design-engineering` skills.
+- A design-related delivery is not considered validated until it has been reviewed against the guidance and checklists from both skills.
 - Never create a Git commit before the user has reviewed and explicitly approved the changes.
 - Work in small, focused, reviewable increments.
 - Keep each delivery narrowly scoped and pause for review before moving to the next substantial increment.
