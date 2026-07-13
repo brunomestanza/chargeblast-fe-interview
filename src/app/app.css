@@ -1,0 +1,26 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.app-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100dvh;
+  padding: clamp(24px, 5vw, 64px);
+}
+
+app-payments-table {
+  width: 100%;
+  max-width: 1180px;
+  min-width: 0;
+}
+
+@media (max-width: 720px), (max-height: 760px) {
+  .app-shell {
+    align-items: start;
+    padding: 16px;
+  }
+}

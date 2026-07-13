@@ -1,0 +1,58 @@
+<section class="payments-panel">
+  <header class="payments-panel__header">
+    <div>
+      <p class="payments-panel__eyebrow">Transactions</p>
+      <h1 id="payments-title">Payments</h1>
+    </div>
+    <p class="payments-panel__count">{{ paymentCountLabel() }}</p>
+  </header>
+
+  <p id="payments-table-instructions" class="visually-hidden">
+    Scroll horizontally to view every payment column.
+  </p>
+  <p class="visually-hidden" aria-live="polite">{{ copyAnnouncement() }}</p>
+
+  <div
+    class="table-scroll"
+    role="region"
+    aria-label="Payments data"
+    aria-describedby="payments-table-instructions"
+    tabindex="0"
+  >
+    <table>
+      <caption class="visually-hidden">
+        Recent payments, including customer, amount, status, payment method, and creation time.
+      </caption>
+      <colgroup>
+        <col class="payment-id-column" />
+        <col class="customer-column" />
+        <col class="amount-column" />
+        <col class="status-column" />
+        <col class="payment-method-column" />
+        <col class="created-column" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">Payment ID</th>
+          <th scope="col">Customer</th>
+          <th scope="col" class="numeric-column">Amount</th>
+          <th scope="col">Status</th>
+          <th scope="col">Payment method</th>
+          <th scope="col">Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (payment of payments(); track payment.id) {
+          <tr
+            appPaymentRow
+            [payment]="payment"
+            [copyState]="copyState()"
+            [currentTime]="currentTime()"
+            [timeZone]="timeZone()"
+            (copyRequested)="copyPaymentId($event)"
+          ></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

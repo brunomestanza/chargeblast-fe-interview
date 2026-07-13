@@ -1,0 +1,287 @@
+:host {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+td {
+  height: 60px;
+  padding: 0 18px;
+  border-top: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+td:first-child {
+  padding-left: 24px;
+}
+
+td:last-child {
+  padding-right: 24px;
+}
+
+.payment-id-cell,
+.payment-method,
+.payment-method__details,
+.amount-cell,
+.created-at,
+.copy-action,
+.status {
+  display: flex;
+  align-items: center;
+}
+
+.payment-id-cell {
+  gap: 8px;
+}
+
+.payment-id {
+  min-width: 0;
+  overflow: hidden;
+  color: #3c4257;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-action {
+  flex: 0 0 72px;
+  justify-content: center;
+  gap: 5px;
+  min-width: 72px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  color: #4f566b;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  touch-action: manipulation;
+}
+
+.copy-action svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.copy-action--success {
+  color: #176b3a;
+  background: #edf8f1;
+}
+
+.copy-action--failed {
+  color: #9b2c2c;
+  background: #fff2f0;
+}
+
+.copy-action:focus-visible,
+.created-at:focus-visible {
+  outline: 2px solid #303750;
+  outline-offset: 2px;
+}
+
+.customer {
+  display: block;
+  overflow: hidden;
+  color: #3c4257;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount-cell {
+  justify-content: flex-end;
+  gap: 7px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.amount-value {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.currency-code {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.status {
+  width: max-content;
+  gap: 6px;
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.status__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status--succeeded {
+  border-color: #b8dfc5;
+  color: #176b3a;
+  background: #edf8f1;
+}
+
+.status--pending {
+  border-color: #ead49a;
+  color: #795500;
+  background: #fff8df;
+}
+
+.status--failed {
+  border-color: #efc3bd;
+  color: #9b2c2c;
+  background: #fff2f0;
+}
+
+.status--refunded {
+  border-color: #cfd5df;
+  color: #4f566b;
+  background: #f3f5f8;
+}
+
+.payment-method {
+  gap: 10px;
+  min-width: 0;
+}
+
+.payment-mark {
+  display: inline-flex;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 20px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(31, 45, 61, 0.12);
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.payment-mark--visa {
+  color: #ffffff;
+  background: #1a5fb4;
+}
+
+.payment-mark--mastercard {
+  color: #57100a;
+  background: #ffb649;
+}
+
+.payment-mark--amex {
+  color: #ffffff;
+  background: #2876a8;
+}
+
+.payment-mark--ach {
+  color: #36536f;
+  background: #eef4f8;
+}
+
+.payment-mark--apple-pay {
+  color: #ffffff;
+  background: #111111;
+}
+
+.payment-method__details {
+  min-width: 0;
+  gap: 6px;
+  color: #3c4257;
+  white-space: nowrap;
+}
+
+.last-four {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.created-at {
+  position: relative;
+  width: max-content;
+  min-height: 44px;
+  border-radius: 4px;
+  outline: none;
+  color: #3c4257;
+  cursor: help;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.created-time {
+  margin-left: 4px;
+  color: var(--color-muted);
+}
+
+.relative-tooltip {
+  position: absolute;
+  top: calc(100% - 3px);
+  left: 50%;
+  z-index: 1;
+  width: max-content;
+  max-width: 220px;
+  padding: 6px 8px;
+  visibility: hidden;
+  border-radius: 6px;
+  color: #ffffff;
+  background: #303750;
+  box-shadow: 0 4px 12px rgba(31, 45, 61, 0.18);
+  font-size: 12px;
+  font-variant-numeric: normal;
+  line-height: 18px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.created-at:focus .relative-tooltip {
+  visibility: visible;
+}
+
+:host(:last-child) .relative-tooltip {
+  top: auto;
+  bottom: calc(100% - 3px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :host(:hover) {
+    background: var(--color-row-hover);
+  }
+
+  .copy-action:hover {
+    color: var(--color-ink);
+    background: #eef1f5;
+  }
+
+  .copy-action--success:hover {
+    color: #176b3a;
+    background: #e2f4e9;
+  }
+
+  .copy-action--failed:hover {
+    color: #9b2c2c;
+    background: #ffe9e6;
+  }
+
+  .created-at:hover .relative-tooltip {
+    visibility: visible;
+  }
+}
