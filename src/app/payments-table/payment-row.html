@@ -45,17 +45,24 @@
 </td>
 <td>
   <div class="payment-method">
-    <span
-      class="payment-mark"
-      [class]="'payment-mark payment-mark--' + row.paymentMethod.brandKey"
-      aria-hidden="true"
-    >
-      {{ row.paymentMethod.mark }}
+    <span class="payment-method__icons">
+      @for (
+        icon of paymentMethodIcons();
+        track icon.category + ':' + icon.key;
+        let index = $index
+      ) {
+        <app-payment-method-icon
+          [category]="icon.category"
+          [iconKey]="icon.key"
+          [tooltipId]="paymentIconTooltipId(index)"
+        />
+      }
     </span>
-    <span class="payment-method__details">
-      <span>{{ row.paymentMethod.brand }}</span>
-      <span class="last-four">•••• {{ row.paymentMethod.lastFour }}</span>
-    </span>
+    @if (paymentMethodLastFour(); as lastFour) {
+      <span class="payment-method__reference last-four">•••• {{ lastFour }}</span>
+    } @else {
+      <span class="payment-method__reference no-card">No card</span>
+    }
   </div>
 </td>
 <td>

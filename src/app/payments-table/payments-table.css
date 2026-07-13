@@ -132,6 +132,10 @@ th:last-child {
   text-align: right;
 }
 
+.payment-method-heading {
+  text-align: right;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

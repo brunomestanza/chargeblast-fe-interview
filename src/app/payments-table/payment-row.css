@@ -21,7 +21,7 @@ td:last-child {
 
 .payment-id-cell,
 .payment-method,
-.payment-method__details,
+.payment-method__icons,
 .amount-cell,
 .created-at,
 .copy-action,
@@ -159,60 +159,33 @@ td:last-child {
 }
 
 .payment-method {
-  gap: 10px;
+  justify-content: flex-end;
+  width: 100%;
+  gap: 8px;
   min-width: 0;
 }
 
-.payment-mark {
-  display: inline-flex;
-  flex: 0 0 30px;
+.payment-method__icons {
+  flex: 0 0 auto;
   align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 20px;
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px rgba(31, 45, 61, 0.12);
-  font-size: 7px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.03em;
+  gap: 4px;
 }
 
-.payment-mark--visa {
-  color: #ffffff;
-  background: #1a5fb4;
-}
-
-.payment-mark--mastercard {
-  color: #57100a;
-  background: #ffb649;
-}
-
-.payment-mark--amex {
-  color: #ffffff;
-  background: #2876a8;
-}
-
-.payment-mark--ach {
-  color: #36536f;
-  background: #eef4f8;
-}
-
-.payment-mark--apple-pay {
-  color: #ffffff;
-  background: #111111;
-}
-
-.payment-method__details {
-  min-width: 0;
-  gap: 6px;
-  color: #3c4257;
+.payment-method__reference {
+  flex: 0 0 60px;
+  min-width: 60px;
+  text-align: left;
   white-space: nowrap;
 }
 
 .last-four {
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.no-card {
+  color: var(--color-muted);
+  text-align: center;
 }
 
 .created-at {

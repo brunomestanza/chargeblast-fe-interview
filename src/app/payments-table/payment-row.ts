@@ -1,5 +1,6 @@
 import { Component, computed, input, output } from '@angular/core';
 import { Payment, PaymentStatus } from './payment';
+import { PaymentIconCategory, PaymentMethodIcon } from './payment-method-icon';
 
 export interface PaymentCopyState {
   readonly paymentId: string;
@@ -17,6 +18,11 @@ const CURRENCY_FORMATTERS = new Map<string, Intl.NumberFormat>();
 const CREATED_DATE_FORMATTERS = new Map<string, Intl.DateTimeFormat>();
 const CREATED_TIME_FORMATTERS = new Map<string, Intl.DateTimeFormat>();
 const RELATIVE_TIME_FORMATTER = new Intl.RelativeTimeFormat('en-US', { numeric: 'always' });
+
+interface PaymentMethodIconView {
+  readonly category: PaymentIconCategory;
+  readonly key: string;
+}
 
 function getDateFormatter(timeZone: string): Intl.DateTimeFormat {
   let formatter = CREATED_DATE_FORMATTERS.get(timeZone);
@@ -102,6 +108,7 @@ export function formatRelativeTime(createdAt: string, currentTime: number): stri
 
 @Component({
   selector: 'tr[appPaymentRow]',
+  imports: [PaymentMethodIcon],
   templateUrl: './payment-row.html',
   styleUrl: './payment-row.css',
 })
@@ -146,6 +153,26 @@ export class PaymentRow {
       ? 'Relative time will update after the page loads.'
       : formatRelativeTime(this.payment().createdAt, currentTime);
   });
+  protected readonly paymentMethodIcons = computed<readonly PaymentMethodIconView[]>(() => {
+    const paymentMethod = this.payment().paymentMethod;
+
+    if (paymentMethod.kind === 'standalone') {
+      return [{ category: 'method', key: paymentMethod.method }];
+    }
+
+    const brandIcon: PaymentMethodIconView = {
+      category: 'card-brand',
+      key: paymentMethod.brand,
+    };
+
+    return paymentMethod.wallet
+      ? [{ category: 'wallet', key: paymentMethod.wallet }, brandIcon]
+      : [brandIcon];
+  });
+  protected readonly paymentMethodLastFour = computed(() => {
+    const paymentMethod = this.payment().paymentMethod;
+    return paymentMethod.kind === 'card' ? paymentMethod.lastFour : null;
+  });
   protected readonly tooltipId = computed(() => 'relative-time-' + this.payment().id);
 
   protected statusLabel(status: PaymentStatus): string {
@@ -162,5 +189,9 @@ export class PaymentRow {
 
   protected requestCopy(): void {
     this.copyRequested.emit(this.payment().id);
+  }
+
+  protected paymentIconTooltipId(index: number): string {
+    return 'payment-method-' + this.payment().id + '-' + index;
   }
 }
