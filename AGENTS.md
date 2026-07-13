@@ -55,3 +55,15 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Prefer the `@Service` decorator over `@Injectable({providedIn: 'root'})` for new singleton services (Angular v22+)
 - Use the `inject()` function instead of constructor injection
+
+## Project Documentation
+
+- Read `docs/product-requirements.md` before planning or implementing product work.
+- Read `docs/design-reference.md` and inspect `docs/stripe-base-design.png` before implementing or reviewing the interface.
+- Treat the files in `docs/` as the source of truth for product and design context.
+
+## Delivery and Review Workflow
+
+- Never create a Git commit before the user has reviewed and explicitly approved the changes.
+- Work in small, focused, reviewable increments.
+- Keep each delivery narrowly scoped and pause for review before moving to the next substantial increment.
