@@ -14,13 +14,18 @@ describe('App', () => {
   });
 
   it('should render the payments table in the main screen', async () => {
+    const beforeRender = Date.now();
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
 
     const compiled = fixture.nativeElement as HTMLElement;
+    const newestPaymentTime = Date.parse(compiled.querySelector('time')?.dateTime ?? '');
+
     expect(compiled.querySelector('main.app-shell')).toBeTruthy();
     expect(compiled.querySelector('app-payments-table')).toBeTruthy();
     expect(compiled.querySelector('h1')?.textContent).toContain('Payments');
+    expect(newestPaymentTime).toBeGreaterThanOrEqual(beforeRender);
+    expect(newestPaymentTime).toBeLessThanOrEqual(Date.now());
   });
 
   it('should expose every available payment icon and the missing-icon fallback', async () => {
