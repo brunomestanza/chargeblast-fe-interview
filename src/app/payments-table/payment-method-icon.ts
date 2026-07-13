@@ -138,7 +138,9 @@ function getFallbackText(label: string): string {
       [attr.aria-labelledby]="tooltipId()"
     >
       @if (source(); as iconSource) {
-        <img [ngSrc]="iconSource" fill alt="" />
+        <span class="payment-icon__image">
+          <img [ngSrc]="iconSource" fill alt="" />
+        </span>
       } @else {
         <span aria-hidden="true">{{ fallbackText() }}</span>
       }
