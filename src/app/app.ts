@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { Payment } from './payments-table/payment';
 import { PaymentsTable } from './payments-table/payments-table';
 
-const INITIAL_PAYMENTS: readonly Payment[] = [
+const PAYMENT_TEMPLATES: readonly Payment[] = [
   {
     id: 'pay_3RxQZ9Jx7yL2kA4fB8mD',
     customer: 'olivia.martin@example.com',
@@ -260,6 +260,38 @@ const INITIAL_PAYMENTS: readonly Payment[] = [
     createdAt: '2026-07-13T01:39:00-03:00',
   },
 ];
+
+const PAYMENT_HISTORY_BATCHES = 16;
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function addEmailTag(email: string, tag: number): string {
+  const atIndex = email.indexOf('@');
+
+  return atIndex === -1 ? email : `${email.slice(0, atIndex)}+${tag}${email.slice(atIndex)}`;
+}
+
+function createPaymentHistory(): readonly Payment[] {
+  return Array.from({ length: PAYMENT_TEMPLATES.length * PAYMENT_HISTORY_BATCHES }, (_, index) => {
+    const template = PAYMENT_TEMPLATES[index % PAYMENT_TEMPLATES.length];
+    const batch = Math.floor(index / PAYMENT_TEMPLATES.length);
+
+    if (batch === 0) {
+      return template;
+    }
+
+    return {
+      ...template,
+      id: template.id.slice(0, -4) + String(index).padStart(4, '0'),
+      customer: addEmailTag(template.customer, batch),
+      amount: Math.round(template.amount * (1 + batch * 0.0125) * 100) / 100,
+      createdAt: new Date(
+        Date.parse(template.createdAt) - batch * MILLISECONDS_PER_DAY,
+      ).toISOString(),
+    };
+  });
+}
+
+const INITIAL_PAYMENTS = createPaymentHistory();
 
 @Component({
   selector: 'app-root',

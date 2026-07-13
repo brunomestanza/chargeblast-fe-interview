@@ -19,7 +19,7 @@
     aria-describedby="payments-table-instructions"
     tabindex="0"
   >
-    <table>
+    <table id="payments-table">
       <caption class="visually-hidden">
         Recent payments, including customer, amount, status, payment method, and creation time.
       </caption>
@@ -42,7 +42,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (payment of payments(); track payment.id) {
+        @for (payment of paginatedPayments(); track payment.id) {
           <tr
             appPaymentRow
             [payment]="payment"
@@ -55,4 +55,45 @@
       </tbody>
     </table>
   </div>
+
+  <footer class="pagination">
+    <div class="pagination__summary">
+      <div class="page-size-control">
+        <label for="payments-page-size">Rows per page</label>
+        <select
+          id="payments-page-size"
+          aria-controls="payments-table"
+          [value]="pageSize()"
+          (change)="changePageSize($event)"
+        >
+          @for (option of pageSizeOptions; track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select>
+      </div>
+      <p id="payments-pagination-range" aria-live="polite" aria-atomic="true">
+        {{ paginationRangeLabel() }}
+      </p>
+    </div>
+
+    <nav class="pagination__navigation" aria-label="Payments pagination">
+      <span class="pagination__page">Page {{ currentPage() }} of {{ pageCount() }}</span>
+      <button
+        type="button"
+        aria-controls="payments-table"
+        [disabled]="currentPage() === 1"
+        (click)="showPreviousPage()"
+      >
+        Previous
+      </button>
+      <button
+        type="button"
+        aria-controls="payments-table"
+        [disabled]="currentPage() === pageCount()"
+        (click)="showNextPage()"
+      >
+        Next
+      </button>
+    </nav>
+  </footer>
 </section>
