@@ -132,7 +132,8 @@ th:last-child {
   text-align: right;
 }
 
-.payment-method-heading {
+.payment-method-heading,
+.created-heading {
   text-align: right;
 }
 

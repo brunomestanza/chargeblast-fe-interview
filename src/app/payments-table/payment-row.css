@@ -19,6 +19,10 @@ td:last-child {
   padding-right: 24px;
 }
 
+.created-cell {
+  text-align: right;
+}
+
 .payment-id-cell,
 .payment-method,
 .payment-method__icons,
@@ -191,6 +195,7 @@ td:last-child {
 .created-at {
   position: relative;
   width: max-content;
+  margin-left: auto;
   min-height: 44px;
   border-radius: 4px;
   outline: none;
