@@ -1,11 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 
+const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
+
 describe('App', () => {
   beforeEach(async () => {
+    window.localStorage.removeItem(PAGE_SIZE_STORAGE_KEY);
     await TestBed.configureTestingModule({
       imports: [App],
     }).compileComponents();
+  });
+
+  afterEach(() => {
+    window.localStorage.removeItem(PAGE_SIZE_STORAGE_KEY);
   });
 
   it('should create the app', () => {
@@ -65,5 +72,19 @@ describe('App', () => {
     expect(compiled.querySelector('.payment-icon__trigger--fallback')?.textContent?.trim()).toBe(
       'EL',
     );
+  });
+
+  it('should restore the stored page size when the user opens the page', async () => {
+    window.localStorage.setItem(PAGE_SIZE_STORAGE_KEY, '50');
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector<HTMLSelectElement>('#payments-page-size')?.value).toBe('50');
+    expect(compiled.querySelectorAll('tbody tr')).toHaveLength(50);
+
+    await fixture.whenStable();
   });
 });

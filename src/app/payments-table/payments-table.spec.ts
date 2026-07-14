@@ -130,15 +130,17 @@ describe('PaymentsTable', () => {
     const fixture = TestBed.createComponent(PaymentsTable);
     fixture.componentRef.setInput('payments', createPayments(126));
     fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
     const pageSizeSelect = element.querySelector<HTMLSelectElement>('#payments-page-size')!;
-    const nextButton = element.querySelectorAll<HTMLButtonElement>('.pagination button')[1];
 
     expect(pageSizeSelect.value).toBe('50');
     expect(element.querySelectorAll('tbody tr')).toHaveLength(50);
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const nextButton = element.querySelectorAll<HTMLButtonElement>('.pagination button')[1];
 
     nextButton.click();
     fixture.detectChanges();
@@ -151,6 +153,40 @@ describe('PaymentsTable', () => {
     expect(window.localStorage.getItem(PAGE_SIZE_STORAGE_KEY)).toBe('100');
     expect(element.querySelectorAll('tbody tr')).toHaveLength(100);
     expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 1 of 2');
+  });
+
+  it('reacts when the persisted page size changes', async () => {
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', createPayments(126));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: PAGE_SIZE_STORAGE_KEY,
+        newValue: '50',
+        storageArea: window.localStorage,
+      }),
+    );
+    fixture.detectChanges();
+
+    expect(element.querySelector<HTMLSelectElement>('#payments-page-size')?.value).toBe('50');
+    expect(element.querySelectorAll('tbody tr')).toHaveLength(50);
+
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: PAGE_SIZE_STORAGE_KEY,
+        newValue: null,
+        storageArea: window.localStorage,
+      }),
+    );
+    fixture.detectChanges();
+
+    expect(element.querySelector<HTMLSelectElement>('#payments-page-size')?.value).toBe('25');
+    expect(element.querySelectorAll('tbody tr')).toHaveLength(25);
   });
 
   it('uses 25 rows when the stored page size is invalid', async () => {

@@ -63,11 +63,10 @@
         <select
           id="payments-page-size"
           aria-controls="payments-table"
-          [value]="pageSize()"
           (change)="changePageSize($event)"
         >
           @for (option of pageSizeOptions; track option) {
-            <option [value]="option">{{ option }}</option>
+            <option [value]="option" [selected]="option === pageSize()">{{ option }}</option>
           }
         </select>
       </div>

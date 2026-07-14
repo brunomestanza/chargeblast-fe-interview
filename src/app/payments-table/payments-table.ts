@@ -23,6 +23,29 @@ function isPageSize(value: number): value is PageSize {
   return value === 25 || value === 50 || value === 100;
 }
 
+function parseStoredPageSize(value: string | null): PageSize {
+  if (value === null) {
+    return DEFAULT_PAGE_SIZE;
+  }
+
+  const pageSize = Number(value);
+  return isPageSize(pageSize) ? pageSize : DEFAULT_PAGE_SIZE;
+}
+
+function readStoredPageSize(
+  browserWindow: Window | null = typeof window === 'undefined' ? null : window,
+): PageSize {
+  if (!browserWindow) {
+    return DEFAULT_PAGE_SIZE;
+  }
+
+  try {
+    return parseStoredPageSize(browserWindow.localStorage.getItem(PAGE_SIZE_STORAGE_KEY));
+  } catch {
+    return DEFAULT_PAGE_SIZE;
+  }
+}
+
 @Component({
   selector: 'app-payments-table',
   imports: [PaymentRow],
@@ -30,6 +53,8 @@ function isPageSize(value: number): value is PageSize {
   styleUrl: './payments-table.css',
 })
 export class PaymentsTable {
+  private readonly document = inject(DOCUMENT);
+
   readonly payments = input.required<readonly Payment[]>();
 
   protected readonly copyState = signal<PaymentCopyState | null>(null);
@@ -74,7 +99,6 @@ export class PaymentsTable {
       : 'Payment ID ' + state.paymentId + ' could not be copied. Try again.';
   });
 
-  private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly keepCurrentPageInBounds = effect(() => {
     const pageCount = this.pageCount();
@@ -87,12 +111,31 @@ export class PaymentsTable {
   });
   private feedbackTimer: ReturnType<typeof setTimeout> | undefined;
   private clockTimer: number | undefined;
+  private readonly handlePageSizeStorageChange = (event: StorageEvent): void => {
+    const browserWindow = this.document.defaultView;
+
+    if (!browserWindow || (event.key !== PAGE_SIZE_STORAGE_KEY && event.key !== null)) {
+      return;
+    }
+
+    try {
+      if (event.storageArea !== null && event.storageArea !== browserWindow.localStorage) {
+        return;
+      }
+    } catch {
+      return;
+    }
+
+    this.applyPageSize(parseStoredPageSize(event.newValue));
+  };
 
   constructor() {
+    this.pageSize.set(readStoredPageSize());
     afterNextRender(() => this.startBrowserState());
     this.destroyRef.onDestroy(() => {
       this.clearFeedbackTimer();
       this.stopClock();
+      this.document.defaultView?.removeEventListener('storage', this.handlePageSizeStorageChange);
     });
   }
 
@@ -120,8 +163,7 @@ export class PaymentsTable {
       return;
     }
 
-    this.currentPage.set(1);
-    this.pageSize.set(selectedPageSize);
+    this.applyPageSize(selectedPageSize);
     this.storePageSize(selectedPageSize);
   }
 
@@ -141,21 +183,19 @@ export class PaymentsTable {
     }
 
     this.restorePageSize(browserWindow);
+    browserWindow.addEventListener('storage', this.handlePageSizeStorageChange);
     this.timeZone.set(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
     this.currentTime.set(Date.now());
     this.clockTimer = browserWindow.setInterval(() => this.currentTime.set(Date.now()), 60_000);
   }
 
   private restorePageSize(browserWindow: Window): void {
-    try {
-      const storedPageSize = Number(browserWindow.localStorage.getItem(PAGE_SIZE_STORAGE_KEY));
+    this.applyPageSize(readStoredPageSize(browserWindow));
+  }
 
-      if (isPageSize(storedPageSize)) {
-        this.pageSize.set(storedPageSize);
-      }
-    } catch {
-      // Browser privacy settings can make localStorage unavailable.
-    }
+  private applyPageSize(pageSize: PageSize): void {
+    this.currentPage.set(1);
+    this.pageSize.set(pageSize);
   }
 
   private storePageSize(pageSize: PageSize): void {
