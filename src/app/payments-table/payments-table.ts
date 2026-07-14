@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import {
   Component,
   DestroyRef,
+  ElementRef,
   afterNextRender,
   computed,
   effect,
@@ -55,7 +56,9 @@ import {
   serializeTextSearchQuery,
 } from './payment-filter-query';
 import { PAYMENT_STATUS_LABELS, Payment, PaymentStatus } from './payment';
+import { PAYMENT_QUERY_DELAY } from './payment-query-delay';
 import { PaymentCopyState, PaymentRow } from './payment-row';
+import { PaymentSkeletonRow } from './payment-skeleton-row';
 import { createPaymentTextSearch, matchesPaymentTextSearch } from './payment-text-search';
 import {
   DEFAULT_PAYMENT_SORT,
@@ -93,6 +96,19 @@ interface PaymentSortColumnState {
   readonly priority: number;
 }
 
+interface PaymentViewState {
+  readonly sortCriteria: readonly PaymentSortCriterion[];
+  readonly dateRange: DateRangeSelection | null;
+  readonly selectedStatuses: readonly PaymentStatus[];
+  readonly selectedPaymentMethods: readonly PaymentMethodFilterValue[];
+  readonly amountRange: AmountRange | null;
+  readonly textSearch: string | null;
+}
+
+interface PendingViewStateWrite {
+  readonly source: 'payments-table';
+}
+
 const PAYMENT_TABLE_COLUMNS: readonly PaymentTableColumn[] = [
   { key: 'paymentId', label: PAYMENT_SORT_COLUMN_LABELS.paymentId, align: 'left' },
   { key: 'customer', label: PAYMENT_SORT_COLUMN_LABELS.customer, align: 'left' },
@@ -101,6 +117,16 @@ const PAYMENT_TABLE_COLUMNS: readonly PaymentTableColumn[] = [
   { key: 'paymentMethod', label: PAYMENT_SORT_COLUMN_LABELS.paymentMethod, align: 'right' },
   { key: 'created', label: PAYMENT_SORT_COLUMN_LABELS.created, align: 'right' },
 ];
+
+const INITIAL_PAYMENT_VIEW_STATE: PaymentViewState = {
+  sortCriteria: DEFAULT_PAYMENT_SORT,
+  dateRange: null,
+  selectedStatuses: [],
+  selectedPaymentMethods: [],
+  amountRange: null,
+  textSearch: null,
+};
+const PAYMENT_SKELETON_ROWS = Array.from({ length: 15 }, (_, index) => index);
 
 type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
@@ -141,18 +167,22 @@ function readStoredPageSize(
     TextSearchFilter,
     CleanFiltersButton,
     PaymentRow,
+    PaymentSkeletonRow,
   ],
   templateUrl: './payments-table.html',
-  styleUrls: ['./payments-table.css', './payments-table-sort.css'],
+  styleUrls: ['./payments-table.css', './payments-table-scroll.css', './payments-table-sort.css'],
 })
 export class PaymentsTable {
   private readonly document = inject(DOCUMENT);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly queryDelay = inject(PAYMENT_QUERY_DELAY);
 
   readonly payments = input.required<readonly Payment[]>();
 
   protected readonly copyState = signal<PaymentCopyState | null>(null);
+  protected readonly isLoading = signal(false);
+  protected readonly skeletonRows = PAYMENT_SKELETON_ROWS;
   protected readonly currentTime = signal<number | null>(null);
   protected readonly timeZone = signal('UTC');
   protected readonly sortColumns = PAYMENT_TABLE_COLUMNS;
@@ -168,6 +198,7 @@ export class PaymentsTable {
   protected readonly amountRange = signal<AmountRange | null>(null);
   protected readonly textSearchInput = signal('');
   protected readonly textSearch = signal<string | null>(null);
+  private readonly appliedViewState = signal<PaymentViewState>(INITIAL_PAYMENT_VIEW_STATE);
   protected readonly hasActiveFilters = computed(
     () =>
       this.dateRange() !== null ||
@@ -178,7 +209,7 @@ export class PaymentsTable {
       parseTextSearchQuery(this.textSearchInput()) !== null,
   );
   protected readonly effectiveDateRange = computed(() => {
-    const selection = this.dateRange();
+    const selection = this.appliedViewState().dateRange;
     const currentTime = this.currentTime();
 
     if (selection === null || currentTime === null) {
@@ -189,11 +220,12 @@ export class PaymentsTable {
     return resolveDateRangeForToday(selection, today);
   });
   protected readonly filteredPayments = computed(() => {
+    const appliedViewState = this.appliedViewState();
     const dateRange = this.effectiveDateRange();
-    const selectedStatuses = this.selectedStatuses();
-    const selectedPaymentMethods = this.selectedPaymentMethods();
-    const amountRange = this.amountRange();
-    const textSearch = createPaymentTextSearch(this.textSearch());
+    const selectedStatuses = appliedViewState.selectedStatuses;
+    const selectedPaymentMethods = appliedViewState.selectedPaymentMethods;
+    const amountRange = appliedViewState.amountRange;
+    const textSearch = createPaymentTextSearch(appliedViewState.textSearch);
 
     if (
       dateRange === null &&
@@ -223,7 +255,7 @@ export class PaymentsTable {
     Math.max(1, Math.ceil(this.filteredPayments().length / this.pageSize())),
   );
   protected readonly sortedPayments = computed(() =>
-    sortPayments(this.filteredPayments(), this.sortCriteria()),
+    sortPayments(this.filteredPayments(), this.appliedViewState().sortCriteria),
   );
   protected readonly paginatedPayments = computed(() => {
     const startIndex = (this.currentPage() - 1) * this.pageSize();
@@ -265,6 +297,7 @@ export class PaymentsTable {
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly textSearchFilter = viewChild.required(TextSearchFilter);
+  private readonly tableScroll = viewChild<ElementRef<HTMLElement>>('tableScroll');
   private readonly keepCurrentPageInBounds = effect(() => {
     const pageCount = this.pageCount();
 
@@ -276,8 +309,10 @@ export class PaymentsTable {
   });
   private feedbackTimer: ReturnType<typeof setTimeout> | undefined;
   private textSearchTimer: ReturnType<typeof setTimeout> | undefined;
+  private queryTimer: ReturnType<typeof setTimeout> | undefined;
+  private queryRequestId = 0;
   private clockTimer: number | undefined;
-  private pendingViewStateWrites = 0;
+  private readonly pendingViewStateWrites = new Set<PendingViewStateWrite>();
   private readonly handlePageSizeStorageChange = (event: StorageEvent): void => {
     const browserWindow = this.document.defaultView;
 
@@ -308,6 +343,7 @@ export class PaymentsTable {
     this.destroyRef.onDestroy(() => {
       this.clearFeedbackTimer();
       this.clearTextSearchTimer();
+      this.cancelPendingQuery();
       this.stopClock();
       this.document.defaultView?.removeEventListener('storage', this.handlePageSizeStorageChange);
     });
@@ -335,9 +371,9 @@ export class PaymentsTable {
     const nextCriteria = cyclePaymentSort(currentCriteria, column);
 
     this.sortCriteria.set(nextCriteria);
-    this.currentPage.set(1);
-    this.sortAnnouncement.set(this.describeSortAction(column, currentCriteria, nextCriteria));
-    this.writeViewStateToUrl(false);
+    this.requestPayments(() => {
+      this.sortAnnouncement.set(this.describeSortAction(column, currentCriteria, nextCriteria));
+    });
   }
 
   protected sortDirection(column: PaymentSortColumn): PaymentSortCriterion['direction'] | null {
@@ -399,89 +435,74 @@ export class PaymentsTable {
 
   protected changeDateRange(selection: DateRangeSelection | null): void {
     this.dateRange.set(selection);
-    this.currentPage.set(1);
-    this.writeViewStateToUrl(false);
+    this.requestPayments(() => {
+      const paymentCount = this.paymentCountSummary();
 
-    if (selection === null) {
-      const paymentCount = this.filteredPayments().length;
-      const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
       this.filterAnnouncement.set(
-        `Date range filter cleared. ${paymentCount} ${paymentLabel} found.`,
+        selection === null
+          ? `Date range filter cleared. ${paymentCount} found.`
+          : `Date range filter applied: ${formatDateRangeLabel(selection)}. ${paymentCount} found.`,
       );
-      return;
-    }
-
-    const paymentCount = this.filteredPayments().length;
-    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
-    this.filterAnnouncement.set(
-      `Date range filter applied: ${formatDateRangeLabel(selection)}. ${paymentCount} ${paymentLabel} found.`,
-    );
+    });
   }
 
   protected changeStatuses(statuses: readonly PaymentStatus[]): void {
     this.selectedStatuses.set([...statuses]);
-    this.currentPage.set(1);
-    this.writeViewStateToUrl(false);
+    this.requestPayments(() => {
+      const paymentCount = this.paymentCountSummary();
 
-    if (statuses.length === 0) {
-      const paymentCount = this.filteredPayments().length;
-      const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
-      this.filterAnnouncement.set(`Status filter cleared. ${paymentCount} ${paymentLabel} found.`);
-      return;
-    }
+      if (statuses.length === 0) {
+        this.filterAnnouncement.set(`Status filter cleared. ${paymentCount} found.`);
+        return;
+      }
 
-    const statusLabel = statuses.map((status) => PAYMENT_STATUS_LABELS[status]).join(', ');
-    const paymentCount = this.filteredPayments().length;
-    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
-    this.filterAnnouncement.set(
-      `Status filter applied: ${statusLabel}. ${paymentCount} ${paymentLabel} found.`,
-    );
+      const statusLabel = statuses.map((status) => PAYMENT_STATUS_LABELS[status]).join(', ');
+      this.filterAnnouncement.set(`Status filter applied: ${statusLabel}. ${paymentCount} found.`);
+    });
   }
 
   protected changePaymentMethods(paymentMethods: readonly PaymentMethodFilterValue[]): void {
     this.selectedPaymentMethods.set([...paymentMethods]);
-    this.currentPage.set(1);
-    this.writeViewStateToUrl(false);
+    this.requestPayments(() => {
+      const paymentCount = this.paymentCountSummary();
 
-    const paymentCount = this.filteredPayments().length;
-    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
+      if (paymentMethods.length === 0) {
+        this.filterAnnouncement.set(`Payment method filter cleared. ${paymentCount} found.`);
+        return;
+      }
 
-    if (paymentMethods.length === 0) {
+      const methodLabel = paymentMethods.map(paymentMethodFilterLabel).join(', ');
       this.filterAnnouncement.set(
-        `Payment method filter cleared. ${paymentCount} ${paymentLabel} found.`,
+        `Payment method filter applied: ${methodLabel}. ${paymentCount} found.`,
       );
-      return;
-    }
-
-    const methodLabel = paymentMethods.map(paymentMethodFilterLabel).join(', ');
-    this.filterAnnouncement.set(
-      `Payment method filter applied: ${methodLabel}. ${paymentCount} ${paymentLabel} found.`,
-    );
+    });
   }
 
   protected changeAmountRange(range: AmountRange | null): void {
     this.amountRange.set(range);
-    this.currentPage.set(1);
-    this.writeViewStateToUrl(false);
+    this.requestPayments(() => {
+      const paymentCount = this.paymentCountSummary();
 
-    const paymentCount = this.filteredPayments().length;
-    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
-
-    if (range === null) {
       this.filterAnnouncement.set(
-        `Amount range filter cleared. ${paymentCount} ${paymentLabel} found.`,
+        range === null
+          ? `Amount range filter cleared. ${paymentCount} found.`
+          : `Amount range filter applied: ${formatAmountRangeLabel(range)}. ${paymentCount} found.`,
       );
-      return;
-    }
-
-    this.filterAnnouncement.set(
-      `Amount range filter applied: ${formatAmountRangeLabel(range)}. ${paymentCount} ${paymentLabel} found.`,
-    );
+    });
   }
 
   protected changeTextSearch(value: string): void {
     this.textSearchInput.set(value);
     this.clearTextSearchTimer();
+
+    if (
+      this.isLoading() &&
+      serializeTextSearchQuery(parseTextSearchQuery(value)) !==
+        serializeTextSearchQuery(this.textSearch())
+    ) {
+      this.cancelPendingQuery();
+    }
+
     this.textSearchTimer = setTimeout(() => {
       this.textSearchTimer = undefined;
       this.applyTextSearch(value);
@@ -496,14 +517,11 @@ export class PaymentsTable {
     this.amountRange.set(null);
     this.textSearchInput.set('');
     this.textSearch.set(null);
-    this.currentPage.set(1);
-    this.writeViewStateToUrl(false);
-
-    const paymentCount = this.filteredPayments().length;
-    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
-    this.filterAnnouncement.set(
-      `All payment filters cleared. ${paymentCount} ${paymentLabel} found.`,
-    );
+    this.requestPayments(() => {
+      this.filterAnnouncement.set(
+        `All payment filters cleared. ${this.paymentCountSummary()} found.`,
+      );
+    });
 
     if (this.shouldFocusTextSearchAfterClean(event)) {
       this.textSearchFilter().focus();
@@ -545,6 +563,10 @@ export class PaymentsTable {
   }
 
   private applyViewStateFromUrl(queryParams: ParamMap, announceRestore = this.urlSyncReady): void {
+    if (this.isPendingViewStateWrite()) {
+      return;
+    }
+
     const nextCriteria = parsePaymentSort(queryParams.get(SORT_QUERY_PARAM));
     const nextDateRange = parseDateRangeQuery(
       queryParams.get(DATE_RANGE_QUERY_PARAM),
@@ -564,17 +586,10 @@ export class PaymentsTable {
       serializeAmountRangeQuery(this.amountRange()) !== serializeAmountRangeQuery(nextAmountRange);
     const textSearchChanged =
       serializeTextSearchQuery(this.textSearch()) !== serializeTextSearchQuery(nextTextSearch);
-    const shouldRestoreTextSearchInput = textSearchChanged || this.pendingViewStateWrites === 0;
     const filtersChanged = structuredFiltersChanged || textSearchChanged;
 
     if (sortChanged) {
       this.sortCriteria.set(nextCriteria);
-
-      if (announceRestore) {
-        this.sortAnnouncement.set(
-          'Sort order restored from the URL. ' + this.describeSortOrder(nextCriteria),
-        );
-      }
     }
 
     if (structuredFiltersChanged) {
@@ -584,28 +599,45 @@ export class PaymentsTable {
       this.amountRange.set(nextAmountRange);
     }
 
-    if (shouldRestoreTextSearchInput) {
-      this.clearTextSearchTimer();
-      this.textSearch.set(nextTextSearch);
-      this.textSearchInput.set(nextTextSearch ?? '');
-    }
+    this.clearTextSearchTimer();
+    this.textSearch.set(nextTextSearch);
+    this.textSearchInput.set(nextTextSearch ?? '');
 
-    if (filtersChanged) {
+    const shouldResumeUnappliedView = !this.isLoading() && this.hasUnappliedRequestedViewState();
+
+    if (sortChanged || filtersChanged || shouldResumeUnappliedView) {
+      const announceRestoredView = (): void => {
+        if (sortChanged) {
+          this.sortAnnouncement.set(
+            'Sort order restored from the URL. ' + this.describeSortOrder(nextCriteria),
+          );
+        }
+
+        if (filtersChanged) {
+          this.filterAnnouncement.set(
+            this.describeRestoredFilters(
+              nextDateRange,
+              nextStatuses,
+              nextPaymentMethods,
+              nextAmountRange,
+              nextTextSearch,
+            ),
+          );
+        } else if (!sortChanged) {
+          this.filterAnnouncement.set(
+            `Payment results restored from the URL. ${this.paymentCountSummary()} found.`,
+          );
+        }
+      };
+
       if (announceRestore) {
-        this.filterAnnouncement.set(
-          this.describeRestoredFilters(
-            nextDateRange,
-            nextStatuses,
-            nextPaymentMethods,
-            nextAmountRange,
-            nextTextSearch,
-          ),
-        );
+        this.requestPayments(announceRestoredView, false);
+      } else {
+        this.cancelPendingQuery();
+        this.currentPage.set(1);
+        this.appliedViewState.set(this.captureRequestedViewState());
+        this.resetTableScrollPosition();
       }
-    }
-
-    if (sortChanged || filtersChanged) {
-      this.currentPage.set(1);
     }
 
     if (this.urlSyncReady && !this.hasCanonicalViewQuery(queryParams)) {
@@ -705,17 +737,21 @@ export class PaymentsTable {
       serializeTextSearchQuery(this.textSearch()),
     );
 
-    this.pendingViewStateWrites += 1;
+    const pendingWrite: PendingViewStateWrite = {
+      source: 'payments-table',
+    };
+    this.pendingViewStateWrites.add(pendingWrite);
     void this.router
       .navigate([], {
         relativeTo: this.activatedRoute,
         queryParams,
         preserveFragment: true,
         replaceUrl,
+        info: pendingWrite,
       })
       .then(
-        () => this.finishViewStateWrite(),
-        () => this.finishViewStateWrite(),
+        () => this.finishViewStateWrite(pendingWrite),
+        () => this.finishViewStateWrite(pendingWrite),
       );
   }
 
@@ -729,8 +765,13 @@ export class PaymentsTable {
     }
   }
 
-  private finishViewStateWrite(): void {
-    this.pendingViewStateWrites = Math.max(0, this.pendingViewStateWrites - 1);
+  private isPendingViewStateWrite(): boolean {
+    const navigationInfo = this.router.currentNavigation()?.extras.info;
+    return this.pendingViewStateWrites.has(navigationInfo as PendingViewStateWrite);
+  }
+
+  private finishViewStateWrite(pendingWrite: PendingViewStateWrite): void {
+    this.pendingViewStateWrites.delete(pendingWrite);
   }
 
   private describeRestoredFilters(
@@ -837,21 +878,117 @@ export class PaymentsTable {
 
   private applyTextSearch(value: string): void {
     const nextTextSearch = parseTextSearchQuery(value);
+    const textSearchChanged =
+      serializeTextSearchQuery(this.textSearch()) !== serializeTextSearchQuery(nextTextSearch);
 
-    if (serializeTextSearchQuery(this.textSearch()) === serializeTextSearchQuery(nextTextSearch)) {
+    if (!textSearchChanged && !this.hasUnappliedRequestedViewState()) {
       return;
     }
 
-    this.textSearch.set(nextTextSearch);
-    this.currentPage.set(1);
-    this.writeViewStateToUrl(false);
+    if (textSearchChanged) {
+      this.textSearch.set(nextTextSearch);
+    }
 
+    this.requestPayments(() => {
+      if (textSearchChanged) {
+        const action = nextTextSearch === null ? 'cleared' : `applied: ${nextTextSearch}`;
+        this.filterAnnouncement.set(
+          `Text search filter ${action}. ${this.paymentCountSummary()} found.`,
+        );
+        return;
+      }
+
+      this.filterAnnouncement.set(`Payment results updated. ${this.paymentCountSummary()} found.`);
+    });
+  }
+
+  private captureRequestedViewState(): PaymentViewState {
+    return {
+      sortCriteria: [...this.sortCriteria()],
+      dateRange: this.dateRange(),
+      selectedStatuses: [...this.selectedStatuses()],
+      selectedPaymentMethods: [...this.selectedPaymentMethods()],
+      amountRange: this.amountRange(),
+      textSearch: this.textSearch(),
+    };
+  }
+
+  private hasUnappliedRequestedViewState(): boolean {
+    return (
+      this.paymentViewStateSignature(this.captureRequestedViewState()) !==
+      this.paymentViewStateSignature(this.appliedViewState())
+    );
+  }
+
+  private paymentViewStateSignature(viewState: PaymentViewState): string {
+    return JSON.stringify([
+      serializePaymentSort(viewState.sortCriteria),
+      serializeDateRangeQuery(viewState.dateRange),
+      serializeStatusQuery(viewState.selectedStatuses),
+      serializePaymentMethodQuery(viewState.selectedPaymentMethods),
+      serializeAmountRangeQuery(viewState.amountRange),
+      serializeTextSearchQuery(viewState.textSearch),
+    ]);
+  }
+
+  private requestPayments(announceResult: () => void, writeUrl = true): void {
+    const requestedViewState = this.captureRequestedViewState();
+
+    this.cancelPendingQuery();
+    const requestId = ++this.queryRequestId;
+    this.isLoading.set(true);
+    this.sortAnnouncement.set('');
+    this.filterAnnouncement.set('');
+
+    const applyResponse = (): void => {
+      if (requestId !== this.queryRequestId) {
+        return;
+      }
+
+      this.queryTimer = undefined;
+      this.currentPage.set(1);
+      this.appliedViewState.set(requestedViewState);
+      this.isLoading.set(false);
+      this.resetTableScrollPosition();
+      announceResult();
+
+      if (writeUrl) {
+        this.writeViewStateToUrl(false);
+      }
+    };
+    const delay = this.queryDelay();
+
+    if (delay <= 0) {
+      applyResponse();
+      return;
+    }
+
+    this.queryTimer = setTimeout(applyResponse, delay);
+  }
+
+  private cancelPendingQuery(): void {
+    this.queryRequestId += 1;
+
+    if (this.queryTimer !== undefined) {
+      clearTimeout(this.queryTimer);
+      this.queryTimer = undefined;
+    }
+
+    this.isLoading.set(false);
+  }
+
+  private resetTableScrollPosition(): void {
+    const tableScroll = this.tableScroll()?.nativeElement;
+
+    if (tableScroll) {
+      tableScroll.scrollTop = 0;
+    }
+  }
+
+  private paymentCountSummary(): string {
     const paymentCount = this.filteredPayments().length;
     const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
-    const action = nextTextSearch === null ? 'cleared' : `applied: ${nextTextSearch}`;
-    this.filterAnnouncement.set(
-      `Text search filter ${action}. ${paymentCount} ${paymentLabel} found.`,
-    );
+    return `${paymentCount} ${paymentLabel}`;
   }
 
   private clearTextSearchTimer(): void {

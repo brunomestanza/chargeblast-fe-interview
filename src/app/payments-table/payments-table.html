@@ -8,10 +8,11 @@
   </header>
 
   <p id="payments-table-instructions" class="visually-hidden">
-    Scroll horizontally to view every payment column. Created starts sorted descending. The first
-    activation of a different header replaces that default and makes the chosen column the primary
-    ascending sort. Further inactive headers join the sort queue. Activate an active header to
-    change it to descending, then remove it. Earlier columns in the queue take priority.
+    Scroll horizontally to view every payment column and vertically to view additional payments.
+    Created starts sorted descending. The first activation of a different header replaces that
+    default and makes the chosen column the primary ascending sort. Further inactive headers join
+    the sort queue. Activate an active header to change it to descending, then remove it. Earlier
+    columns in the queue take priority.
   </p>
   <p class="visually-hidden" aria-live="polite">{{ copyAnnouncement() }}</p>
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
@@ -19,6 +20,9 @@
   </p>
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
     {{ filterAnnouncement() }}
+  </p>
+  <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+    {{ isLoading() ? 'Loading payments.' : '' }}
   </p>
 
   <section class="filter-toolbar" aria-label="Payment filters">
@@ -47,10 +51,12 @@
   </section>
 
   <div
+    #tableScroll
     class="table-scroll"
     role="region"
     aria-label="Payments data"
     aria-describedby="payments-table-instructions"
+    [attr.aria-busy]="isLoading()"
     tabindex="0"
   >
     <table id="payments-table">
@@ -108,24 +114,32 @@
           }
         </tr>
       </thead>
-      <tbody>
-        @if (paginatedPayments().length === 0) {
-          <tr class="payments-empty">
-            <td colspan="6">No payments match the selected filters.</td>
-          </tr>
-        } @else {
-          @for (payment of paginatedPayments(); track payment.id) {
-            <tr
-              appPaymentRow
-              [payment]="payment"
-              [copyState]="copyState()"
-              [currentTime]="currentTime()"
-              [timeZone]="timeZone()"
-              (copyRequested)="copyPaymentId($event)"
-            ></tr>
+      @if (isLoading()) {
+        <tbody class="payments-skeleton" aria-hidden="true">
+          @for (skeletonRow of skeletonRows; track skeletonRow) {
+            <tr appPaymentSkeletonRow></tr>
           }
-        }
-      </tbody>
+        </tbody>
+      } @else {
+        <tbody>
+          @if (paginatedPayments().length === 0) {
+            <tr class="payments-empty">
+              <td colspan="6">No payments match the selected filters.</td>
+            </tr>
+          } @else {
+            @for (payment of paginatedPayments(); track payment.id) {
+              <tr
+                appPaymentRow
+                [payment]="payment"
+                [copyState]="copyState()"
+                [currentTime]="currentTime()"
+                [timeZone]="timeZone()"
+                (copyRequested)="copyPaymentId($event)"
+              ></tr>
+            }
+          }
+        </tbody>
+      }
     </table>
   </div>
 

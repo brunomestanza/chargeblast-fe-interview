@@ -36,7 +36,7 @@ import { Component, ElementRef, computed, input, output, viewChild } from '@angu
       }
     </div>
     <span id="payments-text-search-help" class="visually-hidden">
-      Results update two seconds after you stop typing.
+      Search starts two seconds after you stop typing.
     </span>
   `,
   styleUrl: './text-search-filter.css',
