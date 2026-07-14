@@ -11,7 +11,7 @@ import {
   untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, type ParamMap } from '@angular/router';
 import { filter, take } from 'rxjs';
 import { DateRangeFilter } from './filters/date-range-filter/date-range-filter';
 import {
@@ -28,6 +28,17 @@ import {
   type PaymentMethodFilterValue,
 } from './filters/payment-method-filter/payment-method-filter-options.mock';
 import { StatusFilter } from './filters/status-filter/status-filter';
+import {
+  DATE_RANGE_QUERY_PARAM,
+  PAYMENT_METHOD_QUERY_PARAM,
+  STATUS_QUERY_PARAM,
+  parseDateRangeQuery,
+  parsePaymentMethodQuery,
+  parseStatusQuery,
+  serializeDateRangeQuery,
+  serializePaymentMethodQuery,
+  serializeStatusQuery,
+} from './payment-filter-query';
 import { PAYMENT_STATUS_LABELS, Payment, PaymentStatus } from './payment';
 import { PaymentCopyState, PaymentRow } from './payment-row';
 import {
@@ -230,17 +241,15 @@ export class PaymentsTable {
 
     this.applyPageSize(parseStoredPageSize(event.newValue));
   };
-  private sortUrlSyncReady = false;
+  private urlSyncReady = false;
 
   constructor() {
     this.pageSize.set(readStoredPageSize());
-    this.sortCriteria.set(
-      parsePaymentSort(this.activatedRoute.snapshot.queryParamMap.get(SORT_QUERY_PARAM)),
-    );
+    this.applyViewStateFromUrl(this.activatedRoute.snapshot.queryParamMap, false);
     this.activatedRoute.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((queryParams) => this.applySortFromUrl(queryParams.get(SORT_QUERY_PARAM)));
-    this.startSortUrlSync();
+      .subscribe((queryParams) => this.applyViewStateFromUrl(queryParams));
+    this.startUrlSync();
     afterNextRender(() => this.startBrowserState());
     this.destroyRef.onDestroy(() => {
       this.clearFeedbackTimer();
@@ -273,7 +282,7 @@ export class PaymentsTable {
     this.sortCriteria.set(nextCriteria);
     this.currentPage.set(1);
     this.sortAnnouncement.set(this.describeSortAction(column, currentCriteria, nextCriteria));
-    this.writeSortToUrl(nextCriteria, false);
+    this.writeViewStateToUrl(false);
   }
 
   protected sortDirection(column: PaymentSortColumn): PaymentSortCriterion['direction'] | null {
@@ -336,6 +345,7 @@ export class PaymentsTable {
   protected changeDateRange(selection: DateRangeSelection | null): void {
     this.dateRange.set(selection);
     this.currentPage.set(1);
+    this.writeViewStateToUrl(false);
 
     if (selection === null) {
       const paymentCount = this.filteredPayments().length;
@@ -356,6 +366,7 @@ export class PaymentsTable {
   protected changeStatuses(statuses: readonly PaymentStatus[]): void {
     this.selectedStatuses.set([...statuses]);
     this.currentPage.set(1);
+    this.writeViewStateToUrl(false);
 
     if (statuses.length === 0) {
       const paymentCount = this.filteredPayments().length;
@@ -375,6 +386,7 @@ export class PaymentsTable {
   protected changePaymentMethods(paymentMethods: readonly PaymentMethodFilterValue[]): void {
     this.selectedPaymentMethods.set([...paymentMethods]);
     this.currentPage.set(1);
+    this.writeViewStateToUrl(false);
 
     const paymentCount = this.filteredPayments().length;
     const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
@@ -406,9 +418,9 @@ export class PaymentsTable {
     this.clockTimer = browserWindow.setInterval(() => this.currentTime.set(Date.now()), 60_000);
   }
 
-  private startSortUrlSync(): void {
+  private startUrlSync(): void {
     if (this.router.navigated) {
-      this.enableSortUrlSync();
+      this.enableUrlSync();
       return;
     }
 
@@ -418,21 +430,32 @@ export class PaymentsTable {
         take(1),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(() => this.enableSortUrlSync());
+      .subscribe(() => this.enableUrlSync());
   }
 
-  private enableSortUrlSync(): void {
-    this.sortUrlSyncReady = true;
-    this.applySortFromUrl(this.activatedRoute.snapshot.queryParamMap.get(SORT_QUERY_PARAM), false);
+  private enableUrlSync(): void {
+    this.urlSyncReady = true;
+    this.applyViewStateFromUrl(this.activatedRoute.snapshot.queryParamMap, false);
   }
 
-  private applySortFromUrl(value: string | null, announceRestore = this.sortUrlSyncReady): void {
-    const nextCriteria = parsePaymentSort(value);
-    const serializedCriteria = serializePaymentSort(nextCriteria);
+  private applyViewStateFromUrl(queryParams: ParamMap, announceRestore = this.urlSyncReady): void {
+    const nextCriteria = parsePaymentSort(queryParams.get(SORT_QUERY_PARAM));
+    const nextDateRange = parseDateRangeQuery(
+      queryParams.get(DATE_RANGE_QUERY_PARAM),
+      dateKeyInTimeZone(this.currentTime() ?? Date.now(), this.timeZone()),
+    );
+    const nextStatuses = parseStatusQuery(queryParams.get(STATUS_QUERY_PARAM));
+    const nextPaymentMethods = parsePaymentMethodQuery(queryParams.get(PAYMENT_METHOD_QUERY_PARAM));
+    const sortChanged =
+      serializePaymentSort(this.sortCriteria()) !== serializePaymentSort(nextCriteria);
+    const filtersChanged =
+      serializeDateRangeQuery(this.dateRange()) !== serializeDateRangeQuery(nextDateRange) ||
+      serializeStatusQuery(this.selectedStatuses()) !== serializeStatusQuery(nextStatuses) ||
+      serializePaymentMethodQuery(this.selectedPaymentMethods()) !==
+        serializePaymentMethodQuery(nextPaymentMethods);
 
-    if (serializePaymentSort(this.sortCriteria()) !== serializedCriteria) {
+    if (sortChanged) {
       this.sortCriteria.set(nextCriteria);
-      this.currentPage.set(1);
 
       if (announceRestore) {
         this.sortAnnouncement.set(
@@ -441,19 +464,97 @@ export class PaymentsTable {
       }
     }
 
-    if (this.sortUrlSyncReady && value !== serializedCriteria) {
-      this.writeSortToUrl(nextCriteria, true);
+    if (filtersChanged) {
+      this.dateRange.set(nextDateRange);
+      this.selectedStatuses.set(nextStatuses);
+      this.selectedPaymentMethods.set(nextPaymentMethods);
+
+      if (announceRestore) {
+        this.filterAnnouncement.set(
+          this.describeRestoredFilters(nextDateRange, nextStatuses, nextPaymentMethods),
+        );
+      }
+    }
+
+    if (sortChanged || filtersChanged) {
+      this.currentPage.set(1);
+    }
+
+    if (this.urlSyncReady && !this.hasCanonicalViewQuery(queryParams)) {
+      this.writeViewStateToUrl(true);
     }
   }
 
-  private writeSortToUrl(criteria: readonly PaymentSortCriterion[], replaceUrl: boolean): void {
+  private hasCanonicalViewQuery(queryParams: ParamMap): boolean {
+    return (
+      this.isCanonicalQueryParam(
+        queryParams,
+        SORT_QUERY_PARAM,
+        serializePaymentSort(this.sortCriteria()),
+      ) &&
+      this.isCanonicalQueryParam(
+        queryParams,
+        DATE_RANGE_QUERY_PARAM,
+        serializeDateRangeQuery(this.dateRange()),
+      ) &&
+      this.isCanonicalQueryParam(
+        queryParams,
+        STATUS_QUERY_PARAM,
+        serializeStatusQuery(this.selectedStatuses()),
+      ) &&
+      this.isCanonicalQueryParam(
+        queryParams,
+        PAYMENT_METHOD_QUERY_PARAM,
+        serializePaymentMethodQuery(this.selectedPaymentMethods()),
+      )
+    );
+  }
+
+  private isCanonicalQueryParam(queryParams: ParamMap, key: string, value: string | null): boolean {
+    const values = queryParams.getAll(key);
+    return value === null ? values.length === 0 : values.length === 1 && values[0] === value;
+  }
+
+  private writeViewStateToUrl(replaceUrl: boolean): void {
     void this.router.navigate([], {
       relativeTo: this.activatedRoute,
-      queryParams: { [SORT_QUERY_PARAM]: serializePaymentSort(criteria) },
+      queryParams: {
+        [SORT_QUERY_PARAM]: serializePaymentSort(this.sortCriteria()),
+        [DATE_RANGE_QUERY_PARAM]: serializeDateRangeQuery(this.dateRange()),
+        [STATUS_QUERY_PARAM]: serializeStatusQuery(this.selectedStatuses()),
+        [PAYMENT_METHOD_QUERY_PARAM]: serializePaymentMethodQuery(this.selectedPaymentMethods()),
+      },
       queryParamsHandling: 'merge',
       preserveFragment: true,
       replaceUrl,
     });
+  }
+
+  private describeRestoredFilters(
+    dateRange: DateRangeSelection | null,
+    statuses: readonly PaymentStatus[],
+    paymentMethods: readonly PaymentMethodFilterValue[],
+  ): string {
+    const filters: string[] = [];
+
+    if (dateRange !== null) {
+      filters.push('Date range ' + formatDateRangeLabel(dateRange));
+    }
+
+    if (statuses.length > 0) {
+      filters.push('Status ' + statuses.map((status) => PAYMENT_STATUS_LABELS[status]).join(', '));
+    }
+
+    if (paymentMethods.length > 0) {
+      filters.push('Payment method ' + paymentMethods.map(paymentMethodFilterLabel).join(', '));
+    }
+
+    const paymentCount = this.filteredPayments().length;
+    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
+
+    return filters.length === 0
+      ? `Filters cleared from the URL. ${paymentCount} ${paymentLabel} found.`
+      : `Filters restored from the URL: ${filters.join('; ')}. ${paymentCount} ${paymentLabel} found.`;
   }
 
   private describeSortAction(
