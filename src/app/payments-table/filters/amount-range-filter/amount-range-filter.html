@@ -1,0 +1,98 @@
+<app-filter-button
+  label="Amount"
+  [value]="valueLabel()"
+  [expanded]="open()"
+  [controls]="popoverId()"
+  (editRequested)="toggleFilter($event)"
+  (clearRequested)="clearFilter()"
+/>
+
+@if (open()) {
+  <section
+    class="amount-range-filter__popover"
+    [class.amount-range-filter__popover--without-motion]="suppressEntranceMotion()"
+    [id]="popoverId()"
+    role="dialog"
+    [attr.aria-labelledby]="popoverId() + '-title'"
+    [attr.aria-describedby]="popoverId() + '-hint'"
+  >
+    <h2 [id]="popoverId() + '-title'">Filter by: amount</h2>
+
+    <form novalidate (submit)="applyFilter($event)">
+      <div class="amount-range-filter__fields">
+        <div class="amount-range-filter__field">
+          <label [for]="popoverId() + '-minimum'">
+            Minimum<span class="visually-hidden"> amount in USD</span>
+          </label>
+          <div class="amount-range-filter__input-shell">
+            <span aria-hidden="true">$</span>
+            <input
+              #minimumInput
+              [id]="popoverId() + '-minimum'"
+              type="number"
+              inputmode="decimal"
+              step="0.01"
+              autocomplete="off"
+              spellcheck="false"
+              data-lpignore="true"
+              data-1p-ignore
+              [formField]="amountForm.minimumUsd"
+              [attr.aria-describedby]="
+                showMinimumError()
+                  ? popoverId() + '-hint ' + popoverId() + '-minimum-error'
+                  : popoverId() + '-hint'
+              "
+              [attr.aria-invalid]="showMinimumError() ? 'true' : null"
+            />
+          </div>
+          <div class="amount-range-filter__error-slot">
+            @if (minimumError(); as error) {
+              <p [id]="popoverId() + '-minimum-error'">{{ error }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="amount-range-filter__field">
+          <label [for]="popoverId() + '-maximum'">
+            Maximum<span class="visually-hidden"> amount in USD</span>
+          </label>
+          <div class="amount-range-filter__input-shell">
+            <span aria-hidden="true">$</span>
+            <input
+              [id]="popoverId() + '-maximum'"
+              type="number"
+              inputmode="decimal"
+              step="0.01"
+              autocomplete="off"
+              spellcheck="false"
+              data-lpignore="true"
+              data-1p-ignore
+              [formField]="amountForm.maximumUsd"
+              [attr.aria-describedby]="
+                showMaximumError()
+                  ? popoverId() + '-hint ' + popoverId() + '-maximum-error'
+                  : popoverId() + '-hint'
+              "
+              [attr.aria-invalid]="showMaximumError() ? 'true' : null"
+            />
+          </div>
+          <div class="amount-range-filter__error-slot">
+            @if (maximumError(); as error) {
+              <p [id]="popoverId() + '-maximum-error'">{{ error }}</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <p class="amount-range-filter__hint" [id]="popoverId() + '-hint'">
+        Enter both amounts to find payments within this USD range.
+      </p>
+
+      <footer class="amount-range-filter__footer">
+        <button type="submit" class="amount-range-filter__apply" [disabled]="!amountForm().valid()">
+          Apply
+        </button>
+      </footer>
+    </form>
+  </section>
+}

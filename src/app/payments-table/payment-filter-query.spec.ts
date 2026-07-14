@@ -1,13 +1,17 @@
 import type { DateRangeSelection } from './filters/date-range-filter/date-range';
+import type { AmountRange } from './filters/amount-range-filter/amount-range';
 import type { PaymentMethodFilterValue } from './filters/payment-method-filter/payment-method-filter-options.mock';
 import type { PaymentStatus } from './payment';
 import {
+  AMOUNT_RANGE_QUERY_PARAM,
   DATE_RANGE_QUERY_PARAM,
   PAYMENT_METHOD_QUERY_PARAM,
   STATUS_QUERY_PARAM,
+  parseAmountRangeQuery,
   parseDateRangeQuery,
   parsePaymentMethodQuery,
   parseStatusQuery,
+  serializeAmountRangeQuery,
   serializeDateRangeQuery,
   serializePaymentMethodQuery,
   serializeStatusQuery,
@@ -18,6 +22,7 @@ describe('payment filter query codec', () => {
     expect(DATE_RANGE_QUERY_PARAM).toBe('date-range');
     expect(STATUS_QUERY_PARAM).toBe('status');
     expect(PAYMENT_METHOD_QUERY_PARAM).toBe('payment-method');
+    expect(AMOUNT_RANGE_QUERY_PARAM).toBe('amount-range');
   });
 
   describe('date range', () => {
@@ -152,6 +157,61 @@ describe('payment filter query codec', () => {
         'method:pix',
         'card:elo',
       ]);
+    });
+  });
+
+  describe('amount range', () => {
+    it('parses valid inclusive USD ranges into integer cents', () => {
+      expect(parseAmountRangeQuery('10..100')).toEqual({
+        minimumUsdCents: 1_000,
+        maximumUsdCents: 10_000,
+      });
+      expect(parseAmountRangeQuery(' 0.25..1.00 ')).toEqual({
+        minimumUsdCents: 25,
+        maximumUsdCents: 100,
+      });
+      expect(parseAmountRangeQuery('10.00..10.00')).toEqual({
+        minimumUsdCents: 1_000,
+        maximumUsdCents: 1_000,
+      });
+    });
+
+    it('uses no range for absent, incomplete, malformed, or invalid bounds', () => {
+      expect(parseAmountRangeQuery(null)).toBeNull();
+      expect(parseAmountRangeQuery('')).toBeNull();
+      expect(parseAmountRangeQuery('10')).toBeNull();
+      expect(parseAmountRangeQuery('10..')).toBeNull();
+      expect(parseAmountRangeQuery('..100')).toBeNull();
+      expect(parseAmountRangeQuery('-1..100')).toBeNull();
+      expect(parseAmountRangeQuery('0..0')).toBeNull();
+      expect(parseAmountRangeQuery('10..9')).toBeNull();
+      expect(parseAmountRangeQuery('1.001..2')).toBeNull();
+      expect(parseAmountRangeQuery('1e2..200')).toBeNull();
+      expect(parseAmountRangeQuery('NaN..100')).toBeNull();
+      expect(parseAmountRangeQuery('Infinity..100')).toBeNull();
+      expect(parseAmountRangeQuery('1..2..3')).toBeNull();
+    });
+
+    it('serializes valid ranges canonically and rejects invalid state', () => {
+      const range: AmountRange = { minimumUsdCents: 1_000, maximumUsdCents: 10_000 };
+
+      expect(serializeAmountRangeQuery(range)).toBe('10.00..100.00');
+      expect(parseAmountRangeQuery(serializeAmountRangeQuery(range))).toEqual(range);
+      expect(serializeAmountRangeQuery(null)).toBeNull();
+      expect(serializeAmountRangeQuery({ minimumUsdCents: 100, maximumUsdCents: 99 })).toBeNull();
+      expect(serializeAmountRangeQuery({ minimumUsdCents: -1, maximumUsdCents: 100 })).toBeNull();
+      expect(serializeAmountRangeQuery({ minimumUsdCents: 0.5, maximumUsdCents: 100 })).toBeNull();
+    });
+
+    it('round-trips the largest safe integer-cent range without losing precision', () => {
+      const range: AmountRange = {
+        minimumUsdCents: Number.MAX_SAFE_INTEGER - 1,
+        maximumUsdCents: Number.MAX_SAFE_INTEGER,
+      };
+
+      expect(serializeAmountRangeQuery(range)).toBe('90071992547409.90..90071992547409.91');
+      expect(parseAmountRangeQuery(serializeAmountRangeQuery(range))).toEqual(range);
+      expect(parseAmountRangeQuery('0..90071992547409.92')).toBeNull();
     });
   });
 });

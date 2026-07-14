@@ -144,6 +144,11 @@ function findCheckbox(element: HTMLElement, label: string): HTMLInputElement {
   return checkbox;
 }
 
+function setNumberInput(input: HTMLInputElement, value: string): void {
+  input.value = value;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 function expectRouterState(
   router: Router,
   queryParams: Readonly<Record<string, string>>,
@@ -365,19 +370,68 @@ describe('PaymentsTable', () => {
     expect(element.textContent).toContain('Payment method filter cleared. 5 payments found.');
   });
 
-  it('combines payment method, status, and date filters with AND semantics', async () => {
+  it('filters inclusive USD bounds after converting every displayed currency with the ECB mock', () => {
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', [
+      { ...payment, id: 'pay_usd_below', amount: 99.99, currency: 'USD' },
+      { ...payment, id: 'pay_usd_minimum', amount: 100, currency: 'USD' },
+      { ...payment, id: 'pay_eur_converted', amount: 100, currency: 'EUR' },
+      { ...payment, id: 'pay_brl_converted', amount: 584.31, currency: 'BRL' },
+      { ...payment, id: 'pay_jpy_converted', amount: 18_501, currency: 'JPY' },
+      { ...payment, id: 'pay_usd_above', amount: 115.01, currency: 'USD' },
+      { ...payment, id: 'pay_unknown_currency', amount: 110, currency: 'XYZ' },
+    ] satisfies readonly Payment[]);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const amountFilter = element.querySelector<HTMLElement>('app-amount-range-filter')!;
+
+    amountFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    const amountInputs = amountFilter.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    setNumberInput(amountInputs[0], '100');
+    setNumberInput(amountInputs[1], '115');
+    fixture.detectChanges();
+    findButton(amountFilter, 'Apply').click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual([
+      'pay_usd_minimum',
+      'pay_eur_converted',
+      'pay_brl_converted',
+      'pay_jpy_converted',
+    ]);
+    expect(amountFilter.querySelector('.filter-button__value')?.textContent?.trim()).toBe(
+      '$100.00 to $115.00',
+    );
+    expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('4 payments');
+    expect(element.textContent).toContain(
+      'Amount range filter applied: $100.00 to $115.00. 4 payments found.',
+    );
+
+    amountFilter.querySelector<HTMLButtonElement>('.filter-button__clear')!.click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toHaveLength(7);
+    expect(renderedPaymentIds(element)).toContain('pay_unknown_currency');
+    expect(element.textContent).toContain('Amount range filter cleared. 7 payments found.');
+  });
+
+  it('combines amount, payment method, status, and date filters with AND semantics', async () => {
     const now = Date.now();
     const fixture = TestBed.createComponent(PaymentsTable);
     fixture.componentRef.setInput('payments', [
       {
         ...payment,
         id: 'pay_recent_failed_visa',
+        amount: 20,
         status: 'failed',
         createdAt: new Date(now - 60 * 60 * 1000).toISOString(),
       },
       {
         ...payment,
         id: 'pay_recent_failed_paypal',
+        amount: 40,
         status: 'failed',
         paymentMethod: { kind: 'standalone', method: 'paypal' },
         createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
@@ -416,6 +470,7 @@ describe('PaymentsTable', () => {
     const paymentMethodFilter = element.querySelector<HTMLElement>('app-payment-method-filter')!;
     const statusFilter = element.querySelector<HTMLElement>('app-status-filter')!;
     const dateFilter = element.querySelector<HTMLElement>('app-date-range-filter')!;
+    const amountFilter = element.querySelector<HTMLElement>('app-amount-range-filter')!;
 
     paymentMethodFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
     fixture.detectChanges();
@@ -437,11 +492,17 @@ describe('PaymentsTable', () => {
     findButton(dateFilter, 'Apply').click();
     fixture.detectChanges();
 
-    expect(renderedPaymentIds(element)).toEqual([
-      'pay_recent_failed_visa',
-      'pay_recent_failed_paypal',
-    ]);
-    expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('2 payments');
+    amountFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    const amountInputs = amountFilter.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    setNumberInput(amountInputs[0], '10');
+    setNumberInput(amountInputs[1], '30');
+    fixture.detectChanges();
+    findButton(amountFilter, 'Apply').click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_recent_failed_visa']);
+    expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('1 payment');
   });
 
   it('combines the status and date filters before sorting and pagination', async () => {
@@ -496,7 +557,7 @@ describe('PaymentsTable', () => {
   it('restores every filter with sorting from the initial URL', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl(
-      '/?date-range=2026-07-13..2026-07-13&status=failed,succeeded&payment-method=method:paypal,wallet:apple-pay&sort=amount.desc',
+      '/?date-range=2026-07-13..2026-07-13&status=failed,succeeded&payment-method=method:paypal,wallet:apple-pay&amount-range=100.00..300.00&sort=amount.desc',
     );
 
     const fixture = TestBed.createComponent(PaymentsTable);
@@ -509,6 +570,7 @@ describe('PaymentsTable', () => {
     const dateFilter = element.querySelector<HTMLElement>('app-date-range-filter')!;
     const statusFilter = element.querySelector<HTMLElement>('app-status-filter')!;
     const paymentMethodFilter = element.querySelector<HTMLElement>('app-payment-method-filter')!;
+    const amountFilter = element.querySelector<HTMLElement>('app-amount-range-filter')!;
 
     expect(dateFilter.querySelector('.filter-button__value')?.textContent?.trim()).toBe(
       'Jul 13, 2026',
@@ -518,6 +580,9 @@ describe('PaymentsTable', () => {
     );
     expect(paymentMethodFilter.querySelector('.filter-button__value')?.textContent?.trim()).toBe(
       'PayPal, Apple Pay',
+    );
+    expect(amountFilter.querySelector('.filter-button__value')?.textContent?.trim()).toBe(
+      '$100.00 to $300.00',
     );
     expect(renderedPaymentIds(element)).toEqual(['pay_10', 'pay_40']);
     expect(getSortButton(element, 'Amount').closest('th')?.getAttribute('aria-sort')).toBe(
@@ -539,6 +604,7 @@ describe('PaymentsTable', () => {
     const dateFilter = element.querySelector<HTMLElement>('app-date-range-filter')!;
     const statusFilter = element.querySelector<HTMLElement>('app-status-filter')!;
     const paymentMethodFilter = element.querySelector<HTMLElement>('app-payment-method-filter')!;
+    const amountFilter = element.querySelector<HTMLElement>('app-amount-range-filter')!;
 
     dateFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
     fixture.detectChanges();
@@ -595,6 +661,29 @@ describe('PaymentsTable', () => {
       'payments-table',
     );
 
+    amountFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    const amountInputs = amountFilter.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    setNumberInput(amountInputs[0], '100');
+    setNumberInput(amountInputs[1], '400');
+    fixture.detectChanges();
+    findButton(amountFilter, 'Apply').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expectRouterState(
+      router,
+      {
+        sort: 'amount.desc',
+        view: 'compact',
+        'date-range': 'last-30-days',
+        status: 'succeeded,failed',
+        'payment-method': 'card:visa,method:paypal',
+        'amount-range': '100.00..400.00',
+      },
+      'payments-table',
+    );
+
     dateFilter.querySelector<HTMLButtonElement>('.filter-button__clear')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -606,6 +695,7 @@ describe('PaymentsTable', () => {
         view: 'compact',
         status: 'succeeded,failed',
         'payment-method': 'card:visa,method:paypal',
+        'amount-range': '100.00..400.00',
       },
       'payments-table',
     );
@@ -620,11 +710,22 @@ describe('PaymentsTable', () => {
         sort: 'amount.desc',
         view: 'compact',
         'payment-method': 'card:visa,method:paypal',
+        'amount-range': '100.00..400.00',
       },
       'payments-table',
     );
 
     paymentMethodFilter.querySelector<HTMLButtonElement>('.filter-button__clear')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expectRouterState(
+      router,
+      { sort: 'amount.desc', view: 'compact', 'amount-range': '100.00..400.00' },
+      'payments-table',
+    );
+
+    amountFilter.querySelector<HTMLButtonElement>('.filter-button__clear')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -670,7 +771,7 @@ describe('PaymentsTable', () => {
 
     const router = TestBed.inject(Router);
     await router.navigateByUrl(
-      '/?date-range=2026-07-13..2026-07-13&status=failed&payment-method=method:paypal&sort=amount.desc',
+      '/?date-range=2026-07-13..2026-07-13&status=failed&payment-method=method:paypal&amount-range=10.00..20.00&sort=amount.desc',
     );
     fixture.detectChanges();
 
@@ -688,6 +789,9 @@ describe('PaymentsTable', () => {
     expect(
       element.querySelector('app-payment-method-filter .filter-button__value')?.textContent?.trim(),
     ).toBe('PayPal');
+    expect(
+      element.querySelector('app-amount-range-filter .filter-button__value')?.textContent?.trim(),
+    ).toBe('$10.00 to $20.00');
     expect(getSortButton(element, 'Amount').closest('th')?.getAttribute('aria-sort')).toBe(
       'descending',
     );
@@ -696,7 +800,7 @@ describe('PaymentsTable', () => {
   it('canonicalizes invalid and duplicate filter values without losing unrelated URL state', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl(
-      '/?date-range=2026-07-14..2026-07-13&status=failed,unknown,failed,succeeded&payment-method=method:paypal,unknown,method:paypal,card:visa&sort=status.asc,unknown.desc,status.desc&view=compact#payments-table',
+      '/?date-range=2026-07-14..2026-07-13&status=failed,unknown,failed,succeeded&payment-method=method:paypal,unknown,method:paypal,card:visa&amount-range=100..400&sort=status.asc,unknown.desc,status.desc&view=compact#payments-table',
     );
 
     const fixture = TestBed.createComponent(PaymentsTable);
@@ -711,6 +815,7 @@ describe('PaymentsTable', () => {
         'date-range': '2026-07-13..2026-07-14',
         status: 'failed,succeeded',
         'payment-method': 'method:paypal,card:visa',
+        'amount-range': '100.00..400.00',
         sort: 'status.asc',
         view: 'compact',
       },
@@ -725,6 +830,9 @@ describe('PaymentsTable', () => {
     expect(
       element.querySelector('app-payment-method-filter .filter-button__value')?.textContent?.trim(),
     ).toBe('PayPal, Visa');
+    expect(
+      element.querySelector('app-amount-range-filter .filter-button__value')?.textContent?.trim(),
+    ).toBe('$100.00 to $400.00');
     expect(renderedPaymentIds(element)).toEqual(['pay_40']);
   });
 
@@ -1299,7 +1407,7 @@ describe('PaymentsTable during the initial router navigation', () => {
 
     const router = TestBed.inject(Router);
     await router.navigateByUrl(
-      '/?sort=none&date-range=2026-07-13..2026-07-13&status=failed&payment-method=method:paypal',
+      '/?sort=none&date-range=2026-07-13..2026-07-13&status=failed&payment-method=method:paypal&amount-range=200.00..300.00',
     );
     await fixture.whenStable();
     fixture.detectChanges();
@@ -1311,6 +1419,7 @@ describe('PaymentsTable during the initial router navigation', () => {
       'date-range': '2026-07-13..2026-07-13',
       status: 'failed',
       'payment-method': 'method:paypal',
+      'amount-range': '200.00..300.00',
     });
     expect(renderedPaymentIds(element)).toEqual(['pay_first', 'pay_second']);
     expect(element.querySelectorAll('th[aria-sort]')).toHaveLength(0);
@@ -1324,5 +1433,8 @@ describe('PaymentsTable during the initial router navigation', () => {
     expect(
       element.querySelector('app-payment-method-filter .filter-button__value')?.textContent?.trim(),
     ).toBe('PayPal');
+    expect(
+      element.querySelector('app-amount-range-filter .filter-button__value')?.textContent?.trim(),
+    ).toBe('$200.00 to $300.00');
   });
 });

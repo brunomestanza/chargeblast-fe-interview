@@ -31,7 +31,7 @@ import { Component, ElementRef, computed, input, output, viewChild } from '@angu
         aria-haspopup="dialog"
         [attr.aria-expanded]="expanded()"
         [attr.aria-controls]="expanded() ? controls() : null"
-        (click)="editRequested.emit()"
+        (click)="editRequested.emit($event)"
       >
         @if (!hasValue()) {
           <svg class="filter-button__add" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
@@ -67,7 +67,7 @@ export class FilterButton {
   readonly expanded = input(false);
   readonly controls = input<string | null>(null);
 
-  readonly editRequested = output<void>();
+  readonly editRequested = output<MouseEvent>();
   readonly clearRequested = output<void>();
 
   private readonly trigger = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');

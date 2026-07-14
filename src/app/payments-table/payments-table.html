@@ -33,6 +33,7 @@
       [value]="selectedPaymentMethods()"
       (valueChange)="changePaymentMethods($event)"
     />
+    <app-amount-range-filter [value]="amountRange()" (valueChange)="changeAmountRange($event)" />
   </section>
 
   <div

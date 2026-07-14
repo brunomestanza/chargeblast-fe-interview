@@ -7,13 +7,21 @@ import {
   isPaymentMethodFilterValue,
   type PaymentMethodFilterValue,
 } from './filters/payment-method-filter/payment-method-filter-options.mock';
+import {
+  formatUsdCentsForQuery,
+  isValidAmountRange,
+  parseUsdAmount,
+  type AmountRange,
+} from './filters/amount-range-filter/amount-range';
 import { PAYMENT_STATUS_OPTIONS, type PaymentStatus } from './payment';
 
 export const DATE_RANGE_QUERY_PARAM = 'date-range';
 export const STATUS_QUERY_PARAM = 'status';
 export const PAYMENT_METHOD_QUERY_PARAM = 'payment-method';
+export const AMOUNT_RANGE_QUERY_PARAM = 'amount-range';
 
 const CUSTOM_DATE_RANGE_PATTERN = /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
+const AMOUNT_RANGE_PATTERN = /^(\d+(?:\.\d{1,2})?)\.\.(\d+(?:\.\d{1,2})?)$/;
 const PAYMENT_STATUSES = new Set<string>(PAYMENT_STATUS_OPTIONS.map(({ value }) => value));
 
 export function parseDateRangeQuery(
@@ -83,6 +91,39 @@ export function serializePaymentMethodQuery(
   methods: readonly PaymentMethodFilterValue[],
 ): string | null {
   return serializeCsvQuery(methods, isPaymentMethodFilterValue);
+}
+
+export function parseAmountRangeQuery(value: string | null): AmountRange | null {
+  const token = value?.trim();
+
+  if (!token) {
+    return null;
+  }
+
+  const match = AMOUNT_RANGE_PATTERN.exec(token);
+
+  if (!match) {
+    return null;
+  }
+
+  const minimumUsdCents = parseUsdAmount(match[1]);
+  const maximumUsdCents = parseUsdAmount(match[2]);
+
+  if (minimumUsdCents === null || maximumUsdCents === null) {
+    return null;
+  }
+
+  const range = { minimumUsdCents, maximumUsdCents };
+
+  return isValidAmountRange(range) ? range : null;
+}
+
+export function serializeAmountRangeQuery(range: AmountRange | null): string | null {
+  if (range === null || !isValidAmountRange(range)) {
+    return null;
+  }
+
+  return `${formatUsdCentsForQuery(range.minimumUsdCents)}..${formatUsdCentsForQuery(range.maximumUsdCents)}`;
 }
 
 function isPaymentStatus(value: string): value is PaymentStatus {

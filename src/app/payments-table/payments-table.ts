@@ -13,6 +13,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, type ParamMap } from '@angular/router';
 import { filter, take } from 'rxjs';
+import { AmountRangeFilter } from './filters/amount-range-filter/amount-range-filter';
+import {
+  type AmountRange,
+  formatAmountRangeLabel,
+  matchesAmountRange,
+} from './filters/amount-range-filter/amount-range';
 import { DateRangeFilter } from './filters/date-range-filter/date-range-filter';
 import {
   DateRangeSelection,
@@ -29,12 +35,15 @@ import {
 } from './filters/payment-method-filter/payment-method-filter-options.mock';
 import { StatusFilter } from './filters/status-filter/status-filter';
 import {
+  AMOUNT_RANGE_QUERY_PARAM,
   DATE_RANGE_QUERY_PARAM,
   PAYMENT_METHOD_QUERY_PARAM,
   STATUS_QUERY_PARAM,
+  parseAmountRangeQuery,
   parseDateRangeQuery,
   parsePaymentMethodQuery,
   parseStatusQuery,
+  serializeAmountRangeQuery,
   serializeDateRangeQuery,
   serializePaymentMethodQuery,
   serializeStatusQuery,
@@ -108,7 +117,7 @@ function readStoredPageSize(
 
 @Component({
   selector: 'app-payments-table',
-  imports: [DateRangeFilter, StatusFilter, PaymentMethodFilter, PaymentRow],
+  imports: [DateRangeFilter, StatusFilter, PaymentMethodFilter, AmountRangeFilter, PaymentRow],
   templateUrl: './payments-table.html',
   styleUrls: ['./payments-table.css', './payments-table-sort.css'],
 })
@@ -132,6 +141,7 @@ export class PaymentsTable {
   protected readonly dateRange = signal<DateRangeSelection | null>(null);
   protected readonly selectedStatuses = signal<readonly PaymentStatus[]>([]);
   protected readonly selectedPaymentMethods = signal<readonly PaymentMethodFilterValue[]>([]);
+  protected readonly amountRange = signal<AmountRange | null>(null);
   protected readonly effectiveDateRange = computed(() => {
     const selection = this.dateRange();
     const currentTime = this.currentTime();
@@ -147,11 +157,13 @@ export class PaymentsTable {
     const dateRange = this.effectiveDateRange();
     const selectedStatuses = this.selectedStatuses();
     const selectedPaymentMethods = this.selectedPaymentMethods();
+    const amountRange = this.amountRange();
 
     if (
       dateRange === null &&
       selectedStatuses.length === 0 &&
-      selectedPaymentMethods.length === 0
+      selectedPaymentMethods.length === 0 &&
+      amountRange === null
     ) {
       return this.payments();
     }
@@ -161,7 +173,8 @@ export class PaymentsTable {
       (payment) =>
         (dateRange === null || isTimestampInDateRange(payment.createdAt, dateRange, timeZone)) &&
         (selectedStatuses.length === 0 || selectedStatuses.includes(payment.status)) &&
-        matchesPaymentMethodFilter(payment.paymentMethod, selectedPaymentMethods),
+        matchesPaymentMethodFilter(payment.paymentMethod, selectedPaymentMethods) &&
+        (amountRange === null || matchesAmountRange(payment, amountRange)),
     );
   });
   protected readonly paymentCountLabel = computed(() => {
@@ -404,6 +417,26 @@ export class PaymentsTable {
     );
   }
 
+  protected changeAmountRange(range: AmountRange | null): void {
+    this.amountRange.set(range);
+    this.currentPage.set(1);
+    this.writeViewStateToUrl(false);
+
+    const paymentCount = this.filteredPayments().length;
+    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
+
+    if (range === null) {
+      this.filterAnnouncement.set(
+        `Amount range filter cleared. ${paymentCount} ${paymentLabel} found.`,
+      );
+      return;
+    }
+
+    this.filterAnnouncement.set(
+      `Amount range filter applied: ${formatAmountRangeLabel(range)}. ${paymentCount} ${paymentLabel} found.`,
+    );
+  }
+
   private startBrowserState(): void {
     const browserWindow = this.document.defaultView;
 
@@ -446,13 +479,15 @@ export class PaymentsTable {
     );
     const nextStatuses = parseStatusQuery(queryParams.get(STATUS_QUERY_PARAM));
     const nextPaymentMethods = parsePaymentMethodQuery(queryParams.get(PAYMENT_METHOD_QUERY_PARAM));
+    const nextAmountRange = parseAmountRangeQuery(queryParams.get(AMOUNT_RANGE_QUERY_PARAM));
     const sortChanged =
       serializePaymentSort(this.sortCriteria()) !== serializePaymentSort(nextCriteria);
     const filtersChanged =
       serializeDateRangeQuery(this.dateRange()) !== serializeDateRangeQuery(nextDateRange) ||
       serializeStatusQuery(this.selectedStatuses()) !== serializeStatusQuery(nextStatuses) ||
       serializePaymentMethodQuery(this.selectedPaymentMethods()) !==
-        serializePaymentMethodQuery(nextPaymentMethods);
+        serializePaymentMethodQuery(nextPaymentMethods) ||
+      serializeAmountRangeQuery(this.amountRange()) !== serializeAmountRangeQuery(nextAmountRange);
 
     if (sortChanged) {
       this.sortCriteria.set(nextCriteria);
@@ -468,10 +503,16 @@ export class PaymentsTable {
       this.dateRange.set(nextDateRange);
       this.selectedStatuses.set(nextStatuses);
       this.selectedPaymentMethods.set(nextPaymentMethods);
+      this.amountRange.set(nextAmountRange);
 
       if (announceRestore) {
         this.filterAnnouncement.set(
-          this.describeRestoredFilters(nextDateRange, nextStatuses, nextPaymentMethods),
+          this.describeRestoredFilters(
+            nextDateRange,
+            nextStatuses,
+            nextPaymentMethods,
+            nextAmountRange,
+          ),
         );
       }
     }
@@ -506,6 +547,11 @@ export class PaymentsTable {
         queryParams,
         PAYMENT_METHOD_QUERY_PARAM,
         serializePaymentMethodQuery(this.selectedPaymentMethods()),
+      ) &&
+      this.isCanonicalQueryParam(
+        queryParams,
+        AMOUNT_RANGE_QUERY_PARAM,
+        serializeAmountRangeQuery(this.amountRange()),
       )
     );
   }
@@ -523,6 +569,7 @@ export class PaymentsTable {
         [DATE_RANGE_QUERY_PARAM]: serializeDateRangeQuery(this.dateRange()),
         [STATUS_QUERY_PARAM]: serializeStatusQuery(this.selectedStatuses()),
         [PAYMENT_METHOD_QUERY_PARAM]: serializePaymentMethodQuery(this.selectedPaymentMethods()),
+        [AMOUNT_RANGE_QUERY_PARAM]: serializeAmountRangeQuery(this.amountRange()),
       },
       queryParamsHandling: 'merge',
       preserveFragment: true,
@@ -534,6 +581,7 @@ export class PaymentsTable {
     dateRange: DateRangeSelection | null,
     statuses: readonly PaymentStatus[],
     paymentMethods: readonly PaymentMethodFilterValue[],
+    amountRange: AmountRange | null,
   ): string {
     const filters: string[] = [];
 
@@ -547,6 +595,10 @@ export class PaymentsTable {
 
     if (paymentMethods.length > 0) {
       filters.push('Payment method ' + paymentMethods.map(paymentMethodFilterLabel).join(', '));
+    }
+
+    if (amountRange !== null) {
+      filters.push('Amount range ' + formatAmountRangeLabel(amountRange));
     }
 
     const paymentCount = this.filteredPayments().length;

@@ -1,0 +1,21 @@
+{
+  "source": {
+    "name": "European Central Bank",
+    "url": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html"
+  },
+  "effectiveDate": "2026-07-14",
+  "base": "EUR",
+  "quote": "units-per-EUR",
+  "rates": {
+    "EUR": 1,
+    "USD": 1.1405,
+    "JPY": 185.01,
+    "GBP": 0.85215,
+    "SEK": 11.036,
+    "CHF": 0.9257,
+    "AUD": 1.6428,
+    "BRL": 5.8431,
+    "CAD": 1.6095,
+    "CNY": 7.7327
+  }
+}
