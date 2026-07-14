@@ -1,59 +1,74 @@
-# ChargeblastFeInterview
+# Chargeblast — Payments Dashboard
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.6.
+A Stripe-inspired payments dashboard built with Angular 22 (standalone components, signals, SSR).
 
-## Development server
-
-To start a local development server, run:
+**Live demo:** https://chargeblast-fe-interview.vercel.app/
 
 ```bash
-ng serve
+npm install
+npm start    # http://localhost:4200
+npm test     # Vitest — 23 spec files
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Features
 
-## Code scaffolding
+### Payments table
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- **Columns:** Payment ID (truncated, copy-to-clipboard), Customer, Amount (currency-formatted), Status badge (Succeeded / Pending / Failed / Refunded), Payment Method (card brand + last4 or ACH / Wallet), Created (with relative-time hover tooltip).
+- **Sorting:** multi-column, on all columns.
+- **Pagination:** client-side, 25 / 50 / 100 rows per page, with the chosen page size persisted on localStorage.
+- **Loading states:** skeleton rows behind a simulated query delay, so filtering and sorting read like a real network-backed table.
 
-```bash
-ng generate component component-name
-```
+### Filters
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+- Date range with **Today / 7d / 30d / Custom** presets and a custom calendar picker.
+- Status — multi-select.
+- Payment method — multi-select (Card, ACH, Wallet, and card brands).
+- Amount range, normalized to USD via a real **European Central Bank** rate snapshot so a single range filters across every currency.
+- Text search across payment ID, customer email and last4.
 
-```bash
-ng generate --help
-```
+### Mocked data
 
-## Building
+640 rows in `public/data/payments.json`, runtime-validated on load: realistic amounts, multiple currencies (USD, EUR, GBP, BRL, JPY…), varied statuses and payment methods. Exchange rates live in `public/data/exchange-rates.json`.
 
-To build the project run:
+### Nice-to-haves — all six delivered
 
-```bash
-ng build
-```
+1. **Sidebar** — Payments, Customers, Balances, Product Catalog, plus an account switcher.
+2. **Top nav** — search input and account menu.
+3. **Details view** — `/payments/:paymentId` route with activity timeline, payment breakdown, payment method and metadata rails.
+4. **URL-synced filters** — every filter and sort lives in canonical query params, so any view is a shareable link.
+5. **Column resizing and drag-to-reorder** — persisted to `localStorage` and acessible.
+6. **CSV export** of the current view, with a confirmation toast, ignoring pagination.
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Design engineering highlights
 
-## Running unit tests
+**1. Column resizing and drag-to-reorder**
+`src/app/payments-table/payments-table.ts` · `payment-columns.ts` · `payments-table-columns.css`
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Pointer-driven resize and reorder with clamped widths, keyboard-operable alternatives, and `aria-live` announcements on every column move. Layout survives reloads through `localStorage` and stays in sync across tabs via the `storage` event.
 
-```bash
-ng test
-```
+Also, we have clean simple animation, to match Stripe's design.
 
-## Running end-to-end tests
+**2. Custom date-range calendar**
+`src/app/payments-table/filters/date-range-filter/`
 
-For end-to-end (e2e) testing, run:
+A hand-built calendar — no date library — with preset shortcuts, range preview, keyboard navigation, and a popover that mirrors Stripe's filter chips. Range parsing and normalization are pure functions with their own tests (`date-range.spec.ts`).
 
-```bash
-ng e2e
-```
+**3. Table micro-interactions**
+`src/app/payments-table/payment-row.html` · `payment-row.css` · `payment-skeleton-row.ts`
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Truncated IDs with a copy affordance that announces success to screen readers, a relative-time tooltip on Created wired through `aria-describedby`, card brand icons, and skeleton rows that hold row height so nothing shifts while data loads.
 
-## Additional Resources
+## AI context
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+`docs/` is the source of truth handed to the AI agents working in this repo — intentionally plain Markdown, no tooling:
+
+- `docs/product-requirements.md` — scope, required and optional features.
+- `docs/design-reference.md` + `docs/stripe-base-design.png` — the visual target.
+- `AGENTS.md` — Angular/TypeScript conventions and the review workflow.
+
+Three files, read directly at the start of every session. Simple enough to stay current, which is the only property that matters for context.
+
+## Stack
+
+Angular 22 · TypeScript · signals · standalone components · SSR (Express) · Vitest · plain CSS · deployed on Vercel.
