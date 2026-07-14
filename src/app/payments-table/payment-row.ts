@@ -1,6 +1,8 @@
 import { Component, computed, input, output } from '@angular/core';
 import { PAYMENT_STATUS_LABELS, Payment, PaymentStatus } from './payment';
+import { PAYMENT_COLUMN_KEYS } from './payment-columns';
 import { PaymentIconCategory, PaymentMethodIcon } from './payment-method-icon';
+import { PaymentSortColumn } from './payment-sort';
 
 export interface PaymentCopyState {
   readonly paymentId: string;
@@ -113,6 +115,7 @@ export class PaymentRow {
   readonly copyState = input<PaymentCopyState | null>(null);
   readonly currentTime = input<number | null>(null);
   readonly timeZone = input('UTC');
+  readonly columnOrder = input<readonly PaymentSortColumn[]>(PAYMENT_COLUMN_KEYS);
   readonly copyRequested = output<string>();
   readonly detailsRequested = output<string>();
 

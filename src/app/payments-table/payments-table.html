@@ -22,6 +22,9 @@
     {{ filterAnnouncement() }}
   </p>
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+    {{ columnAnnouncement() }}
+  </p>
+  <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
     {{ isLoading() ? 'Loading payments.' : '' }}
   </p>
   <p
@@ -85,17 +88,25 @@
         Earlier columns in the queue take priority.
       </caption>
       <colgroup>
-        <col class="payment-id-column" />
-        <col class="customer-column" />
-        <col class="amount-column" />
-        <col class="status-column" />
-        <col class="payment-method-column" />
-        <col class="created-column" />
+        @for (column of orderedColumns(); track column.key) {
+          <col [class]="column.columnClass" [style.width.px]="columnWidth(column.key)" />
+        }
       </colgroup>
       <thead>
-        <tr>
-          @for (column of sortColumns; track column.key) {
-            <th scope="col" [attr.aria-sort]="sortAriaValue(column.key)">
+        <tr
+          (pointerdown)="onHeaderPointerDown($event)"
+          (pointermove)="onHeaderPointerMove($event)"
+          (pointerup)="onHeaderPointerUp($event)"
+          (pointercancel)="onHeaderPointerCancel($event)"
+        >
+          @for (column of orderedColumns(); track column.key; let columnIndex = $index) {
+            <th
+              scope="col"
+              class="column-header"
+              [class.column-header--dragging]="draggingColumn() === column.key"
+              [class.column-header--resizing]="resizingColumn() === column.key"
+              [attr.aria-sort]="sortAriaValue(column.key)"
+            >
               @let direction = sortDirection(column.key);
               <button
                 type="button"
@@ -127,6 +138,41 @@
               <span class="visually-hidden" [id]="sortDescriptionId(column.key)">
                 {{ sortDescription(column.key) }}
               </span>
+              <button
+                type="button"
+                class="reorder-handle"
+                [class.reorder-handle--active]="draggingColumn() === column.key"
+                [attr.aria-label]="reorderHandleLabel(column, columnIndex)"
+                (pointerdown)="onReorderHandlePointerDown($event, columnIndex, column.key)"
+                (keydown)="onReorderHandleKeydown($event, columnIndex, column.key)"
+                (click)="$event.stopPropagation()"
+              >
+                <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+                  <circle cx="6" cy="4" r="1" />
+                  <circle cx="10" cy="4" r="1" />
+                  <circle cx="6" cy="8" r="1" />
+                  <circle cx="10" cy="8" r="1" />
+                  <circle cx="6" cy="12" r="1" />
+                  <circle cx="10" cy="12" r="1" />
+                </svg>
+              </button>
+              <span
+                class="column-resizer"
+                role="separator"
+                aria-orientation="vertical"
+                tabindex="0"
+                [attr.aria-label]="resizeHandleLabel(column)"
+                [attr.aria-valuenow]="columnWidth(column.key)"
+                [attr.aria-valuemin]="minColumnWidth"
+                [attr.aria-valuemax]="maxColumnWidth"
+                (pointerdown)="onResizePointerDown($event, column.key)"
+                (pointermove)="onResizePointerMove($event)"
+                (pointerup)="onResizePointerUp($event)"
+                (pointercancel)="onResizePointerUp($event)"
+                (lostpointercapture)="onResizePointerUp($event)"
+                (keydown)="onResizeKeydown($event, column.key)"
+                (click)="$event.stopPropagation()"
+              ></span>
             </th>
           }
         </tr>
@@ -151,6 +197,7 @@
                 [copyState]="copyState()"
                 [currentTime]="currentTime()"
                 [timeZone]="timeZone()"
+                [columnOrder]="columnOrder()"
                 (copyRequested)="copyPaymentId($event)"
                 (detailsRequested)="openPaymentDetails($event)"
               ></tr>

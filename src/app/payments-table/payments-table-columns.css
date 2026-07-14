@@ -1,0 +1,151 @@
+/* Column resizing and drag-to-reorder affordances layered over each header cell.
+   The header cell keeps its sticky positioning, so these absolutely positioned
+   controls anchor to it without a separate positioning context. */
+
+.column-header {
+  touch-action: none;
+}
+
+.column-header--dragging {
+  background: #eef1f5;
+  opacity: 0.7;
+}
+
+.column-header--dragging,
+.column-header--dragging * {
+  user-select: none;
+}
+
+.column-header .sort-button {
+  transition:
+    transform 150ms ease-out,
+    color 150ms ease;
+}
+
+.column-header--dragging .sort-button {
+  cursor: grabbing;
+  color: #5046e5;
+  transform: scale(1.03);
+}
+
+.reorder-handle {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 2px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 26px;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 4px;
+  color: #b3bac6;
+  background: transparent;
+  cursor: grab;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    color 120ms ease,
+    background-color 120ms ease;
+}
+
+.reorder-handle svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.reorder-handle:focus-visible,
+.reorder-handle--active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.reorder-handle:focus-visible {
+  outline: 2px solid #303750;
+  outline-offset: 1px;
+}
+
+.reorder-handle--active {
+  color: #5046e5;
+  cursor: grabbing;
+}
+
+.column-resizer {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  z-index: 2;
+  width: 16px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.column-resizer::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  inset-inline-end: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background-color 120ms ease;
+}
+
+.column-resizer:focus-visible::after,
+.column-header--resizing .column-resizer::after {
+  background: #5046e5;
+}
+
+.column-resizer:focus-visible {
+  outline: 2px solid #303750;
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .column-header:hover .reorder-handle {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .reorder-handle:hover {
+    color: #697386;
+    background: #e0e4ea;
+  }
+
+  .column-header:hover .column-resizer::after {
+    background: #c1c9d2;
+  }
+
+  .column-resizer:hover::after {
+    background: #5046e5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reorder-handle,
+  .column-resizer::after,
+  .column-header .sort-button {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .reorder-handle {
+    color: ButtonText;
+  }
+
+  .column-resizer:hover::after,
+  .column-resizer:focus-visible::after,
+  .column-header--resizing .column-resizer::after {
+    background: Highlight;
+  }
+}
