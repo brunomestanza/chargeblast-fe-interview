@@ -30,6 +30,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
+  scrollbar-gutter: stable;
   background: #f5f7fa;
   line-height: 1.5;
   tab-size: 4;

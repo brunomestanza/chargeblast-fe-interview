@@ -9,6 +9,7 @@ import {
   input,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, type ParamMap } from '@angular/router';
@@ -19,6 +20,7 @@ import {
   formatAmountRangeLabel,
   matchesAmountRange,
 } from './filters/amount-range-filter/amount-range';
+import { CleanFiltersButton } from './filters/clean-filters-button/clean-filters-button';
 import { DateRangeFilter } from './filters/date-range-filter/date-range-filter';
 import {
   DateRangeSelection,
@@ -34,22 +36,27 @@ import {
   type PaymentMethodFilterValue,
 } from './filters/payment-method-filter/payment-method-filter-options.mock';
 import { StatusFilter } from './filters/status-filter/status-filter';
+import { TextSearchFilter } from './filters/text-search-filter/text-search-filter';
 import {
   AMOUNT_RANGE_QUERY_PARAM,
   DATE_RANGE_QUERY_PARAM,
   PAYMENT_METHOD_QUERY_PARAM,
   STATUS_QUERY_PARAM,
+  TEXT_SEARCH_QUERY_PARAM,
   parseAmountRangeQuery,
   parseDateRangeQuery,
   parsePaymentMethodQuery,
   parseStatusQuery,
+  parseTextSearchQuery,
   serializeAmountRangeQuery,
   serializeDateRangeQuery,
   serializePaymentMethodQuery,
   serializeStatusQuery,
+  serializeTextSearchQuery,
 } from './payment-filter-query';
 import { PAYMENT_STATUS_LABELS, Payment, PaymentStatus } from './payment';
 import { PaymentCopyState, PaymentRow } from './payment-row';
+import { createPaymentTextSearch, matchesPaymentTextSearch } from './payment-text-search';
 import {
   DEFAULT_PAYMENT_SORT,
   PAYMENT_SORT_COLUMN_LABELS,
@@ -65,6 +72,15 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0];
 const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
 const SORT_QUERY_PARAM = 'sort';
+const TEXT_SEARCH_DEBOUNCE_MS = 2_000;
+const MANAGED_VIEW_QUERY_PARAMS = new Set([
+  SORT_QUERY_PARAM,
+  DATE_RANGE_QUERY_PARAM,
+  STATUS_QUERY_PARAM,
+  PAYMENT_METHOD_QUERY_PARAM,
+  AMOUNT_RANGE_QUERY_PARAM,
+  TEXT_SEARCH_QUERY_PARAM,
+]);
 
 interface PaymentTableColumn {
   readonly key: PaymentSortColumn;
@@ -117,7 +133,15 @@ function readStoredPageSize(
 
 @Component({
   selector: 'app-payments-table',
-  imports: [DateRangeFilter, StatusFilter, PaymentMethodFilter, AmountRangeFilter, PaymentRow],
+  imports: [
+    DateRangeFilter,
+    StatusFilter,
+    PaymentMethodFilter,
+    AmountRangeFilter,
+    TextSearchFilter,
+    CleanFiltersButton,
+    PaymentRow,
+  ],
   templateUrl: './payments-table.html',
   styleUrls: ['./payments-table.css', './payments-table-sort.css'],
 })
@@ -142,6 +166,17 @@ export class PaymentsTable {
   protected readonly selectedStatuses = signal<readonly PaymentStatus[]>([]);
   protected readonly selectedPaymentMethods = signal<readonly PaymentMethodFilterValue[]>([]);
   protected readonly amountRange = signal<AmountRange | null>(null);
+  protected readonly textSearchInput = signal('');
+  protected readonly textSearch = signal<string | null>(null);
+  protected readonly hasActiveFilters = computed(
+    () =>
+      this.dateRange() !== null ||
+      this.selectedStatuses().length > 0 ||
+      this.selectedPaymentMethods().length > 0 ||
+      this.amountRange() !== null ||
+      this.textSearch() !== null ||
+      parseTextSearchQuery(this.textSearchInput()) !== null,
+  );
   protected readonly effectiveDateRange = computed(() => {
     const selection = this.dateRange();
     const currentTime = this.currentTime();
@@ -158,12 +193,14 @@ export class PaymentsTable {
     const selectedStatuses = this.selectedStatuses();
     const selectedPaymentMethods = this.selectedPaymentMethods();
     const amountRange = this.amountRange();
+    const textSearch = createPaymentTextSearch(this.textSearch());
 
     if (
       dateRange === null &&
       selectedStatuses.length === 0 &&
       selectedPaymentMethods.length === 0 &&
-      amountRange === null
+      amountRange === null &&
+      textSearch === null
     ) {
       return this.payments();
     }
@@ -174,7 +211,8 @@ export class PaymentsTable {
         (dateRange === null || isTimestampInDateRange(payment.createdAt, dateRange, timeZone)) &&
         (selectedStatuses.length === 0 || selectedStatuses.includes(payment.status)) &&
         matchesPaymentMethodFilter(payment.paymentMethod, selectedPaymentMethods) &&
-        (amountRange === null || matchesAmountRange(payment, amountRange)),
+        (amountRange === null || matchesAmountRange(payment, amountRange)) &&
+        matchesPaymentTextSearch(payment, textSearch),
     );
   });
   protected readonly paymentCountLabel = computed(() => {
@@ -226,6 +264,7 @@ export class PaymentsTable {
   );
 
   private readonly destroyRef = inject(DestroyRef);
+  private readonly textSearchFilter = viewChild.required(TextSearchFilter);
   private readonly keepCurrentPageInBounds = effect(() => {
     const pageCount = this.pageCount();
 
@@ -236,7 +275,9 @@ export class PaymentsTable {
     });
   });
   private feedbackTimer: ReturnType<typeof setTimeout> | undefined;
+  private textSearchTimer: ReturnType<typeof setTimeout> | undefined;
   private clockTimer: number | undefined;
+  private pendingViewStateWrites = 0;
   private readonly handlePageSizeStorageChange = (event: StorageEvent): void => {
     const browserWindow = this.document.defaultView;
 
@@ -266,6 +307,7 @@ export class PaymentsTable {
     afterNextRender(() => this.startBrowserState());
     this.destroyRef.onDestroy(() => {
       this.clearFeedbackTimer();
+      this.clearTextSearchTimer();
       this.stopClock();
       this.document.defaultView?.removeEventListener('storage', this.handlePageSizeStorageChange);
     });
@@ -437,6 +479,37 @@ export class PaymentsTable {
     );
   }
 
+  protected changeTextSearch(value: string): void {
+    this.textSearchInput.set(value);
+    this.clearTextSearchTimer();
+    this.textSearchTimer = setTimeout(() => {
+      this.textSearchTimer = undefined;
+      this.applyTextSearch(value);
+    }, TEXT_SEARCH_DEBOUNCE_MS);
+  }
+
+  protected clearAllFilters(event: MouseEvent): void {
+    this.clearTextSearchTimer();
+    this.dateRange.set(null);
+    this.selectedStatuses.set([]);
+    this.selectedPaymentMethods.set([]);
+    this.amountRange.set(null);
+    this.textSearchInput.set('');
+    this.textSearch.set(null);
+    this.currentPage.set(1);
+    this.writeViewStateToUrl(false);
+
+    const paymentCount = this.filteredPayments().length;
+    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
+    this.filterAnnouncement.set(
+      `All payment filters cleared. ${paymentCount} ${paymentLabel} found.`,
+    );
+
+    if (this.shouldFocusTextSearchAfterClean(event)) {
+      this.textSearchFilter().focus();
+    }
+  }
+
   private startBrowserState(): void {
     const browserWindow = this.document.defaultView;
 
@@ -480,14 +553,19 @@ export class PaymentsTable {
     const nextStatuses = parseStatusQuery(queryParams.get(STATUS_QUERY_PARAM));
     const nextPaymentMethods = parsePaymentMethodQuery(queryParams.get(PAYMENT_METHOD_QUERY_PARAM));
     const nextAmountRange = parseAmountRangeQuery(queryParams.get(AMOUNT_RANGE_QUERY_PARAM));
+    const nextTextSearch = parseTextSearchQuery(queryParams.get(TEXT_SEARCH_QUERY_PARAM));
     const sortChanged =
       serializePaymentSort(this.sortCriteria()) !== serializePaymentSort(nextCriteria);
-    const filtersChanged =
+    const structuredFiltersChanged =
       serializeDateRangeQuery(this.dateRange()) !== serializeDateRangeQuery(nextDateRange) ||
       serializeStatusQuery(this.selectedStatuses()) !== serializeStatusQuery(nextStatuses) ||
       serializePaymentMethodQuery(this.selectedPaymentMethods()) !==
         serializePaymentMethodQuery(nextPaymentMethods) ||
       serializeAmountRangeQuery(this.amountRange()) !== serializeAmountRangeQuery(nextAmountRange);
+    const textSearchChanged =
+      serializeTextSearchQuery(this.textSearch()) !== serializeTextSearchQuery(nextTextSearch);
+    const shouldRestoreTextSearchInput = textSearchChanged || this.pendingViewStateWrites === 0;
+    const filtersChanged = structuredFiltersChanged || textSearchChanged;
 
     if (sortChanged) {
       this.sortCriteria.set(nextCriteria);
@@ -499,12 +577,20 @@ export class PaymentsTable {
       }
     }
 
-    if (filtersChanged) {
+    if (structuredFiltersChanged) {
       this.dateRange.set(nextDateRange);
       this.selectedStatuses.set(nextStatuses);
       this.selectedPaymentMethods.set(nextPaymentMethods);
       this.amountRange.set(nextAmountRange);
+    }
 
+    if (shouldRestoreTextSearchInput) {
+      this.clearTextSearchTimer();
+      this.textSearch.set(nextTextSearch);
+      this.textSearchInput.set(nextTextSearch ?? '');
+    }
+
+    if (filtersChanged) {
       if (announceRestore) {
         this.filterAnnouncement.set(
           this.describeRestoredFilters(
@@ -512,6 +598,7 @@ export class PaymentsTable {
             nextStatuses,
             nextPaymentMethods,
             nextAmountRange,
+            nextTextSearch,
           ),
         );
       }
@@ -552,7 +639,13 @@ export class PaymentsTable {
         queryParams,
         AMOUNT_RANGE_QUERY_PARAM,
         serializeAmountRangeQuery(this.amountRange()),
-      )
+      ) &&
+      this.isCanonicalQueryParam(
+        queryParams,
+        TEXT_SEARCH_QUERY_PARAM,
+        serializeTextSearchQuery(this.textSearch()),
+      ) &&
+      this.hasCanonicalTextSearchPosition(queryParams)
     );
   }
 
@@ -561,20 +654,83 @@ export class PaymentsTable {
     return value === null ? values.length === 0 : values.length === 1 && values[0] === value;
   }
 
+  private hasCanonicalTextSearchPosition(queryParams: ParamMap): boolean {
+    if (this.textSearch() === null) {
+      return true;
+    }
+
+    return queryParams.keys[queryParams.keys.length - 1] === TEXT_SEARCH_QUERY_PARAM;
+  }
+
   private writeViewStateToUrl(replaceUrl: boolean): void {
-    void this.router.navigate([], {
-      relativeTo: this.activatedRoute,
-      queryParams: {
-        [SORT_QUERY_PARAM]: serializePaymentSort(this.sortCriteria()),
-        [DATE_RANGE_QUERY_PARAM]: serializeDateRangeQuery(this.dateRange()),
-        [STATUS_QUERY_PARAM]: serializeStatusQuery(this.selectedStatuses()),
-        [PAYMENT_METHOD_QUERY_PARAM]: serializePaymentMethodQuery(this.selectedPaymentMethods()),
-        [AMOUNT_RANGE_QUERY_PARAM]: serializeAmountRangeQuery(this.amountRange()),
-      },
-      queryParamsHandling: 'merge',
-      preserveFragment: true,
-      replaceUrl,
-    });
+    const queryParams: Record<string, string | string[]> = {};
+    const currentQueryParams = this.activatedRoute.snapshot.queryParamMap;
+
+    for (const key of currentQueryParams.keys) {
+      if (MANAGED_VIEW_QUERY_PARAMS.has(key)) {
+        continue;
+      }
+
+      const values = currentQueryParams.getAll(key);
+
+      if (values.length > 0) {
+        queryParams[key] = values.length === 1 ? values[0] : values;
+      }
+    }
+
+    this.appendQueryParam(queryParams, SORT_QUERY_PARAM, serializePaymentSort(this.sortCriteria()));
+    this.appendQueryParam(
+      queryParams,
+      DATE_RANGE_QUERY_PARAM,
+      serializeDateRangeQuery(this.dateRange()),
+    );
+    this.appendQueryParam(
+      queryParams,
+      STATUS_QUERY_PARAM,
+      serializeStatusQuery(this.selectedStatuses()),
+    );
+    this.appendQueryParam(
+      queryParams,
+      PAYMENT_METHOD_QUERY_PARAM,
+      serializePaymentMethodQuery(this.selectedPaymentMethods()),
+    );
+    this.appendQueryParam(
+      queryParams,
+      AMOUNT_RANGE_QUERY_PARAM,
+      serializeAmountRangeQuery(this.amountRange()),
+    );
+    this.appendQueryParam(
+      queryParams,
+      TEXT_SEARCH_QUERY_PARAM,
+      serializeTextSearchQuery(this.textSearch()),
+    );
+
+    this.pendingViewStateWrites += 1;
+    void this.router
+      .navigate([], {
+        relativeTo: this.activatedRoute,
+        queryParams,
+        preserveFragment: true,
+        replaceUrl,
+      })
+      .then(
+        () => this.finishViewStateWrite(),
+        () => this.finishViewStateWrite(),
+      );
+  }
+
+  private appendQueryParam(
+    queryParams: Record<string, string | string[]>,
+    key: string,
+    value: string | null,
+  ): void {
+    if (value !== null) {
+      queryParams[key] = value;
+    }
+  }
+
+  private finishViewStateWrite(): void {
+    this.pendingViewStateWrites = Math.max(0, this.pendingViewStateWrites - 1);
   }
 
   private describeRestoredFilters(
@@ -582,6 +738,7 @@ export class PaymentsTable {
     statuses: readonly PaymentStatus[],
     paymentMethods: readonly PaymentMethodFilterValue[],
     amountRange: AmountRange | null,
+    textSearch: string | null,
   ): string {
     const filters: string[] = [];
 
@@ -599,6 +756,10 @@ export class PaymentsTable {
 
     if (amountRange !== null) {
       filters.push('Amount range ' + formatAmountRangeLabel(amountRange));
+    }
+
+    if (textSearch !== null) {
+      filters.push('Text search ' + textSearch);
     }
 
     const paymentCount = this.filteredPayments().length;
@@ -672,6 +833,40 @@ export class PaymentsTable {
       browserWindow.clearInterval(this.clockTimer);
       this.clockTimer = undefined;
     }
+  }
+
+  private applyTextSearch(value: string): void {
+    const nextTextSearch = parseTextSearchQuery(value);
+
+    if (serializeTextSearchQuery(this.textSearch()) === serializeTextSearchQuery(nextTextSearch)) {
+      return;
+    }
+
+    this.textSearch.set(nextTextSearch);
+    this.currentPage.set(1);
+    this.writeViewStateToUrl(false);
+
+    const paymentCount = this.filteredPayments().length;
+    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
+    const action = nextTextSearch === null ? 'cleared' : `applied: ${nextTextSearch}`;
+    this.filterAnnouncement.set(
+      `Text search filter ${action}. ${paymentCount} ${paymentLabel} found.`,
+    );
+  }
+
+  private clearTextSearchTimer(): void {
+    if (this.textSearchTimer !== undefined) {
+      clearTimeout(this.textSearchTimer);
+      this.textSearchTimer = undefined;
+    }
+  }
+
+  private shouldFocusTextSearchAfterClean(event: MouseEvent): boolean {
+    if (event.detail === 0) {
+      return true;
+    }
+
+    return !this.document.defaultView?.matchMedia?.('(any-pointer: coarse)').matches;
   }
 
   private showCopyFeedback(paymentId: string, status: PaymentCopyState['status']): void {

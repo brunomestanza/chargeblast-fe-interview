@@ -7,14 +7,17 @@ import {
   DATE_RANGE_QUERY_PARAM,
   PAYMENT_METHOD_QUERY_PARAM,
   STATUS_QUERY_PARAM,
+  TEXT_SEARCH_QUERY_PARAM,
   parseAmountRangeQuery,
   parseDateRangeQuery,
   parsePaymentMethodQuery,
   parseStatusQuery,
+  parseTextSearchQuery,
   serializeAmountRangeQuery,
   serializeDateRangeQuery,
   serializePaymentMethodQuery,
   serializeStatusQuery,
+  serializeTextSearchQuery,
 } from './payment-filter-query';
 
 describe('payment filter query codec', () => {
@@ -23,6 +26,7 @@ describe('payment filter query codec', () => {
     expect(STATUS_QUERY_PARAM).toBe('status');
     expect(PAYMENT_METHOD_QUERY_PARAM).toBe('payment-method');
     expect(AMOUNT_RANGE_QUERY_PARAM).toBe('amount-range');
+    expect(TEXT_SEARCH_QUERY_PARAM).toBe('text-search');
   });
 
   describe('date range', () => {
@@ -212,6 +216,34 @@ describe('payment filter query codec', () => {
       expect(serializeAmountRangeQuery(range)).toBe('90071992547409.90..90071992547409.91');
       expect(parseAmountRangeQuery(serializeAmountRangeQuery(range))).toEqual(range);
       expect(parseAmountRangeQuery('0..90071992547409.92')).toBeNull();
+    });
+  });
+
+  describe('text search', () => {
+    it('uses no search for absent, empty, or whitespace-only values', () => {
+      expect(parseTextSearchQuery(null)).toBeNull();
+      expect(parseTextSearchQuery('')).toBeNull();
+      expect(parseTextSearchQuery('   ')).toBeNull();
+    });
+
+    it('trims a restored search without changing its casing or contents', () => {
+      expect(parseTextSearchQuery('  PAY_3RxQZ  ')).toBe('PAY_3RxQZ');
+      expect(parseTextSearchQuery('  Olivia.Martin@example.com  ')).toBe(
+        'Olivia.Martin@example.com',
+      );
+    });
+
+    it('serializes searches canonically and uses null for an empty value', () => {
+      expect(serializeTextSearchQuery(null)).toBeNull();
+      expect(serializeTextSearchQuery('')).toBeNull();
+      expect(serializeTextSearchQuery('   ')).toBeNull();
+      expect(serializeTextSearchQuery('  4242  ')).toBe('4242');
+    });
+
+    it('round-trips a non-empty search in its canonical form', () => {
+      const search = '  olivia.martin  ';
+
+      expect(parseTextSearchQuery(serializeTextSearchQuery(search))).toBe('olivia.martin');
     });
   });
 });

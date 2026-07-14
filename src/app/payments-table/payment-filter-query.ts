@@ -19,6 +19,7 @@ export const DATE_RANGE_QUERY_PARAM = 'date-range';
 export const STATUS_QUERY_PARAM = 'status';
 export const PAYMENT_METHOD_QUERY_PARAM = 'payment-method';
 export const AMOUNT_RANGE_QUERY_PARAM = 'amount-range';
+export const TEXT_SEARCH_QUERY_PARAM = 'text-search';
 
 const CUSTOM_DATE_RANGE_PATTERN = /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
 const AMOUNT_RANGE_PATTERN = /^(\d+(?:\.\d{1,2})?)\.\.(\d+(?:\.\d{1,2})?)$/;
@@ -126,8 +127,21 @@ export function serializeAmountRangeQuery(range: AmountRange | null): string | n
   return `${formatUsdCentsForQuery(range.minimumUsdCents)}..${formatUsdCentsForQuery(range.maximumUsdCents)}`;
 }
 
+export function parseTextSearchQuery(value: string | null): string | null {
+  return normalizeTextSearchQuery(value);
+}
+
+export function serializeTextSearchQuery(value: string | null): string | null {
+  return normalizeTextSearchQuery(value);
+}
+
 function isPaymentStatus(value: string): value is PaymentStatus {
   return PAYMENT_STATUSES.has(value);
+}
+
+function normalizeTextSearchQuery(value: string | null): string | null {
+  const normalizedValue = value?.trim();
+  return normalizedValue ? normalizedValue : null;
 }
 
 function parseCsvQuery<T extends string>(

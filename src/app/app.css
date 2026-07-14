@@ -5,7 +5,7 @@
 
 .app-shell {
   display: flex;
-  align-items: safe center;
+  align-items: start;
   justify-content: center;
   width: 100%;
   min-height: 100dvh;
@@ -21,7 +21,6 @@ app-payments-table {
 
 @media (max-width: 720px), (max-height: 760px) {
   .app-shell {
-    align-items: start;
     padding: 16px;
   }
 }

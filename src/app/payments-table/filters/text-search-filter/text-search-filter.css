@@ -1,0 +1,118 @@
+:host {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.text-search-filter {
+  position: relative;
+  min-width: 0;
+}
+
+.text-search-filter__input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px dashed #c5cedb;
+  border-radius: 999px;
+  color: #1a1f36;
+  background: #ffffff;
+  font-size: 14px;
+  line-height: 20px;
+  outline: none;
+  touch-action: manipulation;
+}
+
+.text-search-filter__input--active {
+  padding-inline-end: 36px;
+  border-style: solid;
+  border-color: #cbd3df;
+  box-shadow: 0 1px 2px rgba(31, 45, 61, 0.06);
+}
+
+.text-search-filter__input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.text-search-filter__input::placeholder {
+  color: #697386;
+  opacity: 1;
+}
+
+.text-search-filter__input:focus-visible {
+  outline: 2px solid #303750;
+  outline-offset: 2px;
+}
+
+.text-search-filter__clear {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 0 999px 999px 0;
+  color: #4f566b;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.text-search-filter__clear svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.55;
+}
+
+.text-search-filter__clear:focus-visible {
+  outline: 2px solid #303750;
+  outline-offset: -3px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (any-pointer: coarse) {
+  .text-search-filter__input,
+  .text-search-filter__clear {
+    min-height: 44px;
+  }
+
+  .text-search-filter__input--active {
+    padding-inline-end: 48px;
+  }
+
+  .text-search-filter__clear {
+    width: 44px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .text-search-filter__clear:hover {
+    background: #f7f9fc;
+  }
+}
+
+@media (forced-colors: active) {
+  .text-search-filter__input {
+    border-color: ButtonText;
+  }
+}

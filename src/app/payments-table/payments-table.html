@@ -34,6 +34,16 @@
       (valueChange)="changePaymentMethods($event)"
     />
     <app-amount-range-filter [value]="amountRange()" (valueChange)="changeAmountRange($event)" />
+    <div class="filter-toolbar__text-controls">
+      <app-text-search-filter
+        [value]="textSearchInput()"
+        (valueChange)="changeTextSearch($event)"
+      />
+      <app-clean-filters-button
+        [disabled]="!hasActiveFilters()"
+        (cleanRequested)="clearAllFilters($event)"
+      />
+    </div>
   </section>
 
   <div

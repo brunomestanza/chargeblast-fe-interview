@@ -149,6 +149,11 @@ function setNumberInput(input: HTMLInputElement, value: string): void {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
+function setTextSearchInput(input: HTMLInputElement, value: string): void {
+  input.value = value;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 function expectRouterState(
   router: Router,
   queryParams: Readonly<Record<string, string>>,
@@ -197,6 +202,284 @@ describe('PaymentsTable', () => {
     );
     expect(buttons[0]?.disabled).toBe(true);
     expect(buttons[1]?.disabled).toBe(false);
+  });
+
+  it('renders an accessible text search and keeps Clean all filters disabled without filters', async () => {
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', explicitSortPayments);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const searchInput = element.querySelector<HTMLInputElement>('#payments-text-search');
+    const cleanFiltersButton = findButton(element, 'Clean all filters');
+
+    expect(searchInput?.type).toBe('search');
+    expect(searchInput?.getAttribute('aria-controls')).toBe('payments-table');
+    expect(searchInput?.getAttribute('aria-describedby')).toBe('payments-text-search-help');
+    expect(element.querySelector('label[for="payments-text-search"]')?.textContent?.trim()).toBe(
+      'Search payments',
+    );
+    expect(element.querySelector('#payments-text-search-help')?.textContent?.trim()).toBe(
+      'Results update two seconds after you stop typing.',
+    );
+    expect(element.querySelector('.text-search-filter__clear')).toBeNull();
+    expect(cleanFiltersButton.type).toBe('button');
+    expect(cleanFiltersButton.disabled).toBe(true);
+  });
+
+  it('restarts the two-second text-search delay after each input and writes it last in the URL', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?sort=amount.desc&view=compact#payments-table');
+
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', explicitSortPayments);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    vi.useFakeTimers();
+
+    try {
+      const element = fixture.nativeElement as HTMLElement;
+      const searchInput = element.querySelector<HTMLInputElement>('#payments-text-search')!;
+      const cleanFiltersButton = findButton(element, 'Clean all filters');
+
+      setTextSearchInput(searchInput, 'amy');
+      fixture.detectChanges();
+
+      expect(cleanFiltersButton.disabled).toBe(false);
+      expect(renderedPaymentIds(element)).toEqual(['pay_20', 'pay_10', 'pay_30', 'pay_40']);
+      expect(router.url).toBe('/?sort=amount.desc&view=compact#payments-table');
+
+      vi.advanceTimersByTime(1_500);
+      fixture.detectChanges();
+
+      expect(renderedPaymentIds(element)).toEqual(['pay_20', 'pay_10', 'pay_30', 'pay_40']);
+      expect(router.url).toBe('/?sort=amount.desc&view=compact#payments-table');
+
+      setTextSearchInput(searchInput, 'ben');
+      fixture.detectChanges();
+      vi.advanceTimersByTime(1_999);
+      fixture.detectChanges();
+
+      expect(renderedPaymentIds(element)).toEqual(['pay_20', 'pay_10', 'pay_30', 'pay_40']);
+      expect(router.url).toBe('/?sort=amount.desc&view=compact#payments-table');
+
+      vi.advanceTimersByTime(1);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(renderedPaymentIds(element)).toEqual(['pay_40']);
+      expect(router.url).toBe('/?view=compact&sort=amount.desc&text-search=ben#payments-table');
+      expect(element.textContent).toContain('Text search filter applied: ben. 1 payment found.');
+
+      setTextSearchInput(searchInput, '3R');
+      fixture.detectChanges();
+      vi.advanceTimersByTime(2_000);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(renderedPaymentIds(element)).toEqual([]);
+      expect(element.querySelector('.payments-empty')?.textContent?.trim()).toBe(
+        'No payments match the selected filters.',
+      );
+      expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe(
+        '0 payments',
+      );
+      expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
+        'Viewing 0 of 0 payments',
+      );
+      expect(router.url.endsWith('text-search=3R#payments-table')).toBe(true);
+      expect(element.textContent).toContain('Text search filter applied: 3R. 0 payments found.');
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+      fixture.destroy();
+    }
+  });
+
+  it('debounces clearing text search while preserving every other active filter', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?status=failed&text-search=pay_target');
+
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', [
+      { ...payment, id: 'pay_target', status: 'failed', createdAt: '2026-07-13T16:00:00Z' },
+      {
+        ...payment,
+        id: 'pay_other_failed',
+        customer: 'other@example.com',
+        status: 'failed',
+        createdAt: '2026-07-13T15:00:00Z',
+      },
+      {
+        ...payment,
+        id: 'pay_succeeded',
+        customer: 'success@example.com',
+        status: 'succeeded',
+        createdAt: '2026-07-13T14:00:00Z',
+      },
+    ] satisfies readonly Payment[]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    vi.useFakeTimers();
+
+    try {
+      const element = fixture.nativeElement as HTMLElement;
+      const searchInput = element.querySelector<HTMLInputElement>('#payments-text-search')!;
+
+      expect(searchInput.value).toBe('pay_target');
+      expect(renderedPaymentIds(element)).toEqual(['pay_target']);
+
+      const clearTextSearchButton = element.querySelector<HTMLButtonElement>(
+        '.text-search-filter__clear',
+      );
+
+      expect(clearTextSearchButton?.type).toBe('button');
+      expect(clearTextSearchButton?.getAttribute('aria-label')).toBe('Clear text search filter');
+
+      clearTextSearchButton?.click();
+      fixture.detectChanges();
+
+      expect(searchInput.value).toBe('');
+      expect(document.activeElement).toBe(searchInput);
+      expect(element.querySelector('.text-search-filter__clear')).toBeNull();
+
+      vi.advanceTimersByTime(1_999);
+      fixture.detectChanges();
+
+      expect(renderedPaymentIds(element)).toEqual(['pay_target']);
+      expect(router.url).toBe('/?status=failed&text-search=pay_target');
+
+      vi.advanceTimersByTime(1);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(renderedPaymentIds(element)).toEqual(['pay_target', 'pay_other_failed']);
+      expectRouterState(router, { status: 'failed' });
+      expect(element.textContent).toContain('Text search filter cleared. 2 payments found.');
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+      fixture.destroy();
+    }
+  });
+
+  it('restores text search immediately and canonicalizes it to the end of the URL', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?text-search=PAY_30&view=compact&status=pending#payments-table');
+
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', explicitSortPayments);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector<HTMLInputElement>('#payments-text-search')?.value).toBe('PAY_30');
+    expect(renderedPaymentIds(element)).toEqual(['pay_30']);
+    expect(router.url).toBe('/?view=compact&status=pending&text-search=PAY_30#payments-table');
+  });
+
+  it('cancels a pending draft when external URL navigation restores the applied search', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?text-search=amy');
+
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', explicitSortPayments);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    vi.useFakeTimers();
+
+    try {
+      const element = fixture.nativeElement as HTMLElement;
+      const searchInput = element.querySelector<HTMLInputElement>('#payments-text-search')!;
+
+      expect(renderedPaymentIds(element)).toEqual(['pay_20']);
+      setTextSearchInput(searchInput, 'ben');
+      fixture.detectChanges();
+      vi.advanceTimersByTime(1_000);
+
+      await router.navigateByUrl('/?view=compact&text-search=amy');
+      fixture.detectChanges();
+
+      expect(searchInput.value).toBe('amy');
+      expect(renderedPaymentIds(element)).toEqual(['pay_20']);
+
+      vi.advanceTimersByTime(1_000);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(searchInput.value).toBe('amy');
+      expect(renderedPaymentIds(element)).toEqual(['pay_20']);
+      expect(router.url).toBe('/?view=compact&text-search=amy');
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+      fixture.destroy();
+    }
+  });
+
+  it('clears all filters immediately, preserves unrelated URL state, and cancels pending search', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl(
+      '/?sort=amount.desc&view=compact&date-range=2026-07-13..2026-07-13&status=failed&payment-method=wallet:apple-pay&amount-range=200.00..400.00&text-search=pay_10#payments-table',
+    );
+
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', explicitSortPayments);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    vi.useFakeTimers();
+
+    try {
+      const element = fixture.nativeElement as HTMLElement;
+      const searchInput = element.querySelector<HTMLInputElement>('#payments-text-search')!;
+      const cleanFiltersButton = findButton(element, 'Clean all filters');
+
+      expect(renderedPaymentIds(element)).toEqual(['pay_10']);
+      expect(cleanFiltersButton.disabled).toBe(false);
+
+      setTextSearchInput(searchInput, 'amy');
+      fixture.detectChanges();
+      cleanFiltersButton.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(searchInput.value).toBe('');
+      expect(document.activeElement).toBe(searchInput);
+      expect(cleanFiltersButton.disabled).toBe(true);
+      expect(renderedPaymentIds(element)).toEqual(['pay_20', 'pay_10', 'pay_30', 'pay_40']);
+      expectRouterState(router, { view: 'compact', sort: 'amount.desc' }, 'payments-table');
+      expect(element.querySelectorAll('.filter-button__value')).toHaveLength(0);
+      expect(element.textContent).toContain('All payment filters cleared. 4 payments found.');
+
+      vi.advanceTimersByTime(2_000);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(renderedPaymentIds(element)).toEqual(['pay_20', 'pay_10', 'pay_30', 'pay_40']);
+      expectRouterState(router, { view: 'compact', sort: 'amount.desc' }, 'payments-table');
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+      fixture.destroy();
+    }
   });
 
   it('applies and clears the Date range filter before sorting and pagination', async () => {
@@ -771,7 +1054,7 @@ describe('PaymentsTable', () => {
 
     const router = TestBed.inject(Router);
     await router.navigateByUrl(
-      '/?date-range=2026-07-13..2026-07-13&status=failed&payment-method=method:paypal&amount-range=10.00..20.00&sort=amount.desc',
+      '/?date-range=2026-07-13..2026-07-13&status=failed&payment-method=method:paypal&amount-range=10.00..20.00&sort=amount.desc&text-search=pay_failed_paypal_',
     );
     fixture.detectChanges();
 
@@ -792,6 +1075,9 @@ describe('PaymentsTable', () => {
     expect(
       element.querySelector('app-amount-range-filter .filter-button__value')?.textContent?.trim(),
     ).toBe('$10.00 to $20.00');
+    expect(element.querySelector<HTMLInputElement>('#payments-text-search')?.value).toBe(
+      'pay_failed_paypal_',
+    );
     expect(getSortButton(element, 'Amount').closest('th')?.getAttribute('aria-sort')).toBe(
       'descending',
     );
@@ -1407,7 +1693,7 @@ describe('PaymentsTable during the initial router navigation', () => {
 
     const router = TestBed.inject(Router);
     await router.navigateByUrl(
-      '/?sort=none&date-range=2026-07-13..2026-07-13&status=failed&payment-method=method:paypal&amount-range=200.00..300.00',
+      '/?sort=none&date-range=2026-07-13..2026-07-13&status=failed&payment-method=method:paypal&amount-range=200.00..300.00&text-search=pay_first',
     );
     await fixture.whenStable();
     fixture.detectChanges();
@@ -1420,8 +1706,9 @@ describe('PaymentsTable during the initial router navigation', () => {
       status: 'failed',
       'payment-method': 'method:paypal',
       'amount-range': '200.00..300.00',
+      'text-search': 'pay_first',
     });
-    expect(renderedPaymentIds(element)).toEqual(['pay_first', 'pay_second']);
+    expect(renderedPaymentIds(element)).toEqual(['pay_first']);
     expect(element.querySelectorAll('th[aria-sort]')).toHaveLength(0);
     expect(element.querySelectorAll('.sort-button--active')).toHaveLength(0);
     expect(
@@ -1436,5 +1723,8 @@ describe('PaymentsTable during the initial router navigation', () => {
     expect(
       element.querySelector('app-amount-range-filter .filter-button__value')?.textContent?.trim(),
     ).toBe('$200.00 to $300.00');
+    expect(element.querySelector<HTMLInputElement>('#payments-text-search')?.value).toBe(
+      'pay_first',
+    );
   });
 });
