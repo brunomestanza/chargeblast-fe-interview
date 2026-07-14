@@ -59,7 +59,7 @@
   min-width: 0;
   max-width: min(420px, calc(100vw - 48px));
   padding: 0 10px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 20px;
   white-space: nowrap;
