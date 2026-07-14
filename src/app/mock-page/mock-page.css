@@ -1,0 +1,96 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 1180px;
+  min-width: 0;
+}
+
+.mock-page {
+  display: grid;
+  min-height: calc(100dvh - clamp(48px, 10vw, 128px));
+  place-items: center;
+}
+
+.mock-page__card {
+  display: flex;
+  width: min(100%, 540px);
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: clamp(32px, 6vw, 56px);
+  border-radius: 12px;
+  color: #1a1f36;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(31, 45, 61, 0.08),
+    0 4px 12px rgba(31, 45, 61, 0.06);
+  text-align: center;
+}
+
+.mock-page__icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  color: #635bff;
+  background: #f0efff;
+  place-items: center;
+}
+
+.mock-page__icon app-dashboard-icon {
+  width: 24px;
+  height: 24px;
+}
+
+h1 {
+  max-width: 430px;
+  font-size: clamp(20px, 3vw, 24px);
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.mock-page__back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 7px;
+  color: #ffffff;
+  background: #635bff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.mock-page__back:focus-visible {
+  outline: 2px solid #303750;
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mock-page__back:hover {
+    background: #5148e5;
+  }
+}
+
+.mock-page__back:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 720px), (max-height: 760px) {
+  .mock-page {
+    min-height: calc(100dvh - 32px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mock-page__back:active {
+    transform: none;
+  }
+}

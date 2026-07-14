@@ -1,0 +1,60 @@
+<aside class="sidebar" aria-label="Dashboard sidebar">
+  <app-account-switcher />
+
+  <nav class="sidebar__navigation" aria-label="Main navigation">
+    <ul>
+      <li>
+        <a
+          class="sidebar__link"
+          routerLink="/"
+          routerLinkActive="sidebar__link--active"
+          [routerLinkActiveOptions]="routeMatchOptions"
+          ariaCurrentWhenActive="page"
+          aria-label="Payments"
+        >
+          <app-dashboard-icon name="payments" />
+          <span>Payments</span>
+        </a>
+      </li>
+      <li>
+        <a
+          class="sidebar__link"
+          routerLink="/customers"
+          routerLinkActive="sidebar__link--active"
+          [routerLinkActiveOptions]="routeMatchOptions"
+          ariaCurrentWhenActive="page"
+          aria-label="Customers"
+        >
+          <app-dashboard-icon name="customers" />
+          <span>Customers</span>
+        </a>
+      </li>
+      <li>
+        <a
+          class="sidebar__link"
+          routerLink="/balances"
+          routerLinkActive="sidebar__link--active"
+          [routerLinkActiveOptions]="routeMatchOptions"
+          ariaCurrentWhenActive="page"
+          aria-label="Balances"
+        >
+          <app-dashboard-icon name="balances" />
+          <span>Balances</span>
+        </a>
+      </li>
+      <li>
+        <a
+          class="sidebar__link"
+          routerLink="/product-catalog"
+          routerLinkActive="sidebar__link--active"
+          [routerLinkActiveOptions]="routeMatchOptions"
+          ariaCurrentWhenActive="page"
+          aria-label="Product Catalog"
+        >
+          <app-dashboard-icon name="catalog" />
+          <span>Product Catalog</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>

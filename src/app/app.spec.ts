@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { App } from './app';
+import { routes } from './app.routes';
 
 const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
 
@@ -9,7 +10,7 @@ describe('App', () => {
     window.localStorage.removeItem(PAGE_SIZE_STORAGE_KEY);
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter([])],
+      providers: [provideRouter(routes)],
     }).compileComponents();
   });
 
@@ -24,13 +25,13 @@ describe('App', () => {
 
   it('should render the payments table in the main screen', async () => {
     const beforeRender = Date.now();
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
+    const fixture = await createApp('/');
 
     const compiled = fixture.nativeElement as HTMLElement;
     const newestPaymentTime = Date.parse(compiled.querySelector('time')?.dateTime ?? '');
 
-    expect(compiled.querySelector('main.app-shell')).toBeTruthy();
+    expect(compiled.querySelector('main.dashboard-shell__content')).toBeTruthy();
+    expect(compiled.querySelector('app-sidebar')).toBeTruthy();
     expect(compiled.querySelector('app-payments-table')).toBeTruthy();
     expect(compiled.querySelector('h1')?.textContent).toContain('Payments');
     expect(newestPaymentTime).toBeGreaterThanOrEqual(beforeRender);
@@ -38,8 +39,7 @@ describe('App', () => {
   });
 
   it('should expose every available payment icon and the missing-icon fallback', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
+    const fixture = await createApp('/');
 
     const compiled = fixture.nativeElement as HTMLElement;
     const imageSources = Array.from(
@@ -79,14 +79,84 @@ describe('App', () => {
   it('should restore the stored page size when the user opens the page', async () => {
     window.localStorage.setItem(PAGE_SIZE_STORAGE_KEY, '50');
 
-    const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    const fixture = await createApp('/');
 
     const compiled = fixture.nativeElement as HTMLElement;
 
     expect(compiled.querySelector<HTMLSelectElement>('#payments-page-size')?.value).toBe('50');
     expect(compiled.querySelectorAll('tbody tr')).toHaveLength(50);
+  });
 
+  it('should render only the requested primary sections and mark the active route', async () => {
+    const fixture = await createApp('/customers');
+    const compiled = fixture.nativeElement as HTMLElement;
+    const links = Array.from(
+      compiled.querySelectorAll<HTMLAnchorElement>('.sidebar__navigation a'),
+    );
+
+    expect(links.map((link) => link.textContent?.trim())).toEqual([
+      'Payments',
+      'Customers',
+      'Balances',
+      'Product Catalog',
+    ]);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/',
+      '/customers',
+      '/balances',
+      '/product-catalog',
+    ]);
+    expect(links.filter((link) => link.getAttribute('aria-current') === 'page')).toHaveLength(1);
+    expect(
+      links.find((link) => link.getAttribute('aria-current') === 'page')?.textContent?.trim(),
+    ).toBe('Customers');
+  });
+
+  it('should keep Payments active when the table view is represented in the URL', async () => {
+    const fixture = await createApp('/?view=compact');
+    const activeLink = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
+      '.sidebar__link[aria-current="page"]',
+    );
+
+    expect(activeLink?.textContent?.trim()).toBe('Payments');
+  });
+
+  it.each(['/customers', '/balances', '/product-catalog', '/mock'])(
+    'should keep the sidebar and render the mock screen at %s',
+    async (url) => {
+      const fixture = await createApp(url);
+      const compiled = fixture.nativeElement as HTMLElement;
+
+      expect(compiled.querySelector('app-sidebar')).toBeTruthy();
+      expect(compiled.querySelector('h1')?.textContent?.trim()).toBe(
+        'In this implementation this screen is only an mock.',
+      );
+      expect(
+        compiled.querySelector<HTMLAnchorElement>('.mock-page__back')?.getAttribute('href'),
+      ).toBe('/');
+    },
+  );
+
+  it('should always return from the mock screen to the home route', async () => {
+    const fixture = await createApp('/balances');
+    const router = TestBed.inject(Router);
+    const element = fixture.nativeElement as HTMLElement;
+    const backLink = element.querySelector<HTMLAnchorElement>('.mock-page__back');
+
+    backLink?.click();
     await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(router.url).toBe('/');
+    expect(element.querySelector('app-payments-table')).toBeTruthy();
   });
 });
+
+async function createApp(url: string) {
+  const fixture = TestBed.createComponent(App);
+  fixture.detectChanges();
+  await TestBed.inject(Router).navigateByUrl(url);
+  await fixture.whenStable();
+  fixture.detectChanges();
+  return fixture;
+}

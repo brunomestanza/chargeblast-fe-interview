@@ -1,3 +1,9 @@
-<main class="app-shell">
-  <app-payments-table [payments]="payments()" />
-</main>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<div class="dashboard-shell">
+  <app-sidebar />
+
+  <main id="main-content" class="dashboard-shell__content" tabindex="-1">
+    <router-outlet />
+  </main>
+</div>
