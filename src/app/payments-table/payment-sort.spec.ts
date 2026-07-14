@@ -142,22 +142,37 @@ describe('payment sorting', () => {
     ]);
   });
 
-  it('sorts Amount by currency and then by its numeric value', () => {
+  it('sorts Amount by its USD value rather than by currency and raw number', () => {
     const payments = [
-      payment('usd-1', { currency: 'USD', amount: 1 }),
-      payment('eur-10', { currency: 'EUR', amount: 10 }),
-      payment('eur-2', { currency: 'EUR', amount: 2 }),
+      // 10.00 USD, 10.26 USD and 6.17 USD once converted at the ECB rates.
+      payment('usd-10', { currency: 'USD', amount: 10 }),
+      payment('eur-9', { currency: 'EUR', amount: 9 }),
+      payment('jpy-1000', { currency: 'JPY', amount: 1000 }),
     ];
 
     expect(paymentIds(payments, [{ column: 'amount', direction: 'asc' }])).toEqual([
-      'eur-2',
-      'eur-10',
-      'usd-1',
+      'jpy-1000',
+      'usd-10',
+      'eur-9',
     ]);
     expect(paymentIds(payments, [{ column: 'amount', direction: 'desc' }])).toEqual([
-      'usd-1',
-      'eur-10',
-      'eur-2',
+      'eur-9',
+      'usd-10',
+      'jpy-1000',
+    ]);
+  });
+
+  it('sorts Amounts without a USD equivalent after the converted ones', () => {
+    const payments = [
+      payment('unknown-1000', { currency: 'XYZ', amount: 1000 }),
+      payment('usd-10', { currency: 'USD', amount: 10 }),
+      payment('unknown-5', { currency: 'XYZ', amount: 5 }),
+    ];
+
+    expect(paymentIds(payments, [{ column: 'amount', direction: 'asc' }])).toEqual([
+      'usd-10',
+      'unknown-5',
+      'unknown-1000',
     ]);
   });
 

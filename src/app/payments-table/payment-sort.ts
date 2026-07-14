@@ -1,3 +1,4 @@
+import { convertPaymentAmountToUsdCents } from './exchange-rate';
 import { Payment } from './payment';
 
 export const PAYMENT_SORT_COLUMNS = [
@@ -159,7 +160,7 @@ function comparePayments(left: Payment, right: Payment, column: PaymentSortColum
     case 'customer':
       return TEXT_COLLATOR.compare(left.customer, right.customer);
     case 'amount':
-      return TEXT_COLLATOR.compare(left.currency, right.currency) || left.amount - right.amount;
+      return compareAmounts(left, right);
     case 'status':
       return TEXT_COLLATOR.compare(left.status, right.status);
     case 'paymentMethod':
@@ -167,6 +168,22 @@ function comparePayments(left: Payment, right: Payment, column: PaymentSortColum
     case 'created':
       return Date.parse(left.createdAt) - Date.parse(right.createdAt);
   }
+}
+
+function compareAmounts(left: Payment, right: Payment): number {
+  const leftUsdCents = convertPaymentAmountToUsdCents(left.amount, left.currency);
+  const rightUsdCents = convertPaymentAmountToUsdCents(right.amount, right.currency);
+
+  if (leftUsdCents === null || rightUsdCents === null) {
+    // Amounts without a USD equivalent have no comparable value, so they trail the converted ones.
+    if (leftUsdCents !== rightUsdCents) {
+      return leftUsdCents === null ? 1 : -1;
+    }
+
+    return TEXT_COLLATOR.compare(left.currency, right.currency) || left.amount - right.amount;
+  }
+
+  return leftUsdCents - rightUsdCents || TEXT_COLLATOR.compare(left.currency, right.currency);
 }
 
 function comparePaymentMethods(left: Payment, right: Payment): number {
