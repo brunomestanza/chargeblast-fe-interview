@@ -39,9 +39,11 @@
 <td>
   <span class="customer">{{ row.customer }}</span>
 </td>
-<td class="amount-cell">
-  <span class="amount-value">{{ amountLabel() }}</span>
-  <span class="currency-code">{{ row.currency }}</span>
+<td>
+  <div class="amount-cell">
+    <span class="amount-value">{{ amountLabel() }}</span>
+    <span class="currency-code">{{ row.currency }}</span>
+  </div>
 </td>
 <td>
   <span class="status" [class]="'status status--' + row.status">
