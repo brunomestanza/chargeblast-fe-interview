@@ -15,6 +15,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, type ParamMap } from '@angular/router';
 import { filter, take } from 'rxjs';
+import { ExportPaymentsButton } from './export-payments-button/export-payments-button';
+import { ExportSuccessToast } from './export-success-toast/export-success-toast';
 import { AmountRangeFilter } from './filters/amount-range-filter/amount-range-filter';
 import {
   type AmountRange,
@@ -56,6 +58,11 @@ import {
   serializeTextSearchQuery,
 } from './payment-filter-query';
 import { PAYMENT_STATUS_LABELS, Payment, PaymentStatus } from './payment';
+import {
+  createPaymentsCsvFilename,
+  PAYMENTS_CSV_MIME_TYPE,
+  serializePaymentsCsv,
+} from './payment-csv';
 import { PAYMENT_QUERY_DELAY } from './payment-query-delay';
 import { PaymentCopyState, PaymentRow } from './payment-row';
 import { PaymentSkeletonRow } from './payment-skeleton-row';
@@ -76,6 +83,7 @@ const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0];
 const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
 const SORT_QUERY_PARAM = 'sort';
 const TEXT_SEARCH_DEBOUNCE_MS = 2_000;
+const EXPORT_TOAST_DURATION_MS = 5_000;
 const MANAGED_VIEW_QUERY_PARAMS = new Set([
   SORT_QUERY_PARAM,
   DATE_RANGE_QUERY_PARAM,
@@ -107,6 +115,11 @@ interface PaymentViewState {
 
 interface PendingViewStateWrite {
   readonly source: 'payments-table';
+}
+
+interface ExportToast {
+  readonly id: number;
+  readonly message: string;
 }
 
 const PAYMENT_TABLE_COLUMNS: readonly PaymentTableColumn[] = [
@@ -166,11 +179,18 @@ function readStoredPageSize(
     AmountRangeFilter,
     TextSearchFilter,
     CleanFiltersButton,
+    ExportPaymentsButton,
+    ExportSuccessToast,
     PaymentRow,
     PaymentSkeletonRow,
   ],
   templateUrl: './payments-table.html',
-  styleUrls: ['./payments-table.css', './payments-table-scroll.css', './payments-table-sort.css'],
+  styleUrls: [
+    './payments-table.css',
+    './payments-table-export.css',
+    './payments-table-scroll.css',
+    './payments-table-sort.css',
+  ],
 })
 export class PaymentsTable {
   private readonly document = inject(DOCUMENT);
@@ -189,6 +209,7 @@ export class PaymentsTable {
   protected readonly sortCriteria = signal<readonly PaymentSortCriterion[]>(DEFAULT_PAYMENT_SORT);
   protected readonly sortAnnouncement = signal('');
   protected readonly filterAnnouncement = signal('');
+  protected readonly exportToasts = signal<readonly ExportToast[]>([]);
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly pageSize = signal<PageSize>(DEFAULT_PAGE_SIZE);
   protected readonly currentPage = signal(1);
@@ -308,6 +329,8 @@ export class PaymentsTable {
     });
   });
   private feedbackTimer: ReturnType<typeof setTimeout> | undefined;
+  private exportToastTimer: ReturnType<typeof setTimeout> | undefined;
+  private exportToastId = 0;
   private textSearchTimer: ReturnType<typeof setTimeout> | undefined;
   private queryTimer: ReturnType<typeof setTimeout> | undefined;
   private queryRequestId = 0;
@@ -342,6 +365,7 @@ export class PaymentsTable {
     afterNextRender(() => this.startBrowserState());
     this.destroyRef.onDestroy(() => {
       this.clearFeedbackTimer();
+      this.clearExportToastTimer();
       this.clearTextSearchTimer();
       this.cancelPendingQuery();
       this.stopClock();
@@ -368,6 +392,42 @@ export class PaymentsTable {
 
   protected openPaymentDetails(paymentId: string): void {
     void this.router.navigate(['/payments', paymentId], { queryParamsHandling: 'preserve' });
+  }
+
+  protected exportCurrentView(): void {
+    const browserWindow = this.document.defaultView;
+
+    if (
+      !browserWindow ||
+      this.isLoading() ||
+      typeof browserWindow.URL.createObjectURL !== 'function'
+    ) {
+      return;
+    }
+
+    const payments = this.sortedPayments();
+    const csv = serializePaymentsCsv(payments);
+    const blob = new browserWindow.Blob([csv], { type: PAYMENTS_CSV_MIME_TYPE });
+    const downloadLink = this.document.createElement('a');
+    let objectUrl: string | null = null;
+
+    try {
+      objectUrl = browserWindow.URL.createObjectURL(blob);
+      downloadLink.href = objectUrl;
+      downloadLink.download = createPaymentsCsvFilename(new Date(this.currentTime() ?? Date.now()));
+      downloadLink.hidden = true;
+      this.document.body.append(downloadLink);
+      downloadLink.click();
+      this.showExportSuccess(payments.length);
+    } catch {
+      // Do not announce success when the browser cannot initiate the download.
+    } finally {
+      downloadLink.remove();
+
+      if (objectUrl !== null && typeof browserWindow.URL.revokeObjectURL === 'function') {
+        browserWindow.URL.revokeObjectURL(objectUrl);
+      }
+    }
   }
 
   protected changeSort(column: PaymentSortColumn): void {
@@ -1023,6 +1083,33 @@ export class PaymentsTable {
     if (this.feedbackTimer !== undefined) {
       clearTimeout(this.feedbackTimer);
       this.feedbackTimer = undefined;
+    }
+  }
+
+  private showExportSuccess(paymentCount: number): void {
+    this.clearExportToastTimer();
+    const toastId = ++this.exportToastId;
+    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
+
+    this.exportToasts.set([
+      {
+        id: toastId,
+        message: `CSV export completed successfully. ${paymentCount} ${paymentLabel} exported.`,
+      },
+    ]);
+    this.exportToastTimer = setTimeout(() => {
+      if (this.exportToasts()[0]?.id === toastId) {
+        this.exportToasts.set([]);
+      }
+
+      this.exportToastTimer = undefined;
+    }, EXPORT_TOAST_DURATION_MS);
+  }
+
+  private clearExportToastTimer(): void {
+    if (this.exportToastTimer !== undefined) {
+      clearTimeout(this.exportToastTimer);
+      this.exportToastTimer = undefined;
     }
   }
 }

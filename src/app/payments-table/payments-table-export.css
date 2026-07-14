@@ -1,0 +1,38 @@
+.filter-toolbar__text-controls {
+  flex-wrap: wrap;
+}
+
+.filter-toolbar__text-controls app-text-search-filter {
+  flex: 1 1 180px;
+  min-width: 180px;
+}
+
+.filter-toolbar__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  margin-inline-start: auto;
+}
+
+@media (max-width: 640px) {
+  .filter-toolbar__text-controls {
+    flex-basis: 100%;
+  }
+
+  .filter-toolbar__text-controls app-text-search-filter {
+    flex-basis: 100%;
+    min-width: 100%;
+  }
+
+  .filter-toolbar__actions {
+    justify-content: flex-end;
+    width: 100%;
+  }
+}
+
+@media (max-width: 400px) {
+  .filter-toolbar {
+    padding-inline: 12px;
+  }
+}

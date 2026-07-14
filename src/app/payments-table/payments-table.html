@@ -24,8 +24,19 @@
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
     {{ isLoading() ? 'Loading payments.' : '' }}
   </p>
+  <p
+    id="payments-export-status"
+    class="visually-hidden"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    @for (toast of exportToasts(); track toast.id) {
+      <span>{{ toast.message }}</span>
+    }
+  </p>
 
-  <section class="filter-toolbar" aria-label="Payment filters">
+  <section class="filter-toolbar" aria-label="Payment controls">
     <app-date-range-filter
       [value]="dateRange()"
       [referenceTime]="currentTime()"
@@ -43,10 +54,16 @@
         [value]="textSearchInput()"
         (valueChange)="changeTextSearch($event)"
       />
-      <app-clean-filters-button
-        [disabled]="!hasActiveFilters()"
-        (cleanRequested)="clearAllFilters($event)"
-      />
+      <div class="filter-toolbar__actions">
+        <app-clean-filters-button
+          [disabled]="!hasActiveFilters()"
+          (cleanRequested)="clearAllFilters($event)"
+        />
+        <app-export-payments-button
+          [disabled]="isLoading()"
+          (exportRequested)="exportCurrentView()"
+        />
+      </div>
     </div>
   </section>
 
@@ -184,3 +201,7 @@
     </nav>
   </footer>
 </section>
+
+@for (toast of exportToasts(); track toast.id) {
+  <app-export-success-toast [message]="toast.message" />
+}
