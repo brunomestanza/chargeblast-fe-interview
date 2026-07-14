@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 import { Payment } from './payment';
 import { PAYMENT_QUERY_DELAY } from './payment-query-delay';
 import { formatCreatedDate, formatRelativeTime } from './payment-row';
-import { PaymentsTable } from './payments-table';
+import { PaymentsTable, TEXT_SEARCH_DEBOUNCE_MS } from './payments-table';
 
 const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
 const paymentQueryDelay = vi.fn(() => 0);
@@ -743,7 +743,7 @@ describe('PaymentsTable', () => {
       expect(renderedPaymentIds(element)).toEqual(['pay_10']);
       expect(router.url).toBe('/?status=failed&view=compact');
 
-      vi.advanceTimersByTime(2_000);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS);
       fixture.detectChanges();
 
       expect(renderedPaymentIds(element)).toEqual(['pay_10']);
@@ -828,7 +828,7 @@ describe('PaymentsTable', () => {
       'Search payments',
     );
     expect(element.querySelector('#payments-text-search-help')?.textContent?.trim()).toBe(
-      'Search starts two seconds after you stop typing.',
+      'Search starts shortly after you stop typing.',
     );
     expect(element.querySelector('.text-search-filter__clear')).toBeNull();
     expect(cleanFiltersButton.type).toBe('button');
@@ -852,7 +852,7 @@ describe('PaymentsTable', () => {
 
       setTextSearchInput(searchInput, 'ben');
       fixture.detectChanges();
-      vi.advanceTimersByTime(1_999);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS - 1);
       fixture.detectChanges();
 
       expect(renderedPaymentIds(element)).toEqual(['pay_30', 'pay_20', 'pay_40', 'pay_10']);
@@ -901,7 +901,7 @@ describe('PaymentsTable', () => {
 
       setTextSearchInput(searchInput, 'amy');
       fixture.detectChanges();
-      vi.advanceTimersByTime(2_000);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS);
       fixture.detectChanges();
 
       expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
@@ -913,20 +913,27 @@ describe('PaymentsTable', () => {
       expect(element.querySelector('.payments-skeleton')).toBeNull();
       expect(renderedPaymentIds(element)).toEqual(['pay_30', 'pay_20', 'pay_40', 'pay_10']);
 
-      vi.advanceTimersByTime(1_500);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS - 1);
       fixture.detectChanges();
 
       expect(router.url).toBe('/');
       expect(renderedPaymentIds(element)).toEqual(['pay_30', 'pay_20', 'pay_40', 'pay_10']);
 
-      vi.advanceTimersByTime(499);
-      fixture.detectChanges();
       vi.advanceTimersByTime(1);
       fixture.detectChanges();
 
       expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
 
       vi.advanceTimersByTime(500);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(renderedPaymentIds(element)).toEqual(['pay_40']);
+      expect(router.url).toBe('/?text-search=ben');
+
+      // Outlive the cancelled 'amy' response window: it must never land.
+      vi.advanceTimersByTime(1_500);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
@@ -940,7 +947,7 @@ describe('PaymentsTable', () => {
     }
   });
 
-  it('restarts the two-second text-search delay after each input and writes it last in the URL', async () => {
+  it('restarts the text-search delay after each input and writes it last in the URL', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl('/?sort=amount.desc&view=compact#payments-table');
 
@@ -964,7 +971,7 @@ describe('PaymentsTable', () => {
       expect(renderedPaymentIds(element)).toEqual(['pay_20', 'pay_10', 'pay_30', 'pay_40']);
       expect(router.url).toBe('/?sort=amount.desc&view=compact#payments-table');
 
-      vi.advanceTimersByTime(1_500);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS - 1);
       fixture.detectChanges();
 
       expect(renderedPaymentIds(element)).toEqual(['pay_20', 'pay_10', 'pay_30', 'pay_40']);
@@ -972,7 +979,7 @@ describe('PaymentsTable', () => {
 
       setTextSearchInput(searchInput, 'ben');
       fixture.detectChanges();
-      vi.advanceTimersByTime(1_999);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS - 1);
       fixture.detectChanges();
 
       expect(renderedPaymentIds(element)).toEqual(['pay_20', 'pay_10', 'pay_30', 'pay_40']);
@@ -989,7 +996,7 @@ describe('PaymentsTable', () => {
 
       setTextSearchInput(searchInput, '3R');
       fixture.detectChanges();
-      vi.advanceTimersByTime(2_000);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
@@ -1062,7 +1069,7 @@ describe('PaymentsTable', () => {
       expect(document.activeElement).toBe(searchInput);
       expect(element.querySelector('.text-search-filter__clear')).toBeNull();
 
-      vi.advanceTimersByTime(1_999);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS - 1);
       fixture.detectChanges();
 
       expect(renderedPaymentIds(element)).toEqual(['pay_target']);
@@ -1119,7 +1126,7 @@ describe('PaymentsTable', () => {
       expect(renderedPaymentIds(element)).toEqual(['pay_20']);
       setTextSearchInput(searchInput, 'ben');
       fixture.detectChanges();
-      vi.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS - 1);
 
       await router.navigateByUrl('/?view=compact&text-search=amy');
       fixture.detectChanges();
@@ -1127,7 +1134,7 @@ describe('PaymentsTable', () => {
       expect(searchInput.value).toBe('amy');
       expect(renderedPaymentIds(element)).toEqual(['pay_20']);
 
-      vi.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
@@ -1179,7 +1186,7 @@ describe('PaymentsTable', () => {
       expect(element.querySelectorAll('.filter-button__value')).toHaveLength(0);
       expect(element.textContent).toContain('All payment filters cleared. 4 payments found.');
 
-      vi.advanceTimersByTime(2_000);
+      vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS);
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();

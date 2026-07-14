@@ -97,7 +97,7 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0];
 const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
 const SORT_QUERY_PARAM = 'sort';
-const TEXT_SEARCH_DEBOUNCE_MS = 2_000;
+export const TEXT_SEARCH_DEBOUNCE_MS = 300;
 const EXPORT_TOAST_DURATION_MS = 5_000;
 const MANAGED_VIEW_QUERY_PARAMS = new Set([
   SORT_QUERY_PARAM,
