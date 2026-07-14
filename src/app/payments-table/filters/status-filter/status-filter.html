@@ -1,0 +1,40 @@
+<app-filter-button
+  label="Status"
+  [value]="valueLabel()"
+  [expanded]="open()"
+  (editRequested)="toggleFilter()"
+  (clearRequested)="clearFilter()"
+/>
+
+@if (open()) {
+  <section
+    class="status-filter__popover"
+    [id]="popoverId()"
+    role="dialog"
+    [attr.aria-labelledby]="popoverId() + '-title'"
+  >
+    <h2 [id]="popoverId() + '-title'">Filter by: status</h2>
+
+    <fieldset class="status-filter__options">
+      <legend class="visually-hidden">Select payment statuses</legend>
+
+      @for (option of options; track option.value) {
+        <label class="status-filter__option">
+          <input
+            #statusCheckbox
+            type="checkbox"
+            name="payment-status"
+            [value]="option.value"
+            [checked]="isSelected(option.value)"
+            (change)="updateStatus(option.value, statusCheckbox.checked)"
+          />
+          <span>{{ option.label }}</span>
+        </label>
+      }
+    </fieldset>
+
+    <footer class="status-filter__footer">
+      <button type="button" class="status-filter__apply" (click)="applyFilter()">Apply</button>
+    </footer>
+  </section>
+}

@@ -119,6 +119,31 @@ function renderedPaymentIds(element: HTMLElement): readonly string[] {
   );
 }
 
+function findButton(element: HTMLElement, label: string): HTMLButtonElement {
+  const button = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find(
+    (candidate) => candidate.textContent?.trim() === label,
+  );
+
+  if (!button) {
+    throw new Error(`Button ${label} was not found.`);
+  }
+
+  return button;
+}
+
+function findCheckbox(element: HTMLElement, label: string): HTMLInputElement {
+  const checkboxLabel = Array.from(element.querySelectorAll<HTMLLabelElement>('label')).find(
+    (candidate) => candidate.textContent?.trim() === label,
+  );
+  const checkbox = checkboxLabel?.querySelector<HTMLInputElement>('input[type="checkbox"]');
+
+  if (!checkbox) {
+    throw new Error(`Checkbox ${label} was not found.`);
+  }
+
+  return checkbox;
+}
+
 describe('PaymentsTable', () => {
   beforeEach(async () => {
     window.localStorage.removeItem(PAGE_SIZE_STORAGE_KEY);
@@ -208,6 +233,92 @@ describe('PaymentsTable', () => {
     expect(renderedPaymentIds(element)).toEqual(['pay_recent', 'pay_old']);
     expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('2 payments');
     expect(element.querySelector('.filter-button__value')).toBeNull();
+  });
+
+  it('filters by multiple statuses and keeps their selection order in the filter button', () => {
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', explicitSortPayments);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const statusFilter = element.querySelector<HTMLElement>('app-status-filter')!;
+
+    statusFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    findCheckbox(statusFilter, 'Succeeded').click();
+    fixture.detectChanges();
+    findCheckbox(statusFilter, 'Failed').click();
+    fixture.detectChanges();
+    findButton(statusFilter, 'Apply').click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_40', 'pay_10']);
+    expect(statusFilter.querySelector('.filter-button__value')?.textContent?.trim()).toBe(
+      'Succeeded, Failed',
+    );
+    expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('2 payments');
+    expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
+      'Viewing 1–2 of 2 payments',
+    );
+    expect(element.textContent).toContain(
+      'Status filter applied: Succeeded, Failed. 2 payments found.',
+    );
+
+    statusFilter.querySelector<HTMLButtonElement>('.filter-button__clear')!.click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_30', 'pay_20', 'pay_40', 'pay_10']);
+    expect(statusFilter.querySelector('.filter-button__value')).toBeNull();
+    expect(element.textContent).toContain('Status filter cleared. 4 payments found.');
+  });
+
+  it('combines the status and date filters before sorting and pagination', async () => {
+    const now = Date.now();
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', [
+      {
+        ...payment,
+        id: 'pay_recent_succeeded',
+        status: 'succeeded',
+        createdAt: new Date(now - 60 * 60 * 1000).toISOString(),
+      },
+      {
+        ...payment,
+        id: 'pay_recent_failed',
+        status: 'failed',
+        createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        ...payment,
+        id: 'pay_old_failed',
+        status: 'failed',
+        createdAt: new Date(now - 40 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ] satisfies readonly Payment[]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const statusFilter = element.querySelector<HTMLElement>('app-status-filter')!;
+    const dateFilter = element.querySelector<HTMLElement>('app-date-range-filter')!;
+
+    statusFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    findCheckbox(statusFilter, 'Failed').click();
+    fixture.detectChanges();
+    findButton(statusFilter, 'Apply').click();
+    fixture.detectChanges();
+
+    dateFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    findButton(dateFilter, '30d').click();
+    fixture.detectChanges();
+    findButton(dateFilter, 'Apply').click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_recent_failed']);
+    expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('1 payment');
   });
 
   it('moves between pages and disables navigation at the boundaries', async () => {

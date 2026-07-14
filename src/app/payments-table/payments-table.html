@@ -28,6 +28,7 @@
       [timeZone]="timeZone()"
       (valueChange)="changeDateRange($event)"
     />
+    <app-status-filter [value]="selectedStatuses()" (valueChange)="changeStatuses($event)" />
   </section>
 
   <div
@@ -95,7 +96,7 @@
       <tbody>
         @if (paginatedPayments().length === 0) {
           <tr class="payments-empty">
-            <td colspan="6">No payments match this date range.</td>
+            <td colspan="6">No payments match the selected filters.</td>
           </tr>
         } @else {
           @for (payment of paginatedPayments(); track payment.id) {

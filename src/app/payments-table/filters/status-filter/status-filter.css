@@ -1,0 +1,195 @@
+:host {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.status-filter__popover {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 6px);
+  left: 0;
+  box-sizing: border-box;
+  width: 264px;
+  max-width: calc(100vw - 16px);
+  overflow: hidden;
+  color: #1a1f36;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 1px rgba(31, 45, 61, 0.12),
+    0 8px 24px rgba(31, 45, 61, 0.14),
+    0 2px 6px rgba(31, 45, 61, 0.06);
+  transform-origin: top left;
+  animation: status-filter-enter 150ms cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+h2 {
+  margin: 0;
+  padding: 12px 12px 7px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 20px;
+  letter-spacing: -0.005em;
+}
+
+.status-filter__options {
+  display: grid;
+  max-height: 192px;
+  margin: 0;
+  padding: 3px 8px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 0;
+}
+
+.status-filter__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 5px;
+  border-radius: 6px;
+  color: #3c4257;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.status-filter__option input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #635bff;
+  cursor: pointer;
+}
+
+.status-filter__option input:focus-visible,
+.status-filter__apply:focus-visible {
+  outline: 2px solid #303750;
+  outline-offset: 2px;
+}
+
+.status-filter__footer {
+  padding: 8px 12px 12px;
+  background: #ffffff;
+  border-top: 1px solid rgba(31, 45, 61, 0.1);
+}
+
+.status-filter__apply {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #635bff;
+  border-radius: 6px;
+  color: #ffffff;
+  background: #635bff;
+  box-shadow: 0 1px 2px rgba(80, 70, 229, 0.24);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 20px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .status-filter__option:hover {
+    background: #f7f9fc;
+  }
+
+  .status-filter__apply:hover {
+    background: #5145cd;
+  }
+}
+
+@media (pointer: coarse) {
+  .status-filter__option,
+  .status-filter__apply {
+    min-height: 44px;
+  }
+}
+
+@keyframes status-filter-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .status-filter__popover {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: min(264px, calc(100vw - 16px));
+    max-width: none;
+    max-height: calc(100dvh - 16px - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    transform: translate(-50%, -50%);
+    transform-origin: center;
+    animation-name: status-filter-enter-mobile;
+  }
+
+  .status-filter__footer {
+    position: sticky;
+    bottom: 0;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes status-filter-enter-mobile {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 4px)) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-filter__popover {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .status-filter__popover {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .status-filter__footer {
+    border-color: CanvasText;
+  }
+
+  .status-filter__apply {
+    border-color: ButtonText;
+    color: ButtonText;
+    background: ButtonFace;
+    box-shadow: none;
+  }
+}
