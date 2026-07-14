@@ -1,0 +1,158 @@
+:host {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.filter-button {
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 32px;
+  overflow: hidden;
+  color: #4f566b;
+  background: #ffffff;
+  border: 1px dashed #c5cedb;
+  border-radius: 999px;
+}
+
+.filter-button--active {
+  border-style: solid;
+  border-color: #cbd3df;
+  color: #3c4257;
+  box-shadow: 0 1px 2px rgba(31, 45, 61, 0.06);
+}
+
+.filter-button__clear,
+.filter-button__trigger {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.filter-button__clear {
+  flex: 0 0 32px;
+  justify-content: center;
+  width: 32px;
+  padding: 0;
+}
+
+.filter-button__clear svg,
+.filter-button__add {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.55;
+}
+
+.filter-button__trigger {
+  gap: 6px;
+  min-width: 0;
+  max-width: min(420px, calc(100vw - 48px));
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.filter-button--active .filter-button__trigger {
+  padding-inline-start: 8px;
+}
+
+.filter-button__label,
+.filter-button__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-button__label {
+  flex: 0 0 auto;
+}
+
+.filter-button__value {
+  color: #5046e5;
+  font-weight: 600;
+}
+
+.filter-button__divider {
+  align-self: stretch;
+  width: 1px;
+  margin-block: 6px;
+  background: #d8dee8;
+}
+
+.filter-button__chevron {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+  transition: transform 150ms cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.filter-button__chevron--expanded {
+  transform: rotate(180deg);
+}
+
+.filter-button__clear:focus-visible,
+.filter-button__trigger:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid #303750;
+  outline-offset: -3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .filter-button__clear:hover,
+  .filter-button__trigger:hover {
+    background: #f7f9fc;
+  }
+}
+
+@media (pointer: coarse) {
+  .filter-button,
+  .filter-button__clear,
+  .filter-button__trigger {
+    min-height: 44px;
+  }
+
+  .filter-button__clear {
+    flex-basis: 44px;
+    width: 44px;
+  }
+
+  .filter-button__divider {
+    margin-block: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-button__chevron {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .filter-button,
+  .filter-button--active {
+    border-color: ButtonText;
+  }
+
+  .filter-button__divider {
+    background: ButtonText;
+  }
+}

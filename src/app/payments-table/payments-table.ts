@@ -13,6 +13,14 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter, take } from 'rxjs';
+import { DateRangeFilter } from './filters/date-range-filter/date-range-filter';
+import {
+  DateRangeSelection,
+  dateKeyInTimeZone,
+  formatDateRangeLabel,
+  isTimestampInDateRange,
+  resolveDateRangeForToday,
+} from './filters/date-range-filter/date-range';
 import { Payment } from './payment';
 import { PaymentCopyState, PaymentRow } from './payment-row';
 import {
@@ -82,7 +90,7 @@ function readStoredPageSize(
 
 @Component({
   selector: 'app-payments-table',
-  imports: [PaymentRow],
+  imports: [DateRangeFilter, PaymentRow],
   templateUrl: './payments-table.html',
   styleUrls: ['./payments-table.css', './payments-table-sort.css'],
 })
@@ -99,25 +107,50 @@ export class PaymentsTable {
   protected readonly sortColumns = PAYMENT_TABLE_COLUMNS;
   protected readonly sortCriteria = signal<readonly PaymentSortCriterion[]>(DEFAULT_PAYMENT_SORT);
   protected readonly sortAnnouncement = signal('');
+  protected readonly filterAnnouncement = signal('');
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly pageSize = signal<PageSize>(DEFAULT_PAGE_SIZE);
   protected readonly currentPage = signal(1);
+  protected readonly dateRange = signal<DateRangeSelection | null>(null);
+  protected readonly effectiveDateRange = computed(() => {
+    const selection = this.dateRange();
+    const currentTime = this.currentTime();
+
+    if (selection === null || currentTime === null) {
+      return selection;
+    }
+
+    const today = dateKeyInTimeZone(currentTime, this.timeZone());
+    return resolveDateRangeForToday(selection, today);
+  });
+  protected readonly filteredPayments = computed(() => {
+    const dateRange = this.effectiveDateRange();
+
+    if (dateRange === null) {
+      return this.payments();
+    }
+
+    const timeZone = this.timeZone();
+    return this.payments().filter((payment) =>
+      isTimestampInDateRange(payment.createdAt, dateRange, timeZone),
+    );
+  });
   protected readonly paymentCountLabel = computed(() => {
-    const count = this.payments().length;
+    const count = this.filteredPayments().length;
     return count === 1 ? '1 payment' : count + ' payments';
   });
   protected readonly pageCount = computed(() =>
-    Math.max(1, Math.ceil(this.payments().length / this.pageSize())),
+    Math.max(1, Math.ceil(this.filteredPayments().length / this.pageSize())),
   );
   protected readonly sortedPayments = computed(() =>
-    sortPayments(this.payments(), this.sortCriteria()),
+    sortPayments(this.filteredPayments(), this.sortCriteria()),
   );
   protected readonly paginatedPayments = computed(() => {
     const startIndex = (this.currentPage() - 1) * this.pageSize();
     return this.sortedPayments().slice(startIndex, startIndex + this.pageSize());
   });
   protected readonly paginationRangeLabel = computed(() => {
-    const paymentCount = this.payments().length;
+    const paymentCount = this.filteredPayments().length;
 
     if (paymentCount === 0) {
       return 'Viewing 0 of 0 payments';
@@ -280,6 +313,22 @@ export class PaymentsTable {
 
   protected showNextPage(): void {
     this.currentPage.update((page) => Math.min(this.pageCount(), page + 1));
+  }
+
+  protected changeDateRange(selection: DateRangeSelection | null): void {
+    this.dateRange.set(selection);
+    this.currentPage.set(1);
+
+    if (selection === null) {
+      this.filterAnnouncement.set('Date range filter cleared. Showing all payments.');
+      return;
+    }
+
+    const paymentCount = this.filteredPayments().length;
+    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
+    this.filterAnnouncement.set(
+      `Date range filter applied: ${formatDateRangeLabel(selection)}. ${paymentCount} ${paymentLabel} found.`,
+    );
   }
 
   private startBrowserState(): void {

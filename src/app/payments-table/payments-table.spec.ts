@@ -158,6 +158,58 @@ describe('PaymentsTable', () => {
     expect(buttons[1]?.disabled).toBe(false);
   });
 
+  it('applies and clears the Date range filter before sorting and pagination', async () => {
+    const now = Date.now();
+    const recentPayment: Payment = {
+      ...payment,
+      id: 'pay_recent',
+      createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+    };
+    const oldPayment: Payment = {
+      ...payment,
+      id: 'pay_old',
+      customer: 'older.customer@example.com',
+      createdAt: new Date(now - 40 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', [oldPayment, recentPayment]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    element.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+
+    const preset = Array.from(
+      element.querySelectorAll<HTMLButtonElement>('.date-filter__presets button'),
+    ).find((button) => button.textContent?.trim() === '30d')!;
+    const apply = Array.from(
+      element.querySelectorAll<HTMLButtonElement>('.date-filter__actions button'),
+    ).find((button) => button.textContent?.trim() === 'Apply')!;
+
+    preset.click();
+    fixture.detectChanges();
+    apply.click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_recent']);
+    expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('1 payment');
+    expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
+      'Viewing 1–1 of 1 payment',
+    );
+    expect(element.querySelector('.filter-button__value')?.textContent?.trim()).toBe(
+      'Last 30 days',
+    );
+
+    element.querySelector<HTMLButtonElement>('.filter-button__clear')!.click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_recent', 'pay_old']);
+    expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('2 payments');
+    expect(element.querySelector('.filter-button__value')).toBeNull();
+  });
+
   it('moves between pages and disables navigation at the boundaries', async () => {
     const payments = createPayments(51);
     const fixture = TestBed.createComponent(PaymentsTable);

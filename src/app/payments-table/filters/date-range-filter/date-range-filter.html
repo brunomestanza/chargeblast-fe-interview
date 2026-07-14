@@ -1,0 +1,76 @@
+<app-filter-button
+  label="Date range"
+  [value]="valueLabel()"
+  [expanded]="open()"
+  (editRequested)="toggleFilter()"
+  (clearRequested)="clearFilter()"
+/>
+
+@if (open()) {
+  <section
+    class="date-filter__popover"
+    [id]="popoverId()"
+    role="dialog"
+    [attr.aria-labelledby]="popoverId() + '-title'"
+  >
+    <header class="date-filter__header">
+      <div>
+        <p class="date-filter__eyebrow">Filter by</p>
+        <h2 [id]="popoverId() + '-title'">Date range</h2>
+      </div>
+      <button
+        type="button"
+        class="date-filter__close"
+        aria-label="Close date range filter"
+        (click)="closeFilter(true)"
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          <path d="m6.25 6.25 7.5 7.5m0-7.5-7.5 7.5" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="date-filter__presets" role="group" aria-label="Quick date ranges">
+      @for (preset of presets; track preset.value) {
+        <button
+          type="button"
+          [class.date-filter__preset--selected]="draftPreset() === preset.value"
+          [attr.aria-pressed]="draftPreset() === preset.value"
+          (click)="selectPreset(preset.value)"
+        >
+          {{ preset.label }}
+        </button>
+      }
+    </div>
+
+    <app-date-range-calendar
+      [today]="today()"
+      [activeDate]="calendarActiveDate()"
+      [selectionStart]="draftStart()"
+      [selectionEnd]="draftEnd()"
+      [labelId]="popoverId() + '-month'"
+      (dateSelected)="selectDate($event)"
+    />
+
+    <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+      {{ selectionAnnouncement() }}
+    </p>
+
+    <footer class="date-filter__footer">
+      <p>{{ draftSummary() }}</p>
+      <div class="date-filter__actions">
+        <button type="button" class="date-filter__cancel" (click)="closeFilter(true)">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="date-filter__apply"
+          [disabled]="!canApply()"
+          (click)="applyFilter()"
+        >
+          Apply
+        </button>
+      </div>
+    </footer>
+  </section>
+}

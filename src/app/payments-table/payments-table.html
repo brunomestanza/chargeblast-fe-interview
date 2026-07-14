@@ -17,6 +17,18 @@
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
     {{ sortAnnouncement() }}
   </p>
+  <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+    {{ filterAnnouncement() }}
+  </p>
+
+  <section class="filter-toolbar" aria-label="Payment filters">
+    <app-date-range-filter
+      [value]="dateRange()"
+      [referenceTime]="currentTime()"
+      [timeZone]="timeZone()"
+      (valueChange)="changeDateRange($event)"
+    />
+  </section>
 
   <div
     class="table-scroll"
@@ -81,15 +93,21 @@
         </tr>
       </thead>
       <tbody>
-        @for (payment of paginatedPayments(); track payment.id) {
-          <tr
-            appPaymentRow
-            [payment]="payment"
-            [copyState]="copyState()"
-            [currentTime]="currentTime()"
-            [timeZone]="timeZone()"
-            (copyRequested)="copyPaymentId($event)"
-          ></tr>
+        @if (paginatedPayments().length === 0) {
+          <tr class="payments-empty">
+            <td colspan="6">No payments match this date range.</td>
+          </tr>
+        } @else {
+          @for (payment of paginatedPayments(); track payment.id) {
+            <tr
+              appPaymentRow
+              [payment]="payment"
+              [copyState]="copyState()"
+              [currentTime]="currentTime()"
+              [timeZone]="timeZone()"
+              (copyRequested)="copyPaymentId($event)"
+            ></tr>
+          }
         }
       </tbody>
     </table>
