@@ -765,7 +765,7 @@ export class PaymentsTable {
     column: PaymentSortColumn,
   ): void {
     const lastIndex = this.columnOrder().length - 1;
-    let targetIndex = index;
+    let targetIndex: number;
 
     switch (event.key) {
       case 'ArrowLeft':
@@ -865,7 +865,7 @@ export class PaymentsTable {
   protected onResizeKeydown(event: KeyboardEvent, column: PaymentSortColumn): void {
     const step = event.shiftKey ? COLUMN_RESIZE_KEYBOARD_STEP_LARGE : COLUMN_RESIZE_KEYBOARD_STEP;
     const currentWidth = this.effectiveColumnWidth(column);
-    let nextWidth = currentWidth;
+    let nextWidth: number;
 
     switch (event.key) {
       case 'ArrowLeft':

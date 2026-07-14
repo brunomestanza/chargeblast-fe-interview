@@ -10,6 +10,28 @@ npm start    # http://localhost:4200
 npm test     # Vitest — 23 spec files
 ```
 
+## Quality scripts
+
+Playwright starts the dev server on its own, so no script needs a running app.
+
+| Script                | What it checks                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `npm run lint`        | ESLint + angular-eslint, including the template accessibility rules. `npm run lint:fix` autofixes.           |
+| `npm run format`      | Prettier over the repo. `npm run format:check` for a read-only pass.                                         |
+| `npm test`            | Vitest unit specs.                                                                                           |
+| `npm run e2e`         | Playwright user flows: table load, search, sort, navigation. `npm run e2e:ui` opens the runner.              |
+| `npm run test:a11y`   | axe-core WCAG 2.1 AA scan on the payments list, an open filter popover, empty results, details and settings. |
+| `npm run test:visual` | Screenshot regression against committed baselines.                                                           |
+| `npm run test:all`    | Everything above, in order.                                                                                  |
+
+Specs live in `e2e/`, split by concern: `functional/`, `a11y/`, `visual/`, with shared helpers in `support/`.
+
+### Visual baselines
+
+Baselines are committed under `e2e/visual/*-snapshots/` and are **platform-specific** (the files are suffixed `-darwin`). A Linux CI run needs its own set, generated once with `npx playwright test --project=visual --update-snapshots` on that platform.
+
+Run `npm run test:visual:update` after an intentional UI change, and review the regenerated PNGs in the diff like any other change. Rendering is pinned to a fixed viewport and a fixed clock — the fixture rebases payment dates onto `Date.now()`, so without a frozen clock the relative timestamps would make every run differ.
+
 ## Features
 
 ### Payments table

@@ -39,6 +39,12 @@ testem.log
 /typings
 __screenshots__/
 
+# Playwright (baselines under e2e/**/*-snapshots/ are committed on purpose)
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
+
 # System files
 .DS_Store
 Thumbs.db
