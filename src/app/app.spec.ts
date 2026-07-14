@@ -32,6 +32,7 @@ describe('App', () => {
 
     expect(compiled.querySelector('main.dashboard-shell__content')).toBeTruthy();
     expect(compiled.querySelector('app-sidebar')).toBeTruthy();
+    expect(compiled.querySelector('app-top-navigation')).toBeTruthy();
     expect(compiled.querySelector('app-payments-table')).toBeTruthy();
     expect(compiled.querySelector('h1')?.textContent).toContain('Payments');
     expect(newestPaymentTime).toBeGreaterThanOrEqual(beforeRender);
@@ -121,6 +122,31 @@ describe('App', () => {
     expect(activeLink?.textContent?.trim()).toBe('Payments');
   });
 
+  it('should open the complete settings page from the top navigation gear', async () => {
+    const fixture = await createApp('/');
+    const compiled = fixture.nativeElement as HTMLElement;
+    const settingsLink = compiled.querySelector<HTMLAnchorElement>(
+      'app-top-navigation a[aria-label="Settings"]',
+    );
+
+    settingsLink?.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('app-sidebar')).toBeTruthy();
+    expect(compiled.querySelector('app-top-navigation')).toBeTruthy();
+    expect(compiled.querySelector('app-settings-page h1')?.textContent?.trim()).toBe('Settings');
+    expect(settingsLink?.getAttribute('href')).toBe('/settings');
+    expect(settingsLink?.getAttribute('aria-current')).toBe('page');
+    expect(document.activeElement).toBe(compiled.querySelector('#main-content'));
+    expect(compiled.querySelectorAll('.settings-item')).toHaveLength(20);
+    expect(
+      Array.from(compiled.querySelectorAll<HTMLAnchorElement>('.settings-item')).every(
+        (link) => link.getAttribute('href') === '/mock',
+      ),
+    ).toBe(true);
+  });
+
   it.each(['/customers', '/balances', '/product-catalog', '/mock'])(
     'should keep the sidebar and render the mock screen at %s',
     async (url) => {
@@ -129,7 +155,7 @@ describe('App', () => {
 
       expect(compiled.querySelector('app-sidebar')).toBeTruthy();
       expect(compiled.querySelector('h1')?.textContent?.trim()).toBe(
-        'In this implementation this screen is only an mock.',
+        'This screen is a mock in this implementation.',
       );
       expect(
         compiled.querySelector<HTMLAnchorElement>('.mock-page__back')?.getAttribute('href'),

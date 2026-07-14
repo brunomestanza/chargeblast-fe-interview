@@ -1,0 +1,153 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 1180px;
+  min-width: 0;
+}
+
+.settings-page {
+  width: 100%;
+  padding: clamp(24px, 4vw, 44px);
+  color: #1a1f36;
+  background: #ffffff;
+}
+
+.settings-section + .settings-section {
+  margin-top: 26px;
+  padding-top: 26px;
+  border-top: 1px solid rgba(31, 45, 61, 0.1);
+}
+
+.settings-section h2 {
+  margin-bottom: 10px;
+  color: #1a1f36;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 20px;
+}
+
+.settings-section ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.settings-section li {
+  min-width: 0;
+}
+
+.settings-section__new-row {
+  grid-column-start: 1;
+}
+
+.settings-item {
+  display: grid;
+  min-height: 76px;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.settings-item app-dashboard-icon {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: #635bff;
+}
+
+.settings-item__copy,
+.settings-item__name,
+.settings-item__description {
+  display: block;
+}
+
+.settings-item__name {
+  color: #5148d8;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.settings-item__description {
+  margin-top: 2px;
+  color: #4f566b;
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.settings-item:focus-visible,
+.settings-page__footer a:focus-visible {
+  outline: 2px solid #303750;
+  outline-offset: 2px;
+}
+
+.settings-page__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(31, 45, 61, 0.1);
+}
+
+.settings-page__footer a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border-radius: 6px;
+  color: #5148d8;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.settings-page__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .settings-item:hover {
+    background: #f7f7fb;
+  }
+
+  .settings-page__footer a:hover {
+    color: #3229b8;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .settings-section ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .settings-page {
+    padding: 20px 14px;
+  }
+
+  .settings-section ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settings-section + .settings-section {
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+}

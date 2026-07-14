@@ -1,0 +1,27 @@
+<section class="settings-page" aria-labelledby="settings-title">
+  <h1 id="settings-title" class="settings-page__sr-only">Settings</h1>
+
+  @for (section of sections; track section.title) {
+    <section class="settings-section">
+      <h2>{{ section.title }}</h2>
+      <ul>
+        @for (item of section.items; track item.name) {
+          <li [class.settings-section__new-row]="item.startsRow === true">
+            <a class="settings-item" routerLink="/mock">
+              <app-dashboard-icon [name]="item.icon" />
+              <span class="settings-item__copy">
+                <span class="settings-item__name">{{ item.name }}</span>
+                <span class="settings-item__description">{{ item.description }}</span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <nav class="settings-page__footer" aria-label="Settings resources">
+    <a routerLink="/mock">Share feedback</a>
+    <a routerLink="/mock">Keyboard shortcuts</a>
+  </nav>
+</section>

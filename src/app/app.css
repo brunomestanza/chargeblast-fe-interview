@@ -32,15 +32,24 @@
   min-height: 100dvh;
 }
 
+.dashboard-shell__workspace {
+  --dashboard-content-padding-block-start: clamp(24px, 3vw, 40px);
+  --dashboard-content-padding-block-end: clamp(32px, 5vw, 64px);
+  --dashboard-content-padding-inline: clamp(24px, 5vw, 64px);
+  --top-navigation-height: 65px;
+  min-width: 0;
+}
+
 .dashboard-shell__content {
   display: flex;
   align-items: start;
   justify-content: center;
   width: 100%;
   min-width: 0;
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--top-navigation-height));
   overflow-x: clip;
-  padding: clamp(24px, 5vw, 64px);
+  padding: var(--dashboard-content-padding-block-start) var(--dashboard-content-padding-inline)
+    var(--dashboard-content-padding-block-end);
 }
 
 .dashboard-shell__content:focus-visible {
@@ -48,9 +57,22 @@
   outline-offset: -2px;
 }
 
+.dashboard-shell__content:has(app-settings-page) {
+  padding: 0;
+  background: #ffffff;
+}
+
+@media (max-width: 1320px) {
+  .dashboard-shell__workspace {
+    --top-navigation-height: 113px;
+  }
+}
+
 @media (max-width: 720px), (max-height: 760px) {
-  .dashboard-shell__content {
-    padding: 16px;
+  .dashboard-shell__workspace {
+    --dashboard-content-padding-block-start: 16px;
+    --dashboard-content-padding-block-end: 16px;
+    --dashboard-content-padding-inline: 16px;
   }
 }
 

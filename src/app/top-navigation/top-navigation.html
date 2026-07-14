@@ -1,0 +1,78 @@
+<header class="top-navigation">
+  <div class="top-navigation__inner">
+    <div class="top-navigation__search">
+      <label class="top-navigation__sr-only" for="dashboard-search">Search dashboard</label>
+      <app-dashboard-icon name="search" />
+      <input
+        id="dashboard-search"
+        type="search"
+        placeholder="Search"
+        autocomplete="off"
+        spellcheck="false"
+        data-1p-ignore
+        data-lpignore="true"
+        aria-describedby="dashboard-search-description"
+      />
+      <span id="dashboard-search-description" class="top-navigation__sr-only">
+        Search is not available in this demo.
+      </span>
+    </div>
+
+    <div class="top-navigation__actions">
+      <div class="top-navigation__secondary-actions">
+        <p class="top-navigation__notice">
+          Test mode has moved.
+          <a routerLink="/mock">Show me</a>
+        </p>
+
+        <nav class="top-navigation__product-links" aria-label="Product shortcuts">
+          <a routerLink="/mock" aria-label="Developer tools" title="Developer tools">
+            <app-dashboard-icon name="terminal" />
+          </a>
+          <a routerLink="/mock" aria-label="AI assistant" title="AI assistant">
+            <app-dashboard-icon name="assistant" />
+          </a>
+          <a routerLink="/mock" aria-label="Test mode" title="Test mode">
+            <span class="top-navigation__product-mark" aria-hidden="true">T</span>
+          </a>
+          <a routerLink="/mock" aria-label="Apps" title="Apps">
+            <app-dashboard-icon name="apps" />
+          </a>
+        </nav>
+      </div>
+
+      <nav class="top-navigation__utility-links" aria-label="Utility navigation">
+        <a routerLink="/mock" aria-label="Help" title="Help">
+          <app-dashboard-icon name="help" />
+        </a>
+        <a
+          class="top-navigation__notification-link"
+          routerLink="/mock"
+          aria-label="Notifications, unread"
+          title="Notifications"
+        >
+          <app-dashboard-icon name="notifications" />
+          <span class="top-navigation__notification-dot" aria-hidden="true"></span>
+        </a>
+        <a
+          routerLink="/settings"
+          routerLinkActive="top-navigation__link--active"
+          [routerLinkActiveOptions]="routeMatchOptions"
+          ariaCurrentWhenActive="page"
+          aria-label="Settings"
+          title="Settings"
+        >
+          <app-dashboard-icon name="settings" />
+        </a>
+        <a
+          class="top-navigation__create-link"
+          routerLink="/mock"
+          aria-label="Create new"
+          title="Create new"
+        >
+          <app-dashboard-icon name="plus" />
+        </a>
+      </nav>
+    </div>
+  </div>
+</header>

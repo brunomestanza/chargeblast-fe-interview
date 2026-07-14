@@ -7,7 +7,11 @@
 
 .mock-page {
   display: grid;
-  min-height: calc(100dvh - clamp(48px, 10vw, 128px));
+  min-height: calc(
+    100dvh - var(--top-navigation-height, 0px) -
+      var(--dashboard-content-padding-block-start, clamp(24px, 5vw, 64px)) -
+      var(--dashboard-content-padding-block-end, clamp(24px, 5vw, 64px))
+  );
   place-items: center;
 }
 
@@ -81,12 +85,6 @@ h1 {
 
 .mock-page__back:active {
   transform: scale(0.97);
-}
-
-@media (max-width: 720px), (max-height: 760px) {
-  .mock-page {
-    min-height: calc(100dvh - 32px);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

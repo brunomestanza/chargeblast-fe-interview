@@ -26,6 +26,12 @@ export const routes: Routes = [
     title: 'Product Catalog | Chargeblast',
   },
   {
+    path: 'settings',
+    loadComponent: () =>
+      import('./settings-page/settings-page').then(({ SettingsPage }) => SettingsPage),
+    title: 'Settings | Chargeblast',
+  },
+  {
     path: 'mock',
     loadComponent: loadMockPage,
     title: 'Unavailable | Chargeblast',

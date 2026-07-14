@@ -20,7 +20,12 @@ describe('AccountSwitcher', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AccountSwitcher],
-      providers: [provideRouter([{ path: 'mock', children: [] }])],
+      providers: [
+        provideRouter([
+          { path: 'settings', children: [] },
+          { path: 'mock', children: [] },
+        ]),
+      ],
     }).compileComponents();
   });
 
@@ -44,13 +49,9 @@ describe('AccountSwitcher', () => {
     );
     expect(companyNames(element)).toEqual(['AdroCard, Inc', 'Chargeblast', 'Jazzify']);
 
-    for (const label of [
-      'Settings',
-      'Switch to Sandbox',
-      'Create account',
-      'Bruno Mestanza',
-      'Sign out',
-    ]) {
+    expect(findLink(element, 'Settings')?.getAttribute('href')).toBe('/settings');
+
+    for (const label of ['Switch to Sandbox', 'Create account', 'Bruno Mestanza', 'Sign out']) {
       expect(findLink(element, label)?.getAttribute('href')).toBe('/mock');
     }
 
@@ -125,6 +126,22 @@ describe('AccountSwitcher', () => {
 
     expect(router.url).toBe('/mock');
     expect(getTrigger(element).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('should navigate the Settings action to settings and close the menu', async () => {
+    const fixture = TestBed.createComponent(AccountSwitcher);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const router = TestBed.inject(Router);
+    openMenu(fixture);
+
+    findLink(element, 'Settings')?.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(router.url).toBe('/settings');
+    expect(getTrigger(element).getAttribute('aria-expanded')).toBe('false');
+    expect(element.querySelector('#account-switcher-panel')).toBeNull();
   });
 });
 

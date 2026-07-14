@@ -3,7 +3,11 @@
 <div class="dashboard-shell">
   <app-sidebar />
 
-  <main id="main-content" class="dashboard-shell__content" tabindex="-1">
-    <router-outlet />
-  </main>
+  <div class="dashboard-shell__workspace">
+    <app-top-navigation />
+
+    <main #mainContent id="main-content" class="dashboard-shell__content" tabindex="-1">
+      <router-outlet (activate)="handleRouteActivation()" />
+    </main>
+  </div>
 </div>

@@ -1,7 +1,7 @@
 :host {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 30;
   display: block;
   width: 232px;
   height: 100dvh;

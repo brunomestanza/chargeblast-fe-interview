@@ -11,10 +11,10 @@ import { DashboardIcon } from '../sidebar/dashboard-icon';
         <span class="mock-page__icon" aria-hidden="true">
           <app-dashboard-icon name="layers" />
         </span>
-        <h1 id="mock-page-title">In this implementation this screen is only an mock.</h1>
+        <h1 id="mock-page-title">This screen is a mock in this implementation.</h1>
         <a class="mock-page__back" routerLink="/">
           <app-dashboard-icon name="arrow-left" />
-          Back to home
+          Back to payments
         </a>
       </div>
     </section>
