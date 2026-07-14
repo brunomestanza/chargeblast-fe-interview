@@ -107,8 +107,8 @@ table {
 }
 
 th {
-  height: 42px;
-  padding: 0 18px;
+  height: 44px;
+  padding: 0;
   color: #4f566b;
   background: #f7f9fc;
   font-size: 12px;
@@ -118,14 +118,6 @@ th {
   text-align: left;
   vertical-align: middle;
   white-space: nowrap;
-}
-
-th:first-child {
-  padding-left: 24px;
-}
-
-th:last-child {
-  padding-right: 24px;
 }
 
 .pagination,
@@ -199,15 +191,6 @@ th:last-child {
 .pagination__page,
 #payments-pagination-range {
   font-variant-numeric: tabular-nums;
-}
-
-.numeric-column {
-  text-align: right;
-}
-
-.payment-method-heading,
-.created-heading {
-  text-align: right;
 }
 
 .visually-hidden {

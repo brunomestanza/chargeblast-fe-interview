@@ -8,9 +8,15 @@
   </header>
 
   <p id="payments-table-instructions" class="visually-hidden">
-    Scroll horizontally to view every payment column.
+    Scroll horizontally to view every payment column. Created starts sorted descending. The first
+    activation of a different header replaces that default and makes the chosen column the primary
+    ascending sort. Further inactive headers join the sort queue. Activate an active header to
+    change it to descending, then remove it. Earlier columns in the queue take priority.
   </p>
   <p class="visually-hidden" aria-live="polite">{{ copyAnnouncement() }}</p>
+  <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+    {{ sortAnnouncement() }}
+  </p>
 
   <div
     class="table-scroll"
@@ -22,6 +28,10 @@
     <table id="payments-table">
       <caption class="visually-hidden">
         Recent payments, including customer, amount, status, payment method, and creation time.
+        Created starts sorted descending. The first activation of a different column replaces that
+        default and makes the chosen column the primary ascending sort. Further inactive columns
+        join the queue. Activate an active column to change it to descending, then remove it.
+        Earlier columns in the queue take priority.
       </caption>
       <colgroup>
         <col class="payment-id-column" />
@@ -33,12 +43,41 @@
       </colgroup>
       <thead>
         <tr>
-          <th scope="col">Payment ID</th>
-          <th scope="col">Customer</th>
-          <th scope="col" class="numeric-column">Amount</th>
-          <th scope="col">Status</th>
-          <th scope="col" class="payment-method-heading">Payment method</th>
-          <th scope="col" class="created-heading">Created</th>
+          @for (column of sortColumns; track column.key) {
+            <th scope="col" [attr.aria-sort]="sortAriaValue(column.key)">
+              @let direction = sortDirection(column.key);
+              <button
+                type="button"
+                class="sort-button"
+                [class.sort-button--right]="column.align === 'right'"
+                [class.sort-button--active]="direction !== null"
+                aria-controls="payments-table"
+                [attr.aria-describedby]="sortDescriptionId(column.key)"
+                (click)="changeSort(column.key)"
+              >
+                <span class="sort-button__label">{{ column.label }}</span>
+                <span class="sort-indicator" aria-hidden="true">
+                  <svg viewBox="0 0 14 14" focusable="false">
+                    @switch (direction) {
+                      @case ('asc') {
+                        <path d="M3.25 5.5 7 9.25l3.75-3.75" />
+                      }
+                      @case ('desc') {
+                        <path d="M3.25 8.5 7 4.75l3.75 3.75" />
+                      }
+                      @default {
+                        <path d="M3.75 5.25 7 2l3.25 3.25" />
+                        <path d="M3.75 8.75 7 12l3.25-3.25" />
+                      }
+                    }
+                  </svg>
+                </span>
+              </button>
+              <span class="visually-hidden" [id]="sortDescriptionId(column.key)">
+                {{ sortDescription(column.key) }}
+              </span>
+            </th>
+          }
         </tr>
       </thead>
       <tbody>

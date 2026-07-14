@@ -10,12 +10,46 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { filter, take } from 'rxjs';
 import { Payment } from './payment';
 import { PaymentCopyState, PaymentRow } from './payment-row';
+import {
+  DEFAULT_PAYMENT_SORT,
+  PAYMENT_SORT_COLUMN_LABELS,
+  PaymentSortColumn,
+  PaymentSortCriterion,
+  cyclePaymentSort,
+  parsePaymentSort,
+  serializePaymentSort,
+  sortPayments,
+} from './payment-sort';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0];
 const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
+const SORT_QUERY_PARAM = 'sort';
+
+interface PaymentTableColumn {
+  readonly key: PaymentSortColumn;
+  readonly label: string;
+  readonly align: 'left' | 'right';
+}
+
+interface PaymentSortColumnState {
+  readonly direction: PaymentSortCriterion['direction'];
+  readonly priority: number;
+}
+
+const PAYMENT_TABLE_COLUMNS: readonly PaymentTableColumn[] = [
+  { key: 'paymentId', label: PAYMENT_SORT_COLUMN_LABELS.paymentId, align: 'left' },
+  { key: 'customer', label: PAYMENT_SORT_COLUMN_LABELS.customer, align: 'left' },
+  { key: 'amount', label: PAYMENT_SORT_COLUMN_LABELS.amount, align: 'right' },
+  { key: 'status', label: PAYMENT_SORT_COLUMN_LABELS.status, align: 'left' },
+  { key: 'paymentMethod', label: PAYMENT_SORT_COLUMN_LABELS.paymentMethod, align: 'right' },
+  { key: 'created', label: PAYMENT_SORT_COLUMN_LABELS.created, align: 'right' },
+];
 
 type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
@@ -50,16 +84,21 @@ function readStoredPageSize(
   selector: 'app-payments-table',
   imports: [PaymentRow],
   templateUrl: './payments-table.html',
-  styleUrl: './payments-table.css',
+  styleUrls: ['./payments-table.css', './payments-table-sort.css'],
 })
 export class PaymentsTable {
   private readonly document = inject(DOCUMENT);
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly payments = input.required<readonly Payment[]>();
 
   protected readonly copyState = signal<PaymentCopyState | null>(null);
   protected readonly currentTime = signal<number | null>(null);
   protected readonly timeZone = signal('UTC');
+  protected readonly sortColumns = PAYMENT_TABLE_COLUMNS;
+  protected readonly sortCriteria = signal<readonly PaymentSortCriterion[]>(DEFAULT_PAYMENT_SORT);
+  protected readonly sortAnnouncement = signal('');
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly pageSize = signal<PageSize>(DEFAULT_PAGE_SIZE);
   protected readonly currentPage = signal(1);
@@ -70,9 +109,12 @@ export class PaymentsTable {
   protected readonly pageCount = computed(() =>
     Math.max(1, Math.ceil(this.payments().length / this.pageSize())),
   );
+  protected readonly sortedPayments = computed(() =>
+    sortPayments(this.payments(), this.sortCriteria()),
+  );
   protected readonly paginatedPayments = computed(() => {
     const startIndex = (this.currentPage() - 1) * this.pageSize();
-    return this.payments().slice(startIndex, startIndex + this.pageSize());
+    return this.sortedPayments().slice(startIndex, startIndex + this.pageSize());
   });
   protected readonly paginationRangeLabel = computed(() => {
     const paymentCount = this.payments().length;
@@ -98,6 +140,15 @@ export class PaymentsTable {
       ? 'Payment ID ' + state.paymentId + ' copied to clipboard.'
       : 'Payment ID ' + state.paymentId + ' could not be copied. Try again.';
   });
+  private readonly sortStateByColumn = computed(
+    () =>
+      new Map<PaymentSortColumn, PaymentSortColumnState>(
+        this.sortCriteria().map((criterion, index) => [
+          criterion.column,
+          { direction: criterion.direction, priority: index + 1 },
+        ]),
+      ),
+  );
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly keepCurrentPageInBounds = effect(() => {
@@ -128,9 +179,17 @@ export class PaymentsTable {
 
     this.applyPageSize(parseStoredPageSize(event.newValue));
   };
+  private sortUrlSyncReady = false;
 
   constructor() {
     this.pageSize.set(readStoredPageSize());
+    this.sortCriteria.set(
+      parsePaymentSort(this.activatedRoute.snapshot.queryParamMap.get(SORT_QUERY_PARAM)),
+    );
+    this.activatedRoute.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((queryParams) => this.applySortFromUrl(queryParams.get(SORT_QUERY_PARAM)));
+    this.startSortUrlSync();
     afterNextRender(() => this.startBrowserState());
     this.destroyRef.onDestroy(() => {
       this.clearFeedbackTimer();
@@ -154,6 +213,54 @@ export class PaymentsTable {
     } catch {
       this.showCopyFeedback(paymentId, 'failed');
     }
+  }
+
+  protected changeSort(column: PaymentSortColumn): void {
+    const currentCriteria = this.sortCriteria();
+    const nextCriteria = cyclePaymentSort(currentCriteria, column);
+
+    this.sortCriteria.set(nextCriteria);
+    this.currentPage.set(1);
+    this.sortAnnouncement.set(this.describeSortAction(column, currentCriteria, nextCriteria));
+    this.writeSortToUrl(nextCriteria, false);
+  }
+
+  protected sortDirection(column: PaymentSortColumn): PaymentSortCriterion['direction'] | null {
+    return this.sortStateByColumn().get(column)?.direction ?? null;
+  }
+
+  protected sortAriaValue(column: PaymentSortColumn): 'ascending' | 'descending' | null {
+    const state = this.sortStateByColumn().get(column);
+
+    if (!state || state.priority !== 1) {
+      return null;
+    }
+
+    return state.direction === 'asc' ? 'ascending' : 'descending';
+  }
+
+  protected sortDescriptionId(column: PaymentSortColumn): string {
+    return 'payments-sort-description-' + column;
+  }
+
+  protected sortDescription(column: PaymentSortColumn): string {
+    const state = this.sortStateByColumn().get(column);
+
+    if (!state) {
+      const nextCriteria = cyclePaymentSort(this.sortCriteria(), column);
+      const nextPriority = nextCriteria.findIndex((criterion) => criterion.column === column) + 1;
+
+      return 'Not sorted. Activating adds this column ascending as priority ' + nextPriority + '.';
+    }
+
+    const priorityLabel = state.priority === 1 ? 'Primary sort' : 'Sort priority ' + state.priority;
+    const directionLabel = state.direction === 'asc' ? 'ascending' : 'descending';
+    const nextAction =
+      state.direction === 'asc'
+        ? 'Activating changes it to descending.'
+        : 'Activating removes this column from the sort order.';
+
+    return `${priorityLabel}, ${directionLabel}. ${nextAction}`;
   }
 
   protected changePageSize(event: Event): void {
@@ -187,6 +294,95 @@ export class PaymentsTable {
     this.timeZone.set(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
     this.currentTime.set(Date.now());
     this.clockTimer = browserWindow.setInterval(() => this.currentTime.set(Date.now()), 60_000);
+  }
+
+  private startSortUrlSync(): void {
+    if (this.router.navigated) {
+      this.enableSortUrlSync();
+      return;
+    }
+
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        take(1),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.enableSortUrlSync());
+  }
+
+  private enableSortUrlSync(): void {
+    this.sortUrlSyncReady = true;
+    this.applySortFromUrl(this.activatedRoute.snapshot.queryParamMap.get(SORT_QUERY_PARAM), false);
+  }
+
+  private applySortFromUrl(value: string | null, announceRestore = this.sortUrlSyncReady): void {
+    const nextCriteria = parsePaymentSort(value);
+    const serializedCriteria = serializePaymentSort(nextCriteria);
+
+    if (serializePaymentSort(this.sortCriteria()) !== serializedCriteria) {
+      this.sortCriteria.set(nextCriteria);
+      this.currentPage.set(1);
+
+      if (announceRestore) {
+        this.sortAnnouncement.set(
+          'Sort order restored from the URL. ' + this.describeSortOrder(nextCriteria),
+        );
+      }
+    }
+
+    if (this.sortUrlSyncReady && value !== serializedCriteria) {
+      this.writeSortToUrl(nextCriteria, true);
+    }
+  }
+
+  private writeSortToUrl(criteria: readonly PaymentSortCriterion[], replaceUrl: boolean): void {
+    void this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: { [SORT_QUERY_PARAM]: serializePaymentSort(criteria) },
+      queryParamsHandling: 'merge',
+      preserveFragment: true,
+      replaceUrl,
+    });
+  }
+
+  private describeSortAction(
+    column: PaymentSortColumn,
+    currentCriteria: readonly PaymentSortCriterion[],
+    nextCriteria: readonly PaymentSortCriterion[],
+  ): string {
+    const currentCriterion = currentCriteria.find((criterion) => criterion.column === column);
+    const label = PAYMENT_SORT_COLUMN_LABELS[column];
+
+    if (!currentCriterion) {
+      return (
+        `${label} added as priority ${nextCriteria.length}, ascending. ` +
+        this.describeSortOrder(nextCriteria)
+      );
+    }
+
+    if (currentCriterion.direction === 'asc') {
+      return `${label} changed to descending. ${this.describeSortOrder(nextCriteria)}`;
+    }
+
+    if (nextCriteria.length === 0) {
+      return `${label} removed. Sorting removed. Rows are in their original order.`;
+    }
+
+    return `${label} removed. ${this.describeSortOrder(nextCriteria)}`;
+  }
+
+  private describeSortOrder(criteria: readonly PaymentSortCriterion[]): string {
+    if (criteria.length === 0) {
+      return 'Rows are in their original order.';
+    }
+
+    const labels = criteria.map((criterion) => {
+      const direction = criterion.direction === 'asc' ? 'ascending' : 'descending';
+      return PAYMENT_SORT_COLUMN_LABELS[criterion.column] + ' ' + direction;
+    });
+
+    return 'Sort order: ' + labels.join(', then ') + '.';
   }
 
   private restorePageSize(browserWindow: Window): void {

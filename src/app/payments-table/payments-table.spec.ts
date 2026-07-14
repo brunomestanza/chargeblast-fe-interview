@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { Payment } from './payment';
 import { formatCreatedDate, formatRelativeTime } from './payment-row';
@@ -28,12 +29,104 @@ function createPayments(count: number): readonly Payment[] {
   }));
 }
 
+const explicitSortPayments: readonly Payment[] = [
+  {
+    ...payment,
+    id: 'pay_30',
+    customer: 'zoe@example.com',
+    amount: 200,
+    status: 'pending',
+    paymentMethod: { kind: 'standalone', method: 'ach', lastFour: '6789' },
+    createdAt: '2026-07-13T16:00:00Z',
+  },
+  {
+    ...payment,
+    id: 'pay_20',
+    customer: 'amy@example.com',
+    amount: 400,
+    status: 'refunded',
+    paymentMethod: { kind: 'card', brand: 'visa', lastFour: '4242' },
+    createdAt: '2026-07-13T15:00:00Z',
+  },
+  {
+    ...payment,
+    id: 'pay_40',
+    customer: 'ben@example.com',
+    amount: 100,
+    status: 'succeeded',
+    paymentMethod: { kind: 'standalone', method: 'paypal' },
+    createdAt: '2026-07-13T14:00:00Z',
+  },
+  {
+    ...payment,
+    id: 'pay_10',
+    customer: 'morgan@example.com',
+    amount: 300,
+    status: 'failed',
+    paymentMethod: {
+      kind: 'card',
+      brand: 'mastercard',
+      wallet: 'apple-pay',
+      lastFour: '4444',
+    },
+    createdAt: '2026-07-13T13:00:00Z',
+  },
+];
+
+const explicitSortCases = [
+  {
+    label: 'Payment ID',
+    urlKey: 'payment-id',
+    expectedIds: ['pay_10', 'pay_20', 'pay_30', 'pay_40'],
+  },
+  {
+    label: 'Customer',
+    urlKey: 'customer',
+    expectedIds: ['pay_20', 'pay_40', 'pay_10', 'pay_30'],
+  },
+  {
+    label: 'Amount',
+    urlKey: 'amount',
+    expectedIds: ['pay_40', 'pay_30', 'pay_10', 'pay_20'],
+  },
+  {
+    label: 'Status',
+    urlKey: 'status',
+    expectedIds: ['pay_10', 'pay_30', 'pay_20', 'pay_40'],
+  },
+  {
+    label: 'Payment method',
+    urlKey: 'payment-method',
+    expectedIds: ['pay_30', 'pay_10', 'pay_40', 'pay_20'],
+  },
+] as const;
+
+function getSortButton(element: HTMLElement, label: string): HTMLButtonElement {
+  const button = Array.from(element.querySelectorAll<HTMLButtonElement>('.sort-button')).find(
+    (candidate) => candidate.querySelector('.sort-button__label')?.textContent?.trim() === label,
+  );
+
+  if (!button) {
+    throw new Error(`Sort button ${label} was not found.`);
+  }
+
+  return button;
+}
+
+function renderedPaymentIds(element: HTMLElement): readonly string[] {
+  return Array.from(element.querySelectorAll<HTMLElement>('.payment-id')).map(
+    (paymentId) => paymentId.getAttribute('title') ?? '',
+  );
+}
+
 describe('PaymentsTable', () => {
   beforeEach(async () => {
     window.localStorage.removeItem(PAGE_SIZE_STORAGE_KEY);
     await TestBed.configureTestingModule({
       imports: [PaymentsTable],
+      providers: [provideRouter([])],
     }).compileComponents();
+    await TestBed.inject(Router).navigateByUrl('/');
   });
 
   afterEach(() => {
@@ -210,7 +303,7 @@ describe('PaymentsTable', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    const headers = Array.from(element.querySelectorAll('th')).map((header) =>
+    const headers = Array.from(element.querySelectorAll('.sort-button__label')).map((header) =>
       header.textContent?.trim(),
     );
 
@@ -224,8 +317,242 @@ describe('PaymentsTable', () => {
       'Payment method',
       'Created',
     ]);
-    expect(element.querySelectorAll('th[scope="col"]')).toHaveLength(6);
+    const columnHeaders = element.querySelectorAll<HTMLTableCellElement>('th[scope="col"]');
+    const headerRowChildren = Array.from(element.querySelector('thead > tr')?.children ?? []);
+    const sortButtons = element.querySelectorAll<HTMLButtonElement>(
+      'th > button.sort-button[type="button"]',
+    );
+
+    expect(columnHeaders).toHaveLength(6);
+    expect(headerRowChildren.map((child) => child.tagName)).toEqual(Array(6).fill('TH'));
+    expect(sortButtons).toHaveLength(6);
+
+    for (const header of columnHeaders) {
+      const sortButton = header.firstElementChild;
+
+      expect(sortButton?.tagName).toBe('BUTTON');
+      expect(sortButton?.parentElement).toBe(header);
+      expect(sortButton?.querySelector('button')).toBeNull();
+      expect(sortButton?.querySelector('.sort-button__label')).toBeTruthy();
+      expect(sortButton?.querySelector('.sort-indicator svg')).toBeTruthy();
+    }
+
+    expect(element.querySelectorAll('th[aria-sort]')).toHaveLength(1);
+    expect(getSortButton(element, 'Created').closest('th')?.getAttribute('aria-sort')).toBe(
+      'descending',
+    );
+    expect(element.querySelector('.sort-priority')).toBeNull();
+    expect(getSortButton(element, 'Created').querySelector('path')?.getAttribute('d')).toBe(
+      'M3.25 8.5 7 4.75l3.75 3.75',
+    );
+    expect(getSortButton(element, 'Amount').getAttribute('aria-describedby')).toBe(
+      'payments-sort-description-amount',
+    );
     expect(element.querySelectorAll('tbody tr')).toHaveLength(1);
+  });
+
+  it('builds a multi-column queue, cycles direction, removes criteria, and updates the URL', async () => {
+    const payments: readonly Payment[] = [
+      {
+        ...payment,
+        id: 'pay_3',
+        customer: 'zoe@example.com',
+        status: 'succeeded',
+        createdAt: '2026-07-13T15:00:00Z',
+      },
+      {
+        ...payment,
+        id: 'pay_1',
+        customer: 'amy@example.com',
+        status: 'failed',
+        createdAt: '2026-07-13T13:00:00Z',
+      },
+      {
+        ...payment,
+        id: 'pay_2',
+        customer: 'morgan@example.com',
+        status: 'failed',
+        createdAt: '2026-07-13T14:00:00Z',
+      },
+    ];
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', payments);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const router = TestBed.inject(Router);
+    const createdButton = getSortButton(element, 'Created');
+    const customerButton = getSortButton(element, 'Customer');
+    const statusButton = getSortButton(element, 'Status');
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_3', 'pay_2', 'pay_1']);
+    expect(router.url).toBe('/');
+
+    createdButton.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_3', 'pay_1', 'pay_2']);
+    expect(router.url).toBe('/?sort=none');
+    expect(element.querySelectorAll('th[aria-sort]')).toHaveLength(0);
+
+    customerButton.click();
+    statusButton.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_1', 'pay_2', 'pay_3']);
+    expect(element.querySelector('.sort-priority')).toBeNull();
+    expect(customerButton.querySelector('path')?.getAttribute('d')).toBe(
+      'M3.25 5.5 7 9.25l3.75-3.75',
+    );
+    expect(statusButton.querySelector('path')?.getAttribute('d')).toBe(
+      'M3.25 5.5 7 9.25l3.75-3.75',
+    );
+    expect(customerButton.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
+    expect(statusButton.closest('th')?.hasAttribute('aria-sort')).toBe(false);
+    expect(router.url).toBe('/?sort=customer.asc,status.asc');
+
+    customerButton.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_3', 'pay_2', 'pay_1']);
+    expect(customerButton.querySelector('path')?.getAttribute('d')).toBe(
+      'M3.25 8.5 7 4.75l3.75 3.75',
+    );
+    expect(router.url).toBe('/?sort=customer.desc,status.asc');
+
+    customerButton.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(renderedPaymentIds(element)).toEqual(['pay_1', 'pay_2', 'pay_3']);
+    expect(statusButton.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
+    expect(element.querySelector('[role="status"]')?.textContent).toContain(
+      'Sort order: Status ascending.',
+    );
+    expect(router.url).toBe('/?sort=status.asc');
+  });
+
+  it.each(explicitSortCases)(
+    'uses $label as the effective primary sort on its first click',
+    async ({ label, urlKey, expectedIds }) => {
+      const fixture = TestBed.createComponent(PaymentsTable);
+      fixture.componentRef.setInput('payments', explicitSortPayments);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const router = TestBed.inject(Router);
+      const createdButton = getSortButton(element, 'Created');
+      const sortButton = getSortButton(element, label);
+      const sortDescription = sortButton.parentElement?.querySelector('.visually-hidden');
+
+      expect(router.url).toBe('/');
+      expect(renderedPaymentIds(element)).toEqual(['pay_30', 'pay_20', 'pay_40', 'pay_10']);
+      expect(sortDescription?.textContent).toContain('priority 1');
+
+      sortButton.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(renderedPaymentIds(element)).toEqual(expectedIds);
+      expect(router.url).toBe('/?sort=' + urlKey + '.asc');
+      expect(createdButton.closest('th')?.hasAttribute('aria-sort')).toBe(false);
+      expect(createdButton.classList).not.toContain('sort-button--active');
+      expect(sortButton.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
+      expect(sortDescription?.textContent).toContain('Primary sort, ascending.');
+    },
+  );
+
+  it('removes a redundant default while preserving unrelated URL state', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?sort=created.desc&view=compact#payments-table');
+
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', [payment]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const url = router.parseUrl(router.url);
+
+    expect(url.queryParams).toEqual({ view: 'compact' });
+    expect(url.fragment).toBe('payments-table');
+  });
+
+  it('sorts the complete collection before pagination and returns to the first page', async () => {
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', createPayments(51));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const nextButton = element.querySelectorAll<HTMLButtonElement>('.pagination button')[1];
+    const paymentIdButton = getSortButton(element, 'Payment ID');
+
+    nextButton.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 2 of 3');
+
+    paymentIdButton.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 1 of 3');
+    expect(renderedPaymentIds(element)[0]).toBe('pay_test_0001');
+
+    paymentIdButton.click();
+    fixture.detectChanges();
+    expect(renderedPaymentIds(element)[0]).toBe('pay_test_0051');
+  });
+
+  it('restores a multi-column queue from the URL and reacts to later URL changes', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?sort=status.asc,amount.desc');
+
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', [
+      { ...payment, id: 'pay_succeeded', amount: 10, status: 'succeeded' },
+      { ...payment, id: 'pay_failed_small', amount: 5, status: 'failed' },
+      { ...payment, id: 'pay_failed_large', amount: 20, status: 'failed' },
+    ] satisfies readonly Payment[]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const statusButton = getSortButton(element, 'Status');
+    const amountButton = getSortButton(element, 'Amount');
+
+    expect(renderedPaymentIds(element)).toEqual([
+      'pay_failed_large',
+      'pay_failed_small',
+      'pay_succeeded',
+    ]);
+    expect(getSortButton(element, 'Created').closest('th')?.hasAttribute('aria-sort')).toBe(false);
+    expect(statusButton.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
+    expect(element.querySelector('#payments-sort-description-status')?.textContent).toContain(
+      'Primary sort, ascending.',
+    );
+    expect(element.querySelector('#payments-sort-description-amount')?.textContent).toContain(
+      'Sort priority 2, descending.',
+    );
+
+    await router.navigateByUrl('/?sort=customer.desc');
+    fixture.detectChanges();
+
+    expect(getSortButton(element, 'Customer').closest('th')?.getAttribute('aria-sort')).toBe(
+      'descending',
+    );
+    expect(statusButton.classList).not.toContain('sort-button--active');
+    expect(amountButton.classList).not.toContain('sort-button--active');
+    expect(element.querySelector('[role="status"]')?.textContent).toContain(
+      'Sort order restored from the URL.',
+    );
   });
 
   it('renders payment details and accessible copy and relative-time controls', () => {
@@ -363,5 +690,40 @@ describe('PaymentsTable', () => {
     expect(fixture.nativeElement.textContent).toContain('copied to clipboard');
 
     fixture.destroy();
+  });
+});
+
+describe('PaymentsTable during the initial router navigation', () => {
+  beforeEach(async () => {
+    window.localStorage.removeItem(PAGE_SIZE_STORAGE_KEY);
+    await TestBed.configureTestingModule({
+      imports: [PaymentsTable],
+      providers: [provideRouter([])],
+    }).compileComponents();
+  });
+
+  afterEach(() => {
+    window.localStorage.removeItem(PAGE_SIZE_STORAGE_KEY);
+  });
+
+  it('does not overwrite an explicit empty sort queue before navigation completes', async () => {
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', [
+      { ...payment, id: 'pay_first', createdAt: '2026-07-13T12:00:00Z' },
+      { ...payment, id: 'pay_second', createdAt: '2026-07-13T14:00:00Z' },
+    ] satisfies readonly Payment[]);
+    fixture.detectChanges();
+
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?sort=none');
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(router.url).toContain('sort=none');
+    expect(renderedPaymentIds(element)).toEqual(['pay_first', 'pay_second']);
+    expect(element.querySelectorAll('th[aria-sort]')).toHaveLength(0);
+    expect(element.querySelectorAll('.sort-button--active')).toHaveLength(0);
   });
 });

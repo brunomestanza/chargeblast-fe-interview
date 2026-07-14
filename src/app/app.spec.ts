@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
 
 const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
@@ -8,6 +9,7 @@ describe('App', () => {
     window.localStorage.removeItem(PAGE_SIZE_STORAGE_KEY);
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 
