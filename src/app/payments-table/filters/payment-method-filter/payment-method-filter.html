@@ -1,0 +1,50 @@
+<app-filter-button
+  label="Payment method"
+  [value]="valueLabel()"
+  [accessibleValue]="accessibleValueLabel()"
+  [expanded]="open()"
+  [controls]="popoverId()"
+  (editRequested)="toggleFilter()"
+  (clearRequested)="clearFilter()"
+/>
+
+@if (open()) {
+  <section
+    class="payment-method-filter__popover"
+    [id]="popoverId()"
+    role="dialog"
+    [attr.aria-labelledby]="popoverId() + '-title'"
+  >
+    <h2 [id]="popoverId() + '-title'">Filter by: payment method</h2>
+
+    <div class="payment-method-filter__groups">
+      @for (group of groups; track group.key) {
+        <fieldset class="payment-method-filter__group">
+          <legend>{{ group.label }}</legend>
+
+          <div class="payment-method-filter__options">
+            @for (option of group.options; track option.value) {
+              <label class="payment-method-filter__option">
+                <input
+                  #methodCheckbox
+                  type="checkbox"
+                  name="payment-method"
+                  [value]="option.value"
+                  [checked]="isSelected(option.value)"
+                  (change)="updatePaymentMethod(option.value, methodCheckbox.checked)"
+                />
+                <span>{{ option.label }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      }
+    </div>
+
+    <footer class="payment-method-filter__footer">
+      <button type="button" class="payment-method-filter__apply" (click)="applyFilter()">
+        Apply
+      </button>
+    </footer>
+  </section>
+}

@@ -272,6 +272,167 @@ describe('PaymentsTable', () => {
     expect(element.textContent).toContain('Status filter cleared. 4 payments found.');
   });
 
+  it('filters by payment methods across groups while keeping wallets exclusive from cards', () => {
+    const paymentMethodPayments: readonly Payment[] = [
+      {
+        ...payment,
+        id: 'pay_card_visa',
+        paymentMethod: { kind: 'card', brand: 'visa', lastFour: '4242' },
+        createdAt: '2026-07-13T16:00:00Z',
+      },
+      {
+        ...payment,
+        id: 'pay_wallet_google',
+        paymentMethod: {
+          kind: 'card',
+          brand: 'visa',
+          wallet: 'google-pay',
+          lastFour: '5454',
+        },
+        createdAt: '2026-07-13T15:00:00Z',
+      },
+      {
+        ...payment,
+        id: 'pay_bank_ach',
+        paymentMethod: { kind: 'standalone', method: 'ach', lastFour: '6789' },
+        createdAt: '2026-07-13T14:00:00Z',
+      },
+      {
+        ...payment,
+        id: 'pay_service_paypal',
+        paymentMethod: { kind: 'standalone', method: 'paypal' },
+        createdAt: '2026-07-13T13:00:00Z',
+      },
+      {
+        ...payment,
+        id: 'pay_bank_pix',
+        paymentMethod: { kind: 'standalone', method: 'pix' },
+        createdAt: '2026-07-13T12:00:00Z',
+      },
+    ];
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', paymentMethodPayments);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const paymentMethodFilter = element.querySelector<HTMLElement>('app-payment-method-filter')!;
+
+    paymentMethodFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    findCheckbox(paymentMethodFilter, 'Visa').click();
+    findCheckbox(paymentMethodFilter, 'Google Pay').click();
+    findCheckbox(paymentMethodFilter, 'ACH Direct Debit').click();
+    findCheckbox(paymentMethodFilter, 'PayPal').click();
+    fixture.detectChanges();
+    findButton(paymentMethodFilter, 'Apply').click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual([
+      'pay_card_visa',
+      'pay_wallet_google',
+      'pay_bank_ach',
+      'pay_service_paypal',
+    ]);
+    expect(paymentMethodFilter.querySelector('.filter-button__value')?.textContent?.trim()).toBe(
+      'Visa +3',
+    );
+    expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('4 payments');
+    expect(element.textContent).toContain(
+      'Payment method filter applied: Visa, Google Pay, ACH Direct Debit, PayPal. 4 payments found.',
+    );
+
+    paymentMethodFilter.querySelector<HTMLButtonElement>('.filter-button__clear')!.click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual([
+      'pay_card_visa',
+      'pay_wallet_google',
+      'pay_bank_ach',
+      'pay_service_paypal',
+      'pay_bank_pix',
+    ]);
+    expect(element.textContent).toContain('Payment method filter cleared. 5 payments found.');
+  });
+
+  it('combines payment method, status, and date filters with AND semantics', async () => {
+    const now = Date.now();
+    const fixture = TestBed.createComponent(PaymentsTable);
+    fixture.componentRef.setInput('payments', [
+      {
+        ...payment,
+        id: 'pay_recent_failed_visa',
+        status: 'failed',
+        createdAt: new Date(now - 60 * 60 * 1000).toISOString(),
+      },
+      {
+        ...payment,
+        id: 'pay_recent_failed_paypal',
+        status: 'failed',
+        paymentMethod: { kind: 'standalone', method: 'paypal' },
+        createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        ...payment,
+        id: 'pay_recent_succeeded_paypal',
+        status: 'succeeded',
+        paymentMethod: { kind: 'standalone', method: 'paypal' },
+        createdAt: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        ...payment,
+        id: 'pay_recent_failed_google_pay_visa',
+        status: 'failed',
+        paymentMethod: {
+          kind: 'card',
+          brand: 'visa',
+          wallet: 'google-pay',
+          lastFour: '5454',
+        },
+        createdAt: new Date(now - 4 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        ...payment,
+        id: 'pay_old_failed_visa',
+        status: 'failed',
+        createdAt: new Date(now - 40 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ] satisfies readonly Payment[]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const paymentMethodFilter = element.querySelector<HTMLElement>('app-payment-method-filter')!;
+    const statusFilter = element.querySelector<HTMLElement>('app-status-filter')!;
+    const dateFilter = element.querySelector<HTMLElement>('app-date-range-filter')!;
+
+    paymentMethodFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    findCheckbox(paymentMethodFilter, 'Visa').click();
+    findCheckbox(paymentMethodFilter, 'PayPal').click();
+    findButton(paymentMethodFilter, 'Apply').click();
+    fixture.detectChanges();
+
+    statusFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    findCheckbox(statusFilter, 'Failed').click();
+    findButton(statusFilter, 'Apply').click();
+    fixture.detectChanges();
+
+    dateFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
+    fixture.detectChanges();
+    findButton(dateFilter, '30d').click();
+    fixture.detectChanges();
+    findButton(dateFilter, 'Apply').click();
+    fixture.detectChanges();
+
+    expect(renderedPaymentIds(element)).toEqual([
+      'pay_recent_failed_visa',
+      'pay_recent_failed_paypal',
+    ]);
+    expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('2 payments');
+  });
+
   it('combines the status and date filters before sorting and pagination', async () => {
     const now = Date.now();
     const fixture = TestBed.createComponent(PaymentsTable);

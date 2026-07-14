@@ -29,6 +29,10 @@
       (valueChange)="changeDateRange($event)"
     />
     <app-status-filter [value]="selectedStatuses()" (valueChange)="changeStatuses($event)" />
+    <app-payment-method-filter
+      [value]="selectedPaymentMethods()"
+      (valueChange)="changePaymentMethods($event)"
+    />
   </section>
 
   <div

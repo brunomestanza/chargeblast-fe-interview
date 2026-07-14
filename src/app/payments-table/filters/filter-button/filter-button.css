@@ -123,7 +123,7 @@
   }
 }
 
-@media (pointer: coarse) {
+@media (any-pointer: coarse) {
   .filter-button,
   .filter-button__clear,
   .filter-button__trigger {

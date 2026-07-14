@@ -21,6 +21,12 @@ import {
   isTimestampInDateRange,
   resolveDateRangeForToday,
 } from './filters/date-range-filter/date-range';
+import { PaymentMethodFilter } from './filters/payment-method-filter/payment-method-filter';
+import { matchesPaymentMethodFilter } from './filters/payment-method-filter/payment-method-filter-match';
+import {
+  paymentMethodFilterLabel,
+  type PaymentMethodFilterValue,
+} from './filters/payment-method-filter/payment-method-filter-options.mock';
 import { StatusFilter } from './filters/status-filter/status-filter';
 import { PAYMENT_STATUS_LABELS, Payment, PaymentStatus } from './payment';
 import { PaymentCopyState, PaymentRow } from './payment-row';
@@ -91,7 +97,7 @@ function readStoredPageSize(
 
 @Component({
   selector: 'app-payments-table',
-  imports: [DateRangeFilter, StatusFilter, PaymentRow],
+  imports: [DateRangeFilter, StatusFilter, PaymentMethodFilter, PaymentRow],
   templateUrl: './payments-table.html',
   styleUrls: ['./payments-table.css', './payments-table-sort.css'],
 })
@@ -114,6 +120,7 @@ export class PaymentsTable {
   protected readonly currentPage = signal(1);
   protected readonly dateRange = signal<DateRangeSelection | null>(null);
   protected readonly selectedStatuses = signal<readonly PaymentStatus[]>([]);
+  protected readonly selectedPaymentMethods = signal<readonly PaymentMethodFilterValue[]>([]);
   protected readonly effectiveDateRange = computed(() => {
     const selection = this.dateRange();
     const currentTime = this.currentTime();
@@ -128,8 +135,13 @@ export class PaymentsTable {
   protected readonly filteredPayments = computed(() => {
     const dateRange = this.effectiveDateRange();
     const selectedStatuses = this.selectedStatuses();
+    const selectedPaymentMethods = this.selectedPaymentMethods();
 
-    if (dateRange === null && selectedStatuses.length === 0) {
+    if (
+      dateRange === null &&
+      selectedStatuses.length === 0 &&
+      selectedPaymentMethods.length === 0
+    ) {
       return this.payments();
     }
 
@@ -137,7 +149,8 @@ export class PaymentsTable {
     return this.payments().filter(
       (payment) =>
         (dateRange === null || isTimestampInDateRange(payment.createdAt, dateRange, timeZone)) &&
-        (selectedStatuses.length === 0 || selectedStatuses.includes(payment.status)),
+        (selectedStatuses.length === 0 || selectedStatuses.includes(payment.status)) &&
+        matchesPaymentMethodFilter(payment.paymentMethod, selectedPaymentMethods),
     );
   });
   protected readonly paymentCountLabel = computed(() => {
@@ -356,6 +369,26 @@ export class PaymentsTable {
     const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
     this.filterAnnouncement.set(
       `Status filter applied: ${statusLabel}. ${paymentCount} ${paymentLabel} found.`,
+    );
+  }
+
+  protected changePaymentMethods(paymentMethods: readonly PaymentMethodFilterValue[]): void {
+    this.selectedPaymentMethods.set([...paymentMethods]);
+    this.currentPage.set(1);
+
+    const paymentCount = this.filteredPayments().length;
+    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
+
+    if (paymentMethods.length === 0) {
+      this.filterAnnouncement.set(
+        `Payment method filter cleared. ${paymentCount} ${paymentLabel} found.`,
+      );
+      return;
+    }
+
+    const methodLabel = paymentMethods.map(paymentMethodFilterLabel).join(', ');
+    this.filterAnnouncement.set(
+      `Payment method filter applied: ${methodLabel}. ${paymentCount} ${paymentLabel} found.`,
     );
   }
 

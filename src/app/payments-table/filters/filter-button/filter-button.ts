@@ -30,6 +30,7 @@ import { Component, ElementRef, computed, input, output, viewChild } from '@angu
         [attr.aria-label]="triggerLabel()"
         aria-haspopup="dialog"
         [attr.aria-expanded]="expanded()"
+        [attr.aria-controls]="expanded() ? controls() : null"
         (click)="editRequested.emit()"
       >
         @if (!hasValue()) {
@@ -62,7 +63,9 @@ import { Component, ElementRef, computed, input, output, viewChild } from '@angu
 export class FilterButton {
   readonly label = input.required<string>();
   readonly value = input<string | null>(null);
+  readonly accessibleValue = input<string | null>(null);
   readonly expanded = input(false);
+  readonly controls = input<string | null>(null);
 
   readonly editRequested = output<void>();
   readonly clearRequested = output<void>();
@@ -75,7 +78,7 @@ export class FilterButton {
   });
 
   protected readonly triggerLabel = computed(() => {
-    const value = this.value();
+    const value = this.accessibleValue() ?? this.value();
 
     return value ? `Edit ${this.label()} filter, currently ${value}` : `Add ${this.label()} filter`;
   });

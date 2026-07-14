@@ -51,4 +51,24 @@ describe('FilterButton', () => {
     expect(editRequested).toHaveBeenCalledOnce();
     expect(clearRequested).toHaveBeenCalledOnce();
   });
+
+  it('can expose a full accessible value and relate an open trigger to its popover', () => {
+    const fixture = TestBed.createComponent(FilterButton);
+
+    fixture.componentRef.setInput('label', 'Payment method');
+    fixture.componentRef.setInput('value', 'Visa +3');
+    fixture.componentRef.setInput('accessibleValue', 'Visa, Apple Pay, ACH Direct Debit, PayPal');
+    fixture.componentRef.setInput('expanded', true);
+    fixture.componentRef.setInput('controls', 'payments-payment-method-filter');
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const trigger = element.querySelector<HTMLButtonElement>('.filter-button__trigger')!;
+
+    expect(trigger.textContent).toContain('Visa +3');
+    expect(trigger.getAttribute('aria-label')).toBe(
+      'Edit Payment method filter, currently Visa, Apple Pay, ACH Direct Debit, PayPal',
+    );
+    expect(trigger.getAttribute('aria-controls')).toBe('payments-payment-method-filter');
+  });
 });
