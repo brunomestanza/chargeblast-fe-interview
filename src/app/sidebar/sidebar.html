@@ -6,10 +6,9 @@
       <li>
         <a
           class="sidebar__link"
+          [class.sidebar__link--active]="paymentsRouteActive()"
           routerLink="/"
-          routerLinkActive="sidebar__link--active"
-          [routerLinkActiveOptions]="routeMatchOptions"
-          ariaCurrentWhenActive="page"
+          [attr.aria-current]="paymentsRouteActive() ? 'page' : null"
           aria-label="Payments"
         >
           <app-dashboard-icon name="payments" />

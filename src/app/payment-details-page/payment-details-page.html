@@ -1,0 +1,264 @@
+<article class="payment-details" aria-labelledby="payment-details-title">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a routerLink="/" queryParamsHandling="preserve">
+      <svg aria-hidden="true" viewBox="0 0 16 16">
+        <path d="m9.75 3.5-4.5 4.5 4.5 4.5" />
+      </svg>
+      <span>Payments</span>
+    </a>
+  </nav>
+
+  <header class="payment-summary">
+    <div>
+      <div class="payment-summary__title-row">
+        <h1 id="payment-details-title">
+          {{ details.amount }} <span>{{ details.currency }}</span>
+        </h1>
+        <span class="status-badge">
+          <svg aria-hidden="true" viewBox="0 0 14 14">
+            <path d="m4 4 6 6m0-6-6 6" />
+          </svg>
+          {{ details.status }}
+        </span>
+      </div>
+      <p>
+        Charged to
+        <a class="inline-link" routerLink="/mock">{{ details.customer.name }}</a>
+      </p>
+    </div>
+
+    <a class="secondary-action" routerLink="/mock">
+      <svg aria-hidden="true" viewBox="0 0 16 16">
+        <path d="M8 3v10M3 8h10" />
+      </svg>
+      Add to block list
+    </a>
+  </header>
+
+  <div class="details-layout">
+    <div class="details-main">
+      <section class="detail-section" aria-labelledby="recent-activity-title">
+        <div class="section-heading">
+          <h2 id="recent-activity-title">Recent activity</h2>
+          <a class="small-action" routerLink="/mock">
+            <svg aria-hidden="true" viewBox="0 0 16 16">
+              <path d="M3.5 3.5h9v7h-5L4 13v-2.5h-.5z" />
+            </svg>
+            Add note
+          </a>
+        </div>
+
+        <ol class="activity-list">
+          @for (activity of details.activity; track activity.occurredAt) {
+            <li class="activity-item">
+              <span
+                class="activity-icon"
+                [class.activity-icon--failed]="activity.kind === 'failed'"
+                aria-hidden="true"
+              >
+                @if (activity.kind === 'failed') {
+                  <svg viewBox="0 0 16 16">
+                    <path d="m5 5 6 6m0-6-6 6" />
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 16 16">
+                    <path d="M8 4v4l2.75 1.5" />
+                    <circle cx="8" cy="8" r="5" />
+                  </svg>
+                }
+              </span>
+
+              <div class="activity-content">
+                <p class="activity-title">
+                  {{ activity.title }}
+                  @if (activity.actionLabel) {
+                    <a class="inline-link activity-action" routerLink="/mock">
+                      {{ activity.actionLabel }}
+                    </a>
+                  }
+                </p>
+                @if (activity.description) {
+                  <p class="activity-description">{{ activity.description }}</p>
+                }
+                <time [attr.datetime]="activity.occurredAt">{{ activity.occurredLabel }}</time>
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+
+      <section
+        class="detail-section detail-section--breakdown"
+        aria-labelledby="payment-breakdown-title"
+      >
+        <h2 id="payment-breakdown-title">Payment breakdown</h2>
+        <dl class="breakdown-list">
+          <div>
+            <dt>Payment amount</dt>
+            <dd>{{ details.breakdown.paymentAmount }}</dd>
+          </div>
+          <div>
+            <dt>Fees</dt>
+            <dd>{{ details.breakdown.fees }}</dd>
+          </div>
+          <div class="breakdown-list__total">
+            <dt>Net amount</dt>
+            <dd>{{ details.breakdown.netAmount }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="detail-section detail-section--last" aria-labelledby="payment-method-title">
+        <h2 id="payment-method-title">Payment method</h2>
+        <div class="method-summary">
+          <app-payment-method-icon
+            category="card-brand"
+            [iconKey]="details.paymentMethod.brand"
+            tooltipId="detail-payment-method-brand"
+          />
+          <div>
+            <strong>{{ details.paymentMethod.summary }}</strong>
+            <span>Debit card</span>
+          </div>
+        </div>
+
+        <dl class="method-grid">
+          <div>
+            <dt>ID</dt>
+            <dd class="code-value">{{ details.paymentMethod.id }}</dd>
+          </div>
+          <div>
+            <dt>Owner</dt>
+            <dd>{{ details.paymentMethod.owner }}</dd>
+          </div>
+          <div>
+            <dt>Number</dt>
+            <dd class="numeric-value">{{ details.paymentMethod.number }}</dd>
+          </div>
+          <div>
+            <dt>Owner email</dt>
+            <dd>{{ details.paymentMethod.ownerEmail }}</dd>
+          </div>
+          <div>
+            <dt>Fingerprint</dt>
+            <dd class="code-value inline-link">{{ details.paymentMethod.fingerprint }}</dd>
+          </div>
+          <div>
+            <dt>Address</dt>
+            <dd>{{ details.paymentMethod.address }}</dd>
+          </div>
+          <div>
+            <dt>Expires</dt>
+            <dd class="numeric-value">{{ details.paymentMethod.expires }}</dd>
+          </div>
+          <div>
+            <dt>Origin</dt>
+            <dd>{{ details.paymentMethod.origin }}</dd>
+          </div>
+          <div>
+            <dt>Type</dt>
+            <dd>{{ details.paymentMethod.type }}</dd>
+          </div>
+          <div>
+            <dt>Zip check</dt>
+            <dd>{{ details.paymentMethod.zipCheck }}</dd>
+          </div>
+          <div>
+            <dt>Issuer</dt>
+            <dd>{{ details.paymentMethod.issuer }}</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+
+    <aside class="details-rail" aria-label="Payment and customer details">
+      <section aria-labelledby="details-title">
+        <h2 id="details-title">Details</h2>
+        <dl class="rail-list">
+          <div>
+            <dt>Payment ID</dt>
+            <dd class="code-value">{{ details.paymentId }}</dd>
+          </div>
+          <div>
+            <dt>Payment method</dt>
+            <dd class="rail-payment-method">
+              <app-payment-method-icon
+                category="card-brand"
+                [iconKey]="details.paymentMethod.brand"
+                tooltipId="detail-rail-payment-method-brand"
+              />
+              <span class="numeric-value">•••• 1453</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Description</dt>
+            <dd>
+              {{ details.description }}
+              <a class="inline-link" routerLink="/mock">Edit</a>
+            </dd>
+          </div>
+          <div>
+            <dt>Statement descriptor</dt>
+            <dd>{{ details.statementDescriptor }}</dd>
+          </div>
+          <div>
+            <dt>Dates</dt>
+            <dd class="date-list">
+              <span>
+                <span>Created</span>
+                <time [attr.datetime]="details.createdAt">{{ details.createdLabel }}</time>
+              </span>
+              <span>
+                <span>Last updated</span>
+                <time [attr.datetime]="details.updatedAt">{{ details.updatedLabel }}</time>
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>Risk evaluation</dt>
+            <dd class="risk-label">
+              <span aria-hidden="true"></span>
+              {{ details.riskEvaluation }}
+            </dd>
+          </div>
+          <div>
+            <dt>Failure code</dt>
+            <dd class="code-value inline-link">{{ details.failureCode }}</dd>
+          </div>
+          <div>
+            <dt>Network decline code</dt>
+            <dd class="numeric-value">{{ details.networkDeclineCode }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="customer-section" aria-labelledby="customer-title">
+        <h2 id="customer-title">Customer</h2>
+        <dl class="rail-list">
+          <div>
+            <dt>ID</dt>
+            <dd class="code-value inline-link">{{ details.customer.id }}</dd>
+          </div>
+          <div>
+            <dt>Name</dt>
+            <dd>{{ details.customer.name }}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>
+              <span class="email-chip">{{ details.customer.email }}</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Phone</dt>
+            <dd>{{ details.customer.phone }}</dd>
+          </div>
+          <div>
+            <dt>Country</dt>
+            <dd>{{ details.customer.country }}</dd>
+          </div>
+        </dl>
+      </section>
+    </aside>
+  </div>
+</article>

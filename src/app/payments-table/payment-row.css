@@ -1,5 +1,6 @@
 :host {
   color: var(--color-muted);
+  cursor: pointer;
   font-size: 13px;
   line-height: 20px;
 }
@@ -39,14 +40,24 @@ td:last-child {
 }
 
 .payment-id {
+  display: block;
   min-width: 0;
+  min-height: 44px;
+  padding-block: 13px;
   overflow: hidden;
+  border-radius: 4px;
   color: #3c4257;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
   line-height: 18px;
+  text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.payment-id-link:focus-visible {
+  outline: 2px solid #303750;
+  outline-offset: 2px;
 }
 
 .copy-action {
@@ -242,6 +253,11 @@ td:last-child {
 @media (hover: hover) and (pointer: fine) {
   :host(:hover) {
     background: var(--color-row-hover);
+  }
+
+  :host(:hover) .payment-id-link {
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .copy-action:hover {

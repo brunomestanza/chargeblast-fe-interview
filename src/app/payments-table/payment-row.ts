@@ -104,6 +104,9 @@ export function formatRelativeTime(createdAt: string, currentTime: number): stri
   imports: [PaymentMethodIcon],
   templateUrl: './payment-row.html',
   styleUrl: './payment-row.css',
+  host: {
+    '(click)': 'openDetails($event)',
+  },
 })
 export class PaymentRow {
   readonly payment = input.required<Payment>();
@@ -111,6 +114,7 @@ export class PaymentRow {
   readonly currentTime = input<number | null>(null);
   readonly timeZone = input('UTC');
   readonly copyRequested = output<string>();
+  readonly detailsRequested = output<string>();
 
   protected readonly copied = computed(() => {
     const copyState = this.copyState();
@@ -166,6 +170,9 @@ export class PaymentRow {
     const paymentMethod = this.payment().paymentMethod;
     return paymentMethod.kind === 'card' ? paymentMethod.lastFour : null;
   });
+  protected readonly paymentDetailsPath = computed(
+    () => '/payments/' + encodeURIComponent(this.payment().id),
+  );
   protected readonly tooltipId = computed(() => 'relative-time-' + this.payment().id);
 
   protected statusLabel(status: PaymentStatus): string {
@@ -182,6 +189,34 @@ export class PaymentRow {
 
   protected requestCopy(): void {
     this.copyRequested.emit(this.payment().id);
+  }
+
+  protected requestDetails(event: MouseEvent): void {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+
+    event.preventDefault();
+    this.detailsRequested.emit(this.payment().id);
+  }
+
+  protected openDetails(event: MouseEvent): void {
+    const target = event.target;
+    const row = event.currentTarget;
+
+    if (!(target instanceof Element) || !(row instanceof Element)) {
+      return;
+    }
+
+    const interactiveTarget = target.closest(
+      'a, button, input, select, textarea, [contenteditable="true"], [tabindex]',
+    );
+
+    if (interactiveTarget && row.contains(interactiveTarget)) {
+      return;
+    }
+
+    this.detailsRequested.emit(this.payment().id);
   }
 
   protected paymentIconTooltipId(index: number): string {

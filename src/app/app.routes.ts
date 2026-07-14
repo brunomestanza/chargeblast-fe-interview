@@ -11,6 +11,14 @@ export const routes: Routes = [
     title: 'Payments | Chargeblast',
   },
   {
+    path: 'payments/:paymentId',
+    loadComponent: () =>
+      import('./payment-details-page/payment-details-page').then(
+        ({ PaymentDetailsPage }) => PaymentDetailsPage,
+      ),
+    title: 'Payment details | Chargeblast',
+  },
+  {
     path: 'customers',
     loadComponent: loadMockPage,
     title: 'Customers | Chargeblast',

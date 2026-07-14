@@ -2053,6 +2053,7 @@ describe('PaymentsTable', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     const copyButton = element.querySelector<HTMLButtonElement>('.copy-action');
+    const paymentLink = element.querySelector<HTMLAnchorElement>('.payment-id-link');
     const time = element.querySelector('time');
     const relativeTimeTooltip = element.querySelector('.relative-tooltip');
     const paymentIcon = element.querySelector<HTMLElement>('.payment-icon__trigger');
@@ -2066,6 +2067,8 @@ describe('PaymentsTable', () => {
     expect(element.textContent).toContain('Succeeded');
     expect(element.textContent).toContain('•••• 4242');
     expect(element.querySelector('.payment-id')?.textContent).toContain('…');
+    expect(paymentLink?.getAttribute('href')).toBe('/payments/' + payment.id);
+    expect(paymentLink?.getAttribute('aria-label')).toBe('View details for payment ' + payment.id);
     expect(copyButton?.getAttribute('aria-label')).toBe('Copy payment ID ' + payment.id);
     expect(time?.getAttribute('datetime')).toBe(payment.createdAt);
     expect(relativeTimeTooltip?.textContent?.trim()).toBeTruthy();

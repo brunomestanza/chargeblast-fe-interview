@@ -366,6 +366,10 @@ export class PaymentsTable {
     }
   }
 
+  protected openPaymentDetails(paymentId: string): void {
+    void this.router.navigate(['/payments', paymentId], { queryParamsHandling: 'preserve' });
+  }
+
   protected changeSort(column: PaymentSortColumn): void {
     const currentCriteria = this.sortCriteria();
     const nextCriteria = cyclePaymentSort(currentCriteria, column);

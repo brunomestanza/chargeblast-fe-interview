@@ -62,6 +62,10 @@
   background: #ffffff;
 }
 
+.dashboard-shell__content:has(app-payment-details-page) {
+  background: #ffffff;
+}
+
 @media (max-width: 1320px) {
   .dashboard-shell__workspace {
     --top-navigation-height: 113px;

@@ -1,0 +1,275 @@
+:host {
+  --detail-ink: #1a1f36;
+  --detail-body: #3c4257;
+  --detail-muted: #697386;
+  --detail-border: rgba(31, 45, 61, 0.12);
+  --detail-link: #5145cd;
+  display: block;
+  width: 100%;
+  max-width: 1180px;
+  min-width: 0;
+}
+
+.payment-details {
+  width: 100%;
+  min-width: 0;
+  color: var(--detail-body);
+  background: #ffffff;
+}
+
+.breadcrumb {
+  margin-bottom: 8px;
+}
+
+.breadcrumb a,
+.secondary-action,
+.small-action,
+.payment-summary__title-row,
+.method-summary,
+.rail-payment-method,
+.risk-label {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb a {
+  width: max-content;
+  min-height: 44px;
+  gap: 7px;
+  border-radius: 5px;
+  color: var(--detail-link);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.breadcrumb svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.payment-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--detail-border);
+}
+
+.payment-summary__title-row {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+h1,
+h2,
+.payment-summary p,
+.activity-title,
+.activity-description {
+  margin: 0;
+}
+
+h1 {
+  color: var(--detail-ink);
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 36px;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+h1 span {
+  color: var(--detail-muted);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.payment-summary p {
+  margin-top: 4px;
+  color: var(--detail-muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.status-badge {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border: 1px solid #efc3bd;
+  border-radius: 999px;
+  color: #9b2c2c;
+  background: #fff2f0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.status-badge svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+.inline-link {
+  color: var(--detail-link);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.secondary-action,
+.small-action {
+  position: relative;
+  justify-content: center;
+  height: 32px;
+  min-height: 32px;
+  border-radius: 7px;
+  color: var(--detail-body);
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(31, 45, 61, 0.18);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.secondary-action::before,
+.small-action::before {
+  position: absolute;
+  inset-block: -6px;
+  inset-inline: 0;
+  content: '';
+}
+
+.secondary-action {
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 0 12px;
+}
+
+.secondary-action svg,
+.small-action svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.details-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(248px, 280px);
+  gap: 40px;
+}
+
+.details-main,
+.details-rail {
+  min-width: 0;
+}
+
+.detail-section {
+  padding: 28px 0;
+  border-bottom: 1px solid var(--detail-border);
+}
+
+.detail-section--last {
+  border-bottom: 0;
+}
+
+.detail-section--breakdown {
+  padding-bottom: 16px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+h2 {
+  color: var(--detail-ink);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 22px;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.small-action {
+  gap: 5px;
+  min-width: 88px;
+  padding: 0 10px;
+}
+
+.activity-list {
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 12px;
+  padding-bottom: 22px;
+}
+
+.activity-item:last-child {
+  padding-bottom: 0;
+}
+
+.activity-item:not(:last-child)::after {
+  position: absolute;
+  top: 21px;
+  bottom: 0;
+  left: 10px;
+  width: 1px;
+  background: var(--detail-border);
+  content: '';
+}
+
+.activity-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--detail-muted);
+  background: #f3f5f8;
+  box-shadow: 0 0 0 3px #ffffff;
+  place-items: center;
+}
+
+.activity-icon--failed {
+  color: #9b2c2c;
+  background: #fff2f0;
+}
+
+.activity-icon svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+}

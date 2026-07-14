@@ -2,9 +2,15 @@
 
 <td>
   <div class="payment-id-cell">
-    <span class="payment-id" [title]="row.id">
+    <a
+      class="payment-id payment-id-link"
+      [attr.href]="paymentDetailsPath()"
+      [title]="row.id"
+      [attr.aria-label]="'View details for payment ' + row.id"
+      (click)="requestDetails($event)"
+    >
       {{ truncatedPaymentId(row.id) }}
-    </span>
+    </a>
     <button
       class="copy-action"
       type="button"

@@ -39,6 +39,69 @@ describe('App', () => {
     expect(newestPaymentTime).toBeLessThanOrEqual(Date.now());
   });
 
+  it('should open fixed payment details from a table row and preserve the table view', async () => {
+    const fixture = await createApp('/?view=compact');
+    const compiled = fixture.nativeElement as HTMLElement;
+    const router = TestBed.inject(Router);
+    const firstRow = compiled.querySelector<HTMLTableRowElement>('tbody tr[appPaymentRow]')!;
+    const paymentLink = firstRow.querySelector<HTMLAnchorElement>('.payment-id-link')!;
+    const selectedPaymentId = paymentLink.getAttribute('title')!;
+
+    firstRow.querySelector<HTMLButtonElement>('.copy-action')?.click();
+    await Promise.resolve();
+
+    expect(router.url).toBe('/?view=compact');
+    expect(paymentLink.getAttribute('href')).toBe(`/payments/${selectedPaymentId}`);
+
+    firstRow.querySelector<HTMLElement>('.customer')?.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const detailsPage = compiled.querySelector<HTMLElement>('app-payment-details-page')!;
+    const initialDetails = detailsPage.textContent?.replace(/\s+/g, ' ').trim();
+    const activeSidebarLink = compiled.querySelector<HTMLAnchorElement>(
+      '.sidebar__link[aria-current="page"]',
+    );
+    const backLink = Array.from(detailsPage.querySelectorAll<HTMLAnchorElement>('a')).find(
+      (link) => link.textContent?.trim() === 'Payments',
+    );
+
+    expect(router.url).toBe(`/payments/${selectedPaymentId}?view=compact`);
+    expect(detailsPage.querySelector('h1')?.textContent).toContain('£34.99');
+    expect(detailsPage.textContent).toContain('Recent activity');
+    expect(activeSidebarLink?.textContent?.trim()).toBe('Payments');
+    expect(backLink?.getAttribute('href')).toBe('/?view=compact');
+    expect(document.activeElement).toBe(compiled.querySelector('#main-content'));
+    expect(document.title).toBe('Payment details | Chargeblast');
+
+    await router.navigateByUrl('/payments/a-different-payment?view=compact');
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const nextDetails = compiled
+      .querySelector<HTMLElement>('app-payment-details-page')
+      ?.textContent?.replace(/\s+/g, ' ')
+      .trim();
+
+    expect(nextDetails).toBe(initialDetails);
+
+    backLink?.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(router.url).toBe('/?view=compact');
+    expect(compiled.querySelector('app-payments-table')).toBeTruthy();
+
+    const returnedPaymentLink = compiled.querySelector<HTMLAnchorElement>('.payment-id-link')!;
+    const returnedPaymentId = returnedPaymentLink.getAttribute('title')!;
+    returnedPaymentLink.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(router.url).toBe(`/payments/${returnedPaymentId}?view=compact`);
+    expect(compiled.querySelector('app-payment-details-page')).toBeTruthy();
+  });
+
   it('should expose every available payment icon and the missing-icon fallback', async () => {
     const fixture = await createApp('/');
 
