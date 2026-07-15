@@ -22,6 +22,7 @@ import { PaymentColumnLayoutController } from './payment-column-layout.controlle
 import { PaymentCsvDownloadAdapter } from './payment-csv-download.adapter';
 import type { Payment } from '../payments/payment';
 import { PaymentTablePreferencesAdapter, isPageSize } from './payment-table-preferences.adapter';
+import { PaymentTableFeedbackController } from './payment-table-feedback.controller';
 import { PaymentTableViewportController } from './payment-table-viewport.controller';
 import { PaymentViewUrlAdapter } from './payment-view-url.adapter';
 import { PaymentRow } from './payment-row';
@@ -49,6 +50,7 @@ export { TEXT_SEARCH_DEBOUNCE_MS } from './payments-table.facade';
     PaymentClipboardAdapter,
     PaymentColumnLayoutController,
     PaymentCsvDownloadAdapter,
+    PaymentTableFeedbackController,
     PaymentTablePreferencesAdapter,
     PaymentTableViewportController,
     PaymentViewUrlAdapter,

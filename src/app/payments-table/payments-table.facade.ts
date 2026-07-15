@@ -17,8 +17,6 @@ import {
   paymentMethodFilterLabel,
   type PaymentMethodFilterValue,
 } from './filters/payment-method-filter/payment-method-filter-options';
-import { PaymentClipboardAdapter } from './payment-clipboard.adapter';
-import type { PaymentCopyState } from './payment-copy-state';
 import { PaymentCsvDownloadAdapter } from './payment-csv-download.adapter';
 import {
   parseTextSearchQuery,
@@ -51,20 +49,15 @@ import {
 } from './payment-sort.contract';
 import { cyclePaymentSort, sortPayments } from './payment-sort.operations';
 import { serializePaymentSort } from './payment-sort.query-codec';
+import { PaymentTableFeedbackController } from './payment-table-feedback.controller';
+
+export type { PaymentExportToast } from './payment-table-feedback.controller';
 
 export const TEXT_SEARCH_DEBOUNCE_MS = 300;
-
-const EXPORT_TOAST_DURATION_MS = 5_000;
-const COPY_FEEDBACK_DURATION_MS = 1_800;
 
 interface PaymentSortColumnState {
   readonly direction: PaymentSortCriterion['direction'];
   readonly priority: number;
-}
-
-export interface PaymentExportToast {
-  readonly id: number;
-  readonly message: string;
 }
 
 export interface PaymentsTableViewEffects {
@@ -84,14 +77,13 @@ export class PaymentsTableFacade {
   private readonly queryDelay = inject(PAYMENT_QUERY_DELAY);
   private readonly preferences = inject(PaymentTablePreferencesAdapter);
   private readonly url = inject(PaymentViewUrlAdapter);
-  private readonly clipboard = inject(PaymentClipboardAdapter);
   private readonly csvDownload = inject(PaymentCsvDownloadAdapter);
+  private readonly feedback = inject(PaymentTableFeedbackController);
 
   private readonly paymentsState = signal<readonly Payment[]>([]);
   readonly payments = this.paymentsState.asReadonly();
 
-  private readonly copyStateValue = signal<PaymentCopyState | null>(null);
-  readonly copyState = this.copyStateValue.asReadonly();
+  readonly copyState = this.feedback.copyState;
   private readonly loadingState = signal(false);
   readonly isLoading = this.loadingState.asReadonly();
   private readonly currentTimeState = signal<number | null>(null);
@@ -123,12 +115,10 @@ export class PaymentsTableFacade {
   private readonly currentPageState = signal(1);
   readonly currentPage = this.currentPageState.asReadonly();
 
-  private readonly sortAnnouncementState = signal('');
-  readonly sortAnnouncement = this.sortAnnouncementState.asReadonly();
-  private readonly filterAnnouncementState = signal('');
-  readonly filterAnnouncement = this.filterAnnouncementState.asReadonly();
-  private readonly exportToastState = signal<readonly PaymentExportToast[]>([]);
-  readonly exportToasts = this.exportToastState.asReadonly();
+  readonly sortAnnouncement = this.feedback.sortAnnouncement;
+  readonly filterAnnouncement = this.feedback.filterAnnouncement;
+  readonly copyAnnouncement = this.feedback.copyAnnouncement;
+  readonly exportToasts = this.feedback.exportToasts;
 
   readonly hasActiveFilters = computed(
     () =>
@@ -213,18 +203,6 @@ export class PaymentsTableFacade {
     return `Viewing ${firstPayment}–${lastPayment} of ${paymentCount} ${paymentLabel}`;
   });
 
-  readonly copyAnnouncement = computed(() => {
-    const state = this.copyStateValue();
-
-    if (!state) {
-      return '';
-    }
-
-    return state.status === 'copied'
-      ? 'Payment ID ' + state.paymentId + ' copied to clipboard.'
-      : 'Payment ID ' + state.paymentId + ' could not be copied. Try again.';
-  });
-
   private readonly sortStateByColumn = computed(
     () =>
       new Map<PaymentSortColumn, PaymentSortColumnState>(
@@ -246,9 +224,6 @@ export class PaymentsTableFacade {
   });
 
   private viewEffects: PaymentsTableViewEffects = NOOP_VIEW_EFFECTS;
-  private feedbackTimer: ReturnType<typeof setTimeout> | undefined;
-  private exportToastTimer: ReturnType<typeof setTimeout> | undefined;
-  private exportToastId = 0;
   private textSearchTimer: ReturnType<typeof setTimeout> | undefined;
   private queryTimer: ReturnType<typeof setTimeout> | undefined;
   private queryRequestId = 0;
@@ -264,8 +239,6 @@ export class PaymentsTableFacade {
     });
 
     this.destroyRef.onDestroy(() => {
-      this.clearFeedbackTimer();
-      this.clearExportToastTimer();
       this.clearTextSearchTimer();
       this.cancelPendingQuery();
       this.stopClock();
@@ -308,17 +281,8 @@ export class PaymentsTableFacade {
     );
   }
 
-  async copyPaymentId(paymentId: string): Promise<void> {
-    this.clearFeedbackTimer();
-    const copyResult = this.clipboard.writeText(paymentId);
-
-    if (typeof copyResult === 'boolean') {
-      this.showCopyFeedback(paymentId, copyResult ? 'copied' : 'failed');
-      return;
-    }
-
-    const copied = await copyResult;
-    this.showCopyFeedback(paymentId, copied ? 'copied' : 'failed');
+  copyPaymentId(paymentId: string): Promise<void> {
+    return this.feedback.copyPaymentId(paymentId);
   }
 
   exportCurrentView(): void {
@@ -330,7 +294,7 @@ export class PaymentsTableFacade {
     const timestamp = new Date(this.currentTimeState() ?? Date.now());
 
     if (this.csvDownload.download(payments, timestamp)) {
-      this.showExportSuccess(payments.length);
+      this.feedback.showExportSuccess(payments.length);
     }
   }
 
@@ -340,9 +304,7 @@ export class PaymentsTableFacade {
 
     this.requestedSortCriteria.set(nextCriteria);
     this.requestPayments(() => {
-      this.sortAnnouncementState.set(
-        this.describeSortAction(column, currentCriteria, nextCriteria),
-      );
+      this.feedback.announceSort(this.describeSortAction(column, currentCriteria, nextCriteria));
     });
   }
 
@@ -402,7 +364,7 @@ export class PaymentsTableFacade {
     this.requestPayments(() => {
       const paymentCount = this.paymentCountSummary();
 
-      this.filterAnnouncementState.set(
+      this.feedback.announceFilter(
         selection === null
           ? `Date range filter cleared. ${paymentCount} found.`
           : `Date range filter applied: ${formatDateRangeLabel(selection)}. ${paymentCount} found.`,
@@ -416,14 +378,12 @@ export class PaymentsTableFacade {
       const paymentCount = this.paymentCountSummary();
 
       if (statuses.length === 0) {
-        this.filterAnnouncementState.set(`Status filter cleared. ${paymentCount} found.`);
+        this.feedback.announceFilter(`Status filter cleared. ${paymentCount} found.`);
         return;
       }
 
       const statusLabel = statuses.map((status) => PAYMENT_STATUS_LABELS[status]).join(', ');
-      this.filterAnnouncementState.set(
-        `Status filter applied: ${statusLabel}. ${paymentCount} found.`,
-      );
+      this.feedback.announceFilter(`Status filter applied: ${statusLabel}. ${paymentCount} found.`);
     });
   }
 
@@ -433,12 +393,12 @@ export class PaymentsTableFacade {
       const paymentCount = this.paymentCountSummary();
 
       if (paymentMethods.length === 0) {
-        this.filterAnnouncementState.set(`Payment method filter cleared. ${paymentCount} found.`);
+        this.feedback.announceFilter(`Payment method filter cleared. ${paymentCount} found.`);
         return;
       }
 
       const methodLabel = paymentMethods.map(paymentMethodFilterLabel).join(', ');
-      this.filterAnnouncementState.set(
+      this.feedback.announceFilter(
         `Payment method filter applied: ${methodLabel}. ${paymentCount} found.`,
       );
     });
@@ -449,7 +409,7 @@ export class PaymentsTableFacade {
     this.requestPayments(() => {
       const paymentCount = this.paymentCountSummary();
 
-      this.filterAnnouncementState.set(
+      this.feedback.announceFilter(
         range === null
           ? `Amount range filter cleared. ${paymentCount} found.`
           : `Amount range filter applied: ${formatAmountRangeLabel(range)}. ${paymentCount} found.`,
@@ -484,7 +444,7 @@ export class PaymentsTableFacade {
     this.textSearchInputState.set('');
     this.requestedTextSearch.set(null);
     this.requestPayments(() => {
-      this.filterAnnouncementState.set(
+      this.feedback.announceFilter(
         `All payment filters cleared. ${this.paymentCountSummary()} found.`,
       );
     });
@@ -535,13 +495,13 @@ export class PaymentsTableFacade {
 
     const announceRestoredView = (): void => {
       if (sortChanged) {
-        this.sortAnnouncementState.set(
+        this.feedback.announceSort(
           'Sort order restored from the URL. ' + this.describeSortOrder(nextCriteria),
         );
       }
 
       if (filtersChanged) {
-        this.filterAnnouncementState.set(
+        this.feedback.announceFilter(
           this.describeRestoredFilters(
             nextDateRange,
             nextStatuses,
@@ -551,7 +511,7 @@ export class PaymentsTableFacade {
           ),
         );
       } else if (!sortChanged) {
-        this.filterAnnouncementState.set(
+        this.feedback.announceFilter(
           `Payment results restored from the URL. ${this.paymentCountSummary()} found.`,
         );
       }
@@ -666,15 +626,13 @@ export class PaymentsTableFacade {
     this.requestPayments(() => {
       if (textSearchChanged) {
         const action = nextTextSearch === null ? 'cleared' : `applied: ${nextTextSearch}`;
-        this.filterAnnouncementState.set(
+        this.feedback.announceFilter(
           `Text search filter ${action}. ${this.paymentCountSummary()} found.`,
         );
         return;
       }
 
-      this.filterAnnouncementState.set(
-        `Payment results updated. ${this.paymentCountSummary()} found.`,
-      );
+      this.feedback.announceFilter(`Payment results updated. ${this.paymentCountSummary()} found.`);
     });
   }
 
@@ -704,8 +662,7 @@ export class PaymentsTableFacade {
     this.resetTableScrollPosition();
     this.viewEffects.updateSkeletonLayout();
     this.loadingState.set(true);
-    this.sortAnnouncementState.set('');
-    this.filterAnnouncementState.set('');
+    this.feedback.clearResultAnnouncements();
 
     const applyResponse = (): void => {
       if (requestId !== this.queryRequestId) {
@@ -758,49 +715,6 @@ export class PaymentsTableFacade {
     if (this.textSearchTimer !== undefined) {
       clearTimeout(this.textSearchTimer);
       this.textSearchTimer = undefined;
-    }
-  }
-
-  private showCopyFeedback(paymentId: string, status: PaymentCopyState['status']): void {
-    this.copyStateValue.set({ paymentId, status });
-    this.feedbackTimer = setTimeout(() => {
-      if (this.copyStateValue()?.paymentId === paymentId) {
-        this.copyStateValue.set(null);
-      }
-    }, COPY_FEEDBACK_DURATION_MS);
-  }
-
-  private clearFeedbackTimer(): void {
-    if (this.feedbackTimer !== undefined) {
-      clearTimeout(this.feedbackTimer);
-      this.feedbackTimer = undefined;
-    }
-  }
-
-  private showExportSuccess(paymentCount: number): void {
-    this.clearExportToastTimer();
-    const toastId = ++this.exportToastId;
-    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
-
-    this.exportToastState.set([
-      {
-        id: toastId,
-        message: `CSV export completed successfully. ${paymentCount} ${paymentLabel} exported.`,
-      },
-    ]);
-    this.exportToastTimer = setTimeout(() => {
-      if (this.exportToastState()[0]?.id === toastId) {
-        this.exportToastState.set([]);
-      }
-
-      this.exportToastTimer = undefined;
-    }, EXPORT_TOAST_DURATION_MS);
-  }
-
-  private clearExportToastTimer(): void {
-    if (this.exportToastTimer !== undefined) {
-      clearTimeout(this.exportToastTimer);
-      this.exportToastTimer = undefined;
     }
   }
 
