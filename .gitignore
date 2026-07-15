@@ -29,6 +29,9 @@ yarn-error.log
 !.vscode/mcp.json
 .history/*
 
+# Claude Code (local permissions and scratch worktrees)
+.claude/
+
 # Miscellaneous
 /.angular/cache
 .sass-cache/
