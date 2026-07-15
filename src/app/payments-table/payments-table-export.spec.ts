@@ -95,7 +95,7 @@ describe('PaymentsTable export', () => {
         Array.from(actionGroup.querySelectorAll('button')).map((button) =>
           button.textContent?.trim(),
         ),
-      ).toEqual(['Export']);
+      ).toEqual(['Export', 'Edit columns']);
       expect(getComputedStyle(actionGroup).gap).toBe('6px');
       expect(element.querySelectorAll('tbody tr')).toHaveLength(25);
       expect(exportButton.type).toBe('button');

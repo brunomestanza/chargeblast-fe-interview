@@ -79,6 +79,10 @@
         [disabled]="view.isLoading()"
         (exportRequested)="view.exportCurrentView()"
       />
+      <app-edit-columns-button
+        [columns]="columns.orderedColumns()"
+        (orderChange)="columns.setColumnOrder($event)"
+      />
     </div>
   </section>
 
@@ -111,18 +115,12 @@
         }
       </colgroup>
       <thead>
-        <tr
-          (pointerdown)="columns.onHeaderPointerDown($event)"
-          (pointermove)="columns.onHeaderPointerMove($event)"
-          (pointerup)="columns.onHeaderPointerUp($event)"
-          (pointercancel)="columns.onHeaderPointerCancel($event)"
-        >
-          @for (column of columns.orderedColumns(); track column.key; let columnIndex = $index) {
+        <tr>
+          @for (column of columns.orderedColumns(); track column.key) {
             <th
               scope="col"
               class="column-header"
               [attr.data-column]="column.key"
-              [class.column-header--dragging]="columns.draggingColumn() === column.key"
               [class.column-header--resizing]="columns.resizingColumn() === column.key"
               [attr.aria-sort]="view.sortAriaValue(column.key)"
             >
@@ -157,24 +155,6 @@
               <span class="visually-hidden" [id]="view.sortDescriptionId(column.key)">
                 {{ view.sortDescription(column.key) }}
               </span>
-              <button
-                type="button"
-                class="reorder-handle"
-                [class.reorder-handle--active]="columns.draggingColumn() === column.key"
-                [attr.aria-label]="columns.reorderHandleLabel(column, columnIndex)"
-                (pointerdown)="columns.onReorderHandlePointerDown($event, columnIndex, column.key)"
-                (keydown)="columns.onReorderHandleKeydown($event, columnIndex, column.key)"
-                (click)="$event.stopPropagation()"
-              >
-                <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
-                  <circle cx="6" cy="4" r="1" />
-                  <circle cx="10" cy="4" r="1" />
-                  <circle cx="6" cy="8" r="1" />
-                  <circle cx="10" cy="8" r="1" />
-                  <circle cx="6" cy="12" r="1" />
-                  <circle cx="10" cy="12" r="1" />
-                </svg>
-              </button>
               <span
                 class="column-resizer"
                 role="separator"

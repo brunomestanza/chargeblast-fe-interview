@@ -1,0 +1,90 @@
+<button
+  #trigger
+  type="button"
+  class="edit-columns__trigger"
+  [attr.aria-expanded]="open()"
+  [attr.aria-controls]="open() ? popoverId() : null"
+  (click)="togglePopover()"
+>
+  <svg class="edit-columns__settings" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M11.368 4.49a.997.997 0 0 1 .632.93v1.16a1 1 0 0 1-.917.996l-.819.069a.126.126 0 0 0-.105.078.126.126 0 0 0 .02.13l.53.627a.999.999 0 0 1-.056 1.353l-.82.82a1 1 0 0 1-1.353.056l-.628-.53a.126.126 0 0 0-.13-.02.126.126 0 0 0-.077.105l-.069.819A1 1 0 0 1 6.58 12H5.42a1 1 0 0 1-.996-.917l-.069-.819a.126.126 0 0 0-.078-.105.126.126 0 0 0-.13.02l-.627.53a1.002 1.002 0 0 1-1.353-.056l-.82-.82a1 1 0 0 1-.056-1.354l.53-.627a.126.126 0 0 0 .02-.13.126.126 0 0 0-.105-.077l-.819-.069A1 1 0 0 1 0 6.58V5.42a1 1 0 0 1 .917-.996l.819-.069a.126.126 0 0 0 .105-.078.126.126 0 0 0-.02-.13l-.53-.627a1 1 0 0 1 .056-1.353l.82-.82a1 1 0 0 1 1.353-.056l.628.53a.123.123 0 0 0 .13.02.126.126 0 0 0 .077-.105l.069-.819A1 1 0 0 1 5.42 0h1.16a1 1 0 0 1 .996.917l.069.819a.126.126 0 0 0 .078.105.124.124 0 0 0 .13-.02l.627-.53a1 1 0 0 1 1.353.056l.82.82a1 1 0 0 1 .056 1.353l-.53.628a.126.126 0 0 0-.02.13.126.126 0 0 0 .105.077l.82.069a1 1 0 0 1 .284.066Zm-1.762-1.6-.382.451a1.376 1.376 0 0 0 .937 2.261l.589.05v.699l-.59.049a1.376 1.376 0 0 0-.936 2.26l.382.452-.495.495-.451-.382a1.376 1.376 0 0 0-2.261.936l-.05.59H5.65l-.049-.59a1.376 1.376 0 0 0-2.26-.936l-.452.382-.495-.495.382-.451A1.376 1.376 0 0 0 1.84 6.4l-.59-.05v-.7l.59-.049a1.376 1.376 0 0 0 .936-2.26l-.382-.452.495-.495.451.382a1.376 1.376 0 0 0 2.261-.936l.05-.59h.699l.049.59a1.376 1.376 0 0 0 2.26.936l.452-.382.495.495Z"
+    />
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6 7.25a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5ZM6 8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
+    />
+  </svg>
+  <span>Edit columns</span>
+</button>
+
+@if (open()) {
+  <section
+    class="edit-columns__popover"
+    [id]="popoverId()"
+    [attr.aria-labelledby]="popoverId() + '-title'"
+  >
+    <p class="visually-hidden" [id]="popoverId() + '-instructions'">
+      Press Space or Enter to pick up a column. Use the up and down arrow keys to move it. Press
+      Space or Enter again to drop it, or Escape to cancel.
+    </p>
+    <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+      {{ announcement() }}
+    </p>
+
+    <div class="edit-columns__section">
+      <h2 [id]="popoverId() + '-title'">Active columns</h2>
+
+      <div class="edit-columns__list">
+        @for (column of draftColumns(); track column.key; let columnIndex = $index) {
+          <div
+            #columnRow
+            class="edit-columns__row"
+            [class.edit-columns__row--active]="activeColumn() === column.key"
+            [class.edit-columns__row--pointer-active]="
+              pointerDragging() && activeColumn() === column.key
+            "
+            [style.transform]="rowTransform(columnIndex)"
+          >
+            <span class="edit-columns__checkbox" aria-hidden="true">
+              <svg viewBox="0 0 14 14" focusable="false">
+                <path
+                  d="M9.846 3.801a.929.929 0 0 1 1.37 0 1.076 1.076 0 0 1 0 1.456l-4.64 4.94a.929.929 0 0 1-1.37 0L2.784 7.623a1.076 1.076 0 0 1 0-1.456.929.929 0 0 1 1.37 0L5.89 8.013l3.955-4.212Z"
+                />
+              </svg>
+            </span>
+            <span class="edit-columns__label">{{ column.label }}</span>
+            <button
+              #columnHandle
+              type="button"
+              class="edit-columns__handle"
+              [class.edit-columns__handle--active]="activeColumn() === column.key"
+              [attr.data-column]="column.key"
+              [attr.aria-label]="reorderHandleLabel(column, columnIndex)"
+              aria-roledescription="sortable"
+              [attr.aria-describedby]="popoverId() + '-instructions'"
+              (pointerdown)="onHandlePointerDown($event, columnIndex, column.key)"
+              (pointermove)="onHandlePointerMove($event)"
+              (pointerup)="onHandlePointerUp($event)"
+              (pointercancel)="onHandlePointerCancel($event)"
+              (lostpointercapture)="onHandlePointerCancel($event)"
+              (keydown)="onHandleKeydown($event, columnIndex, column.key)"
+            >
+              <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+                <circle cx="3.5" cy="2" r="0.8" />
+                <circle cx="8.5" cy="2" r="0.8" />
+                <circle cx="3.5" cy="6" r="0.8" />
+                <circle cx="8.5" cy="6" r="0.8" />
+                <circle cx="3.5" cy="10" r="0.8" />
+                <circle cx="8.5" cy="10" r="0.8" />
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+}

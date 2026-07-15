@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { EditColumnsButton } from './edit-columns-button/edit-columns-button';
 import { ExportPaymentsButton } from './export-payments-button/export-payments-button';
 import { ExportSuccessToast } from './export-success-toast/export-success-toast';
 import { AmountRangeFilter } from './filters/amount-range-filter/amount-range-filter';
@@ -43,6 +44,7 @@ export { TEXT_SEARCH_DEBOUNCE_MS } from './payments-table.facade';
     AmountRangeFilter,
     TextSearchFilter,
     CleanFiltersButton,
+    EditColumnsButton,
     ExportPaymentsButton,
     ExportSuccessToast,
     PaymentStatusSummary,
@@ -97,9 +99,7 @@ export class PaymentsTable {
   }
 
   protected changeSort(column: PaymentSortColumn): void {
-    if (!this.columns.consumeSortSuppression(column)) {
-      this.view.changeSort(column);
-    }
+    this.view.changeSort(column);
   }
 
   protected changePageSize(event: Event): void {
