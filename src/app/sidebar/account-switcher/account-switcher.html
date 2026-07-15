@@ -8,9 +8,7 @@
     [attr.aria-expanded]="isOpen()"
     (click)="toggle()"
   >
-    <span class="company-mark company-mark--trigger" aria-hidden="true">{{
-      currentCompanyInitial
-    }}</span>
+    <span class="company-mark" aria-hidden="true">{{ currentCompanyInitial }}</span>
     <span class="account-switcher__name">{{ currentCompany }}</span>
     <app-dashboard-icon class="account-switcher__chevron" name="chevron-down" />
   </button>
@@ -31,76 +29,22 @@
         <p class="account-menu__eyebrow">Current company</p>
       </header>
 
+      <a class="account-menu__cta" routerLink="/mock" (click)="close()">Exit sandbox</a>
+
       <nav class="account-menu__section" aria-label="Workspace options">
         <a class="account-menu__row" routerLink="/settings" (click)="close()">
           <app-dashboard-icon name="settings" />
           <span>Settings</span>
-          <app-dashboard-icon class="account-menu__row-chevron" name="chevron-right" />
         </a>
         <a class="account-menu__row" routerLink="/mock" (click)="close()">
           <app-dashboard-icon name="sandbox" />
-          <span>Switch to Sandbox</span>
+          <span>Switch sandbox</span>
           <app-dashboard-icon class="account-menu__row-chevron" name="chevron-right" />
         </a>
-      </nav>
-
-      <div class="account-menu__divider" aria-hidden="true"></div>
-
-      <div class="company-search">
-        <label class="account-menu__sr-only" for="company-search">Search companies</label>
-        <app-dashboard-icon class="company-search__icon" name="search" />
-        <input
-          #companySearch
-          id="company-search"
-          type="search"
-          placeholder="Search companies"
-          autocomplete="off"
-          spellcheck="false"
-          data-1p-ignore
-          data-lpignore="true"
-          aria-controls="company-results"
-          aria-describedby="company-search-hint"
-          [value]="searchQuery()"
-          (input)="updateSearch($event)"
-        />
-        <span id="company-search-hint" class="account-menu__sr-only">
-          Results match from the beginning of the company name.
-        </span>
-      </div>
-
-      <p class="account-menu__sr-only" aria-live="polite" aria-atomic="true">
-        {{ companyResultLabel() }}
-      </p>
-
-      <nav class="account-menu__companies" aria-label="Companies">
-        <ul id="company-results">
-          @for (company of companies(); track company.name) {
-            <li>
-              <a
-                class="account-menu__row account-menu__company-row"
-                routerLink="/mock"
-                [attr.aria-label]="companyAriaLabel(company)"
-                (click)="close()"
-              >
-                <span class="company-mark" aria-hidden="true">{{ companyInitial(company) }}</span>
-                <span>{{ company.name }}</span>
-                @if (company.current) {
-                  <app-dashboard-icon class="account-menu__check" name="check" />
-                }
-              </a>
-            </li>
-          } @empty {
-            <li class="account-menu__empty">No companies found</li>
-          }
-        </ul>
-      </nav>
-
-      <div class="account-menu__divider" aria-hidden="true"></div>
-
-      <nav class="account-menu__section" aria-label="Account creation">
         <a class="account-menu__row" routerLink="/mock" (click)="close()">
           <app-dashboard-icon name="plus" />
-          <span>Create account</span>
+          <span>Create</span>
+          <app-dashboard-icon class="account-menu__row-chevron" name="chevron-right" />
         </a>
       </nav>
 
@@ -110,7 +54,7 @@
         <a class="account-menu__row" routerLink="/mock" (click)="close()">
           <app-dashboard-icon name="customers" />
           <span>Bruno Mestanza</span>
-          <app-dashboard-icon class="account-menu__row-chevron" name="chevron-right" />
+          <app-dashboard-icon class="account-menu__row-info" name="info" />
         </a>
         <a class="account-menu__row" routerLink="/mock" (click)="close()">
           <app-dashboard-icon name="sign-out" />

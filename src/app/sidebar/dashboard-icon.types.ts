@@ -15,6 +15,7 @@ export type DashboardIconName =
   | 'documents'
   | 'help'
   | 'identity'
+  | 'info'
   | 'layers'
   | 'notifications'
   | 'payments'

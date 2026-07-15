@@ -1,18 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { AccountSwitcher, COMPANY_OPTIONS, filterCompaniesByPrefix } from './account-switcher';
+import { AccountSwitcher, companyInitials } from './account-switcher';
 
-describe('filterCompaniesByPrefix', () => {
+describe('companyInitials', () => {
   it.each([
-    { query: 'Cha', expected: ['Chargeblast'] },
-    { query: 'ja', expected: ['Jazzify'] },
-    { query: '  ADRO', expected: ['AdroCard, Inc'] },
-    { query: 'blast', expected: [] },
-    { query: '', expected: ['AdroCard, Inc', 'Chargeblast', 'Jazzify'] },
-  ])('should match "$query" only from the beginning of the company name', ({ query, expected }) => {
-    expect(filterCompaniesByPrefix(COMPANY_OPTIONS, query).map(({ name }) => name)).toEqual(
-      expected,
-    );
+    { name: 'Chargeblast', max: 1, expected: 'C' },
+    { name: 'Chargeblast', max: 2, expected: 'C' },
+    { name: 'AdroCard, Inc', max: 2, expected: 'AI' },
+    { name: 'teste sandbox', max: 2, expected: 'TS' },
+    { name: '  spaced   out  ', max: 2, expected: 'SO' },
+    { name: '— Chargeblast', max: 1, expected: 'C' },
+  ])('should letter "$name" as "$expected" with max $max', ({ name, max, expected }) => {
+    expect(companyInitials(name, max)).toBe(expected);
   });
 });
 
@@ -44,44 +43,21 @@ describe('AccountSwitcher', () => {
 
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(element.querySelector('#account-switcher-panel')?.getAttribute('role')).toBe('dialog');
-    expect(element.querySelector('label[for="company-search"]')?.textContent?.trim()).toBe(
-      'Search companies',
+    expect(element.querySelector('.account-menu__company')?.textContent?.trim()).toBe(
+      'Chargeblast',
     );
-    expect(companyNames(element)).toEqual(['AdroCard, Inc', 'Chargeblast', 'Jazzify']);
 
     expect(findLink(element, 'Settings')?.getAttribute('href')).toBe('/settings');
 
-    for (const label of ['Switch to Sandbox', 'Create account', 'Bruno Mestanza', 'Sign out']) {
+    for (const label of [
+      'Exit sandbox',
+      'Switch sandbox',
+      'Create',
+      'Bruno Mestanza',
+      'Sign out',
+    ]) {
       expect(findLink(element, label)?.getAttribute('href')).toBe('/mock');
     }
-
-    for (const company of COMPANY_OPTIONS) {
-      expect(findLink(element, company.name)?.getAttribute('href')).toBe('/mock');
-    }
-  });
-
-  it('should filter only companies with a case-insensitive prefix', () => {
-    const fixture = TestBed.createComponent(AccountSwitcher);
-    fixture.detectChanges();
-    const element = fixture.nativeElement as HTMLElement;
-    openMenu(fixture);
-    const search = element.querySelector<HTMLInputElement>('#company-search')!;
-
-    setSearch(search, 'Cha');
-    fixture.detectChanges();
-
-    expect(companyNames(element)).toEqual(['Chargeblast']);
-    expect(findLink(element, 'Settings')).toBeTruthy();
-    expect(element.textContent).toContain('1 company found.');
-
-    setSearch(search, 'blast');
-    fixture.detectChanges();
-
-    expect(companyNames(element)).toEqual([]);
-    expect(element.querySelector('.account-menu__empty')?.textContent?.trim()).toBe(
-      'No companies found',
-    );
-    expect(element.textContent).toContain('No companies found.');
   });
 
   it('should close with Escape and restore focus to its trigger', () => {
@@ -90,7 +66,6 @@ describe('AccountSwitcher', () => {
     const element = fixture.nativeElement as HTMLElement;
     const trigger = getTrigger(element);
     openMenu(fixture);
-    element.querySelector<HTMLInputElement>('#company-search')?.focus();
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();
@@ -113,14 +88,14 @@ describe('AccountSwitcher', () => {
     expect(element.querySelector('#account-switcher-panel')).toBeNull();
   });
 
-  it('should navigate every company and account action to the mock route', async () => {
+  it('should navigate an account action to the mock route and close the menu', async () => {
     const fixture = TestBed.createComponent(AccountSwitcher);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const router = TestBed.inject(Router);
     openMenu(fixture);
 
-    findLink(element, 'Jazzify')?.click();
+    findLink(element, 'Exit sandbox')?.click();
     await fixture.whenStable();
     fixture.detectChanges();
 
@@ -152,17 +127,6 @@ function getTrigger(element: HTMLElement): HTMLButtonElement {
 function openMenu(fixture: ComponentFixture<AccountSwitcher>): void {
   getTrigger(fixture.nativeElement as HTMLElement).click();
   fixture.detectChanges();
-}
-
-function setSearch(input: HTMLInputElement, value: string): void {
-  input.value = value;
-  input.dispatchEvent(new Event('input', { bubbles: true }));
-}
-
-function companyNames(element: HTMLElement): string[] {
-  return Array.from(element.querySelectorAll<HTMLAnchorElement>('.account-menu__company-row')).map(
-    (link) => link.querySelector('.company-mark + span')?.textContent?.trim() ?? '',
-  );
 }
 
 function findLink(element: HTMLElement, label: string): HTMLAnchorElement | undefined {

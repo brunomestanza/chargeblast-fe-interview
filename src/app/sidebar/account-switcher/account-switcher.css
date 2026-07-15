@@ -118,15 +118,30 @@
   line-height: 20px;
 }
 
-.account-menu__section,
-.account-menu__companies,
-.account-menu__companies ul {
+.account-menu__section {
   margin: 0;
   padding: 0;
 }
 
-.account-menu__companies ul {
-  list-style: none;
+/* Stripe rings this one with a shadow instead of a border, so it takes no
+   layout width and the label stays centred on the row. */
+.account-menu__cta {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 8px 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #273951;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px #d4dee9;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-decoration: none;
+  touch-action: manipulation;
+  transition: background-color 0.1s cubic-bezier(0, 0, 0.4, 1);
 }
 
 .account-menu__row {
@@ -139,9 +154,10 @@
   line-height: 20px;
 }
 
-/* Leading glyphs only — the trailing chevron and check size and align
-   differently, and would inherit the wrong margin from this rule. */
-.account-menu__row > app-dashboard-icon:not(.account-menu__row-chevron):not(.account-menu__check) {
+/* Leading glyphs only — the trailing icons size and align differently, and
+   would inherit the wrong margin from this rule. */
+.account-menu__row
+  > app-dashboard-icon:not(.account-menu__row-chevron):not(.account-menu__row-info) {
   width: 16px;
   height: 16px;
   /* Stripe pads its row glyphs rather than widening the gap, which is what
@@ -151,20 +167,19 @@
 }
 
 .account-menu__row > .account-menu__row-chevron,
-.account-menu__row > .account-menu__check {
+.account-menu__row > .account-menu__row-info {
   margin-left: auto;
+  color: #50617a;
 }
 
 .account-menu__row > .account-menu__row-chevron {
   width: 8px;
   height: 8px;
-  color: #50617a;
 }
 
-.account-menu__row > .account-menu__check {
-  width: 16px;
-  height: 16px;
-  color: #533afd;
+.account-menu__row > .account-menu__row-info {
+  width: 12px;
+  height: 12px;
 }
 
 .account-menu__divider {
@@ -173,57 +188,8 @@
   background: #d4dee9;
 }
 
-.company-search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin: 8px 0 4px;
-}
-
-.company-search__icon {
-  position: absolute;
-  left: 10px;
-  width: 16px;
-  height: 16px;
-  color: #50617a;
-  pointer-events: none;
-}
-
-.company-search input {
-  width: 100%;
-  min-height: 36px;
-  padding: 8px 10px 8px 34px;
-  border: 1px solid #d4dee9;
-  border-radius: 8px;
-  color: #1a2c44;
-  background: #ffffff;
-  font-size: 16px;
-  line-height: 20px;
-  outline: none;
-}
-
-.company-search input::placeholder {
-  color: #50617a;
-}
-
-.company-search input:focus {
-  border-color: #533afd;
-  box-shadow: 0 0 0 2px rgba(83, 58, 253, 0.18);
-}
-
-.account-menu__company-row {
-  font-weight: 400;
-}
-
-.account-menu__empty {
-  padding: 18px 10px;
-  color: #50617a;
-  font-size: 14px;
-  line-height: 20px;
-  text-align: center;
-}
-
 .account-switcher__trigger:focus-visible,
+.account-menu__cta:focus-visible,
 .account-menu__row:focus-visible {
   outline: 2px solid #303750;
   outline-offset: 1px;
@@ -253,6 +219,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .account-switcher__trigger:hover,
+  .account-menu__cta:hover,
   .account-menu__row:hover {
     background: #f4f7fa;
   }
@@ -284,6 +251,7 @@
   }
 
   .account-switcher__trigger,
+  .account-menu__cta,
   .account-menu__row {
     transition: none;
   }
