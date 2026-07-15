@@ -12,15 +12,29 @@ import { DashboardIcon } from '../dashboard-icon';
 
 export interface CompanyOption {
   readonly name: string;
-  readonly tone: 'lime' | 'midnight' | 'violet';
   readonly current?: boolean;
 }
 
 export const COMPANY_OPTIONS: readonly CompanyOption[] = [
-  { name: 'AdroCard, Inc', tone: 'midnight' },
-  { name: 'Chargeblast', tone: 'violet', current: true },
-  { name: 'Jazzify', tone: 'lime' },
+  { name: 'AdroCard, Inc' },
+  { name: 'Chargeblast', current: true },
+  { name: 'Jazzify' },
 ];
+
+export const CURRENT_COMPANY = 'Chargeblast';
+
+/**
+ * Stripe letters its account avatars from the name: one initial in the 24px
+ * marks, up to two in the 32px one.
+ */
+export function companyInitials(name: string, max = 1): string {
+  return name
+    .split(/\s+/)
+    .filter((word) => /\p{Letter}|\p{Number}/u.test(word))
+    .slice(0, max)
+    .map((word) => [...word][0]?.toLocaleUpperCase('en-US') ?? '')
+    .join('');
+}
 
 export function filterCompaniesByPrefix(
   companies: readonly CompanyOption[],
@@ -53,6 +67,10 @@ export class AccountSwitcher {
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('accountTrigger');
   private readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('companySearch');
   private focusTimer: ReturnType<typeof setTimeout> | undefined;
+
+  protected readonly currentCompany = CURRENT_COMPANY;
+  protected readonly currentCompanyInitial = companyInitials(CURRENT_COMPANY);
+  protected readonly currentCompanyInitials = companyInitials(CURRENT_COMPANY, 2);
 
   protected readonly isOpen = signal(false);
   protected readonly searchQuery = signal('');
@@ -108,6 +126,10 @@ export class AccountSwitcher {
 
   protected companyAriaLabel(company: CompanyOption): string {
     return company.current ? `${company.name}, current company` : company.name;
+  }
+
+  protected companyInitial(company: CompanyOption): string {
+    return companyInitials(company.name);
   }
 
   protected handleFocusOut(event: FocusEvent): void {

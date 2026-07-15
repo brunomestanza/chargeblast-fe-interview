@@ -16,9 +16,10 @@
   width: 100%;
   min-width: 0;
   align-items: center;
-  color: #3c4257;
+  color: #1a2c44;
   text-decoration: none;
   touch-action: manipulation;
+  transition: background-color 0.1s cubic-bezier(0, 0, 0.4, 1);
 }
 
 .account-switcher__trigger {
@@ -34,9 +35,9 @@
   min-width: 0;
   overflow: hidden;
   color: #1a2c44;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  line-height: 20px;
+  line-height: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -48,47 +49,25 @@
   color: #50617a;
 }
 
-.company-mark,
-.user-mark {
-  display: inline-grid;
-  flex: 0 0 auto;
-  place-items: center;
-}
-
 .company-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  color: #ffffff;
-}
-
-.company-mark::before {
-  width: 11px;
-  height: 3px;
-  border-radius: 2px;
-  background: currentColor;
-  box-shadow:
-    0 -4px 0 currentColor,
-    0 4px 0 currentColor;
-  content: '';
-}
-
-.company-mark--trigger {
+  display: inline-grid;
   width: 24px;
   height: 24px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 4px;
+  color: #3c4f69;
+  background: #f4f7fa;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
 }
 
-.company-mark[data-tone='violet'] {
-  background: #7a73e8;
-}
-
-.company-mark[data-tone='midnight'] {
-  background: #27324a;
-}
-
-.company-mark[data-tone='lime'] {
-  color: #173b2a;
-  background: #8ad6a8;
+.company-mark--header {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  line-height: 20px;
 }
 
 .account-menu {
@@ -96,47 +75,47 @@
   top: calc(100% - 2px);
   left: 14px;
   z-index: 100;
-  width: min(300px, calc(100vw - 24px));
+  width: min(288px, calc(100vw - 28px));
   max-height: calc(100dvh - 72px);
-  padding: 6px;
+  padding: 8px;
   overflow-y: auto;
-  border-radius: 10px;
-  color: #3c4257;
+  border: 1px solid #d4dee9;
+  border-radius: 8px;
+  color: #1a2c44;
   background: #ffffff;
   box-shadow:
-    0 0 0 1px rgba(31, 45, 61, 0.12),
-    0 4px 10px rgba(31, 45, 61, 0.1),
-    0 14px 30px rgba(31, 45, 61, 0.08);
+    0 5px 15px rgba(0, 0, 0, 0.12),
+    0 15px 35px rgba(48, 49, 61, 0.08);
   transform-origin: top left;
   animation: account-menu-in 160ms cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
 .account-menu__header {
   display: flex;
-  min-height: 52px;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px 8px;
+  gap: 8px;
+  padding: 16px 24px 8px;
+  text-align: center;
 }
 
 .account-menu__eyebrow,
 .account-menu__company {
   margin: 0;
-}
-
-.account-menu__eyebrow {
-  color: #697386;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 16px;
-  letter-spacing: 0.025em;
+  color: #414552;
 }
 
 .account-menu__company {
-  color: #1a1f36;
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 18px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.account-menu__eyebrow {
+  margin-top: -4px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
 }
 
 .account-menu__section,
@@ -151,67 +130,80 @@
 }
 
 .account-menu__row {
-  min-height: 44px;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 18px;
+  min-height: 36px;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
 }
 
-.account-menu__row > app-dashboard-icon {
-  width: 18px;
-  height: 18px;
-  color: #697386;
+/* Leading glyphs only — the trailing chevron and check size and align
+   differently, and would inherit the wrong margin from this rule. */
+.account-menu__row > app-dashboard-icon:not(.account-menu__row-chevron):not(.account-menu__check) {
+  width: 16px;
+  height: 16px;
+  /* Stripe pads its row glyphs rather than widening the gap, which is what
+     sets the labels 40px in from the row edge. */
+  margin-inline: 4px;
+  color: #50617a;
 }
 
-.account-menu__row-chevron,
-.account-menu__check {
+.account-menu__row > .account-menu__row-chevron,
+.account-menu__row > .account-menu__check {
   margin-left: auto;
 }
 
-.account-menu__check {
+.account-menu__row > .account-menu__row-chevron {
+  width: 8px;
+  height: 8px;
+  color: #50617a;
+}
+
+.account-menu__row > .account-menu__check {
+  width: 16px;
+  height: 16px;
   color: #533afd;
 }
 
 .account-menu__divider {
   height: 1px;
-  margin: 5px -6px;
-  background: rgba(31, 45, 61, 0.1);
+  margin: 8px -8px;
+  background: #d4dee9;
 }
 
 .company-search {
   position: relative;
   display: flex;
   align-items: center;
-  margin: 8px 4px 4px;
+  margin: 8px 0 4px;
 }
 
 .company-search__icon {
   position: absolute;
   left: 10px;
-  width: 18px;
-  height: 18px;
-  color: #697386;
+  width: 16px;
+  height: 16px;
+  color: #50617a;
   pointer-events: none;
 }
 
 .company-search input {
   width: 100%;
-  min-height: 44px;
-  padding: 8px 10px 8px 36px;
-  border: 1px solid rgba(31, 45, 61, 0.18);
-  border-radius: 7px;
-  color: #1a1f36;
+  min-height: 36px;
+  padding: 8px 10px 8px 34px;
+  border: 1px solid #d4dee9;
+  border-radius: 8px;
+  color: #1a2c44;
   background: #ffffff;
   font-size: 16px;
-  line-height: 22px;
+  line-height: 20px;
   outline: none;
 }
 
 .company-search input::placeholder {
-  color: #87909f;
+  color: #50617a;
 }
 
 .company-search input:focus {
@@ -220,28 +212,15 @@
 }
 
 .account-menu__company-row {
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .account-menu__empty {
   padding: 18px 10px;
-  color: #697386;
-  font-size: 13px;
-  line-height: 18px;
+  color: #50617a;
+  font-size: 14px;
+  line-height: 20px;
   text-align: center;
-}
-
-.user-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  color: #3c4257;
-  background: #e8ebf0;
-}
-
-.user-mark app-dashboard-icon {
-  width: 15px;
-  height: 15px;
 }
 
 .account-switcher__trigger:focus-visible,
@@ -275,7 +254,7 @@
 @media (hover: hover) and (pointer: fine) {
   .account-switcher__trigger:hover,
   .account-menu__row:hover {
-    background: #f1f3f6;
+    background: #f4f7fa;
   }
 }
 
@@ -302,5 +281,10 @@
 @media (prefers-reduced-motion: reduce) {
   .account-menu {
     animation: none;
+  }
+
+  .account-switcher__trigger,
+  .account-menu__row {
+    transition: none;
   }
 }

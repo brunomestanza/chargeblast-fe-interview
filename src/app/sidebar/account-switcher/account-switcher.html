@@ -8,8 +8,10 @@
     [attr.aria-expanded]="isOpen()"
     (click)="toggle()"
   >
-    <span class="company-mark company-mark--trigger" data-tone="violet" aria-hidden="true"></span>
-    <span class="account-switcher__name">Chargeblast</span>
+    <span class="company-mark company-mark--trigger" aria-hidden="true">{{
+      currentCompanyInitial
+    }}</span>
+    <span class="account-switcher__name">{{ currentCompany }}</span>
     <app-dashboard-icon class="account-switcher__chevron" name="chevron-down" />
   </button>
 
@@ -22,11 +24,11 @@
       aria-modal="false"
     >
       <header class="account-menu__header">
-        <span class="company-mark" data-tone="violet" aria-hidden="true"></span>
-        <div>
-          <p class="account-menu__eyebrow">Current company</p>
-          <p class="account-menu__company">Chargeblast</p>
-        </div>
+        <span class="company-mark company-mark--header" aria-hidden="true">{{
+          currentCompanyInitials
+        }}</span>
+        <p class="account-menu__company">{{ currentCompany }}</p>
+        <p class="account-menu__eyebrow">Current company</p>
       </header>
 
       <nav class="account-menu__section" aria-label="Workspace options">
@@ -80,11 +82,7 @@
                 [attr.aria-label]="companyAriaLabel(company)"
                 (click)="close()"
               >
-                <span
-                  class="company-mark"
-                  [attr.data-tone]="company.tone"
-                  aria-hidden="true"
-                ></span>
+                <span class="company-mark" aria-hidden="true">{{ companyInitial(company) }}</span>
                 <span>{{ company.name }}</span>
                 @if (company.current) {
                   <app-dashboard-icon class="account-menu__check" name="check" />
@@ -110,9 +108,7 @@
 
       <nav class="account-menu__section" aria-label="User options">
         <a class="account-menu__row" routerLink="/mock" (click)="close()">
-          <span class="user-mark" aria-hidden="true">
-            <app-dashboard-icon name="customers" />
-          </span>
+          <app-dashboard-icon name="customers" />
           <span>Bruno Mestanza</span>
           <app-dashboard-icon class="account-menu__row-chevron" name="chevron-right" />
         </a>
