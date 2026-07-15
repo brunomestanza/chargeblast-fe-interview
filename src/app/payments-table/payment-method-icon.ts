@@ -134,8 +134,7 @@ function getFallbackText(label: string): string {
       class="payment-icon__trigger"
       [class.payment-icon__trigger--fallback]="source() === null"
       role="img"
-      tabindex="0"
-      [attr.aria-labelledby]="tooltipId()"
+      [attr.aria-label]="label()"
     >
       @if (source(); as iconSource) {
         <span class="payment-icon__image">
@@ -145,7 +144,7 @@ function getFallbackText(label: string): string {
         <span aria-hidden="true">{{ fallbackText() }}</span>
       }
     </span>
-    <span class="payment-icon__tooltip" role="tooltip" [id]="tooltipId()">
+    <span class="payment-icon__tooltip" aria-hidden="true">
       {{ label() }}
     </span>
   `,
@@ -154,7 +153,6 @@ function getFallbackText(label: string): string {
 export class PaymentMethodIcon {
   readonly category = input.required<PaymentIconCategory>();
   readonly iconKey = input.required<string>();
-  readonly tooltipId = input.required<string>();
 
   private readonly definition = computed(
     () => PAYMENT_ICON_CATALOG[this.category()][this.iconKey()] ?? null,

@@ -67,16 +67,8 @@
       <td>
         <div class="payment-method">
           <span class="payment-method__icons">
-            @for (
-              icon of paymentMethodIcons();
-              track icon.category + ':' + icon.key;
-              let index = $index
-            ) {
-              <app-payment-method-icon
-                [category]="icon.category"
-                [iconKey]="icon.key"
-                [tooltipId]="paymentIconTooltipId(index)"
-              />
+            @for (icon of paymentMethodIcons(); track icon.category + ':' + icon.key) {
+              <app-payment-method-icon [category]="icon.category" [iconKey]="icon.key" />
             }
           </span>
           @if (paymentMethodLastFour(); as lastFour) {
@@ -89,14 +81,13 @@
     }
     @case ('created') {
       <td class="created-cell">
-        <span class="created-at" tabindex="0" [attr.aria-describedby]="tooltipId()">
+        <span class="created-at">
           <time [attr.datetime]="row.createdAt">
             {{ createdDate() }}
             <span class="created-time">{{ createdTime() }}</span>
+            <span class="visually-hidden">, {{ relativeCreatedAt() }}</span>
           </time>
-          <span class="relative-tooltip" role="tooltip" [id]="tooltipId()">
-            {{ relativeCreatedAt() }}
-          </span>
+          <span class="relative-tooltip" aria-hidden="true">{{ relativeCreatedAt() }}</span>
         </span>
       </td>
     }

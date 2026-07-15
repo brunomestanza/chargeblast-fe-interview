@@ -2309,9 +2309,6 @@ describe('PaymentsTable', () => {
     const relativeTimeTooltip = element.querySelector('.relative-tooltip');
     const paymentIcon = element.querySelector<HTMLElement>('.payment-icon__trigger');
     const paymentIconImage = element.querySelector<HTMLImageElement>('.payment-icon__trigger img');
-    const paymentIconTooltip = element.querySelector(
-      '#' + paymentIcon?.getAttribute('aria-labelledby'),
-    );
 
     expect(element.textContent).toContain('olivia.martin@example.com');
     expect(element.textContent).toContain('$249.00');
@@ -2323,7 +2320,8 @@ describe('PaymentsTable', () => {
     expect(copyButton?.getAttribute('aria-label')).toBe('Copy payment ID ' + payment.id);
     expect(time?.getAttribute('datetime')).toBe(payment.createdAt);
     expect(relativeTimeTooltip?.textContent?.trim()).toBeTruthy();
-    expect(paymentIconTooltip?.textContent?.trim()).toBe('Visa');
+    expect(time?.textContent).toContain(relativeTimeTooltip?.textContent?.trim());
+    expect(paymentIcon?.getAttribute('aria-label')).toBe('Visa');
     expect(paymentIconImage?.getAttribute('src')).toContain(
       '/icons/payment-methods/card-brands/visa.webp',
     );
@@ -2346,8 +2344,7 @@ describe('PaymentsTable', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     const labels = Array.from(element.querySelectorAll<HTMLElement>('.payment-icon__trigger')).map(
-      (icon) =>
-        element.querySelector('#' + icon.getAttribute('aria-labelledby'))?.textContent?.trim(),
+      (icon) => icon.getAttribute('aria-label'),
     );
 
     expect(labels).toEqual(['Apple Pay', 'Mastercard']);
@@ -2370,10 +2367,9 @@ describe('PaymentsTable', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     const fallback = element.querySelector<HTMLElement>('.payment-icon__trigger--fallback');
-    const fallbackTooltip = element.querySelector('#' + fallback?.getAttribute('aria-labelledby'));
 
     expect(fallback?.textContent?.trim()).toBe('EL');
-    expect(fallbackTooltip?.textContent?.trim()).toBe('Elo');
+    expect(fallback?.getAttribute('aria-label')).toBe('Elo');
     expect(fallback?.querySelector('img')).toBeNull();
   });
 

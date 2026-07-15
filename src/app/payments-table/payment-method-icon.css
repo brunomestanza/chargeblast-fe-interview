@@ -42,11 +42,6 @@
   letter-spacing: 0.03em;
 }
 
-.payment-icon__trigger:focus-visible {
-  outline: 2px solid #303750;
-  outline-offset: 2px;
-}
-
 .payment-icon__tooltip {
   position: absolute;
   bottom: calc(100% + 7px);
@@ -71,12 +66,6 @@
     opacity 125ms ease-out,
     transform 125ms ease-out;
   white-space: nowrap;
-}
-
-.payment-icon__trigger:focus + .payment-icon__tooltip {
-  visibility: visible;
-  opacity: 1;
-  transform: translate(-50%, 0) scale(1);
 }
 
 @media (hover: hover) and (pointer: fine) {

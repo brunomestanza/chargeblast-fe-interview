@@ -194,4 +194,42 @@ describe('DateRangeFilter', () => {
     element.querySelector<HTMLButtonElement>('.filter-button__clear')!.click();
     expect(valueChange).toHaveBeenCalledWith(null);
   });
+
+  it('moves focus to the trigger when clearing a closed filter', () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+
+    const fixture = createFilter();
+    const element = fixture.nativeElement as HTMLElement;
+    fixture.componentRef.setInput('value', {
+      preset: 'today',
+      start: '2026-07-14',
+      end: '2026-07-14',
+    });
+    fixture.detectChanges();
+
+    // The filter is controlled, so mirror the parent writing the cleared value back.
+    fixture.componentInstance.valueChange.subscribe(() => {
+      fixture.componentRef.setInput('value', null);
+    });
+
+    const clear = element.querySelector<HTMLButtonElement>('.filter-button__clear')!;
+    clear.focus();
+    expect(document.activeElement).toBe(clear);
+
+    clear.click();
+    fixture.detectChanges();
+    frames.forEach((frame) => frame(0));
+
+    // The clear button unmounts with the value, so focus must not land on body.
+    expect(element.querySelector('.filter-button__clear')).toBeNull();
+    expect(document.activeElement).toBe(
+      element.querySelector<HTMLButtonElement>('.filter-button__trigger'),
+    );
+
+    vi.restoreAllMocks();
+  });
 });

@@ -179,7 +179,13 @@ export class DateRangeFilter {
 
     if (this.open()) {
       this.closeFilter(true);
+      return;
     }
+
+    // Clearing unmounts the clear button itself, so focus would fall to the
+    // body. Hand it to the trigger, which survives.
+    this.cancelFocusFrame();
+    this.scheduleTriggerFocus();
   }
 
   protected onDocumentPointerDown(event: PointerEvent): void {
@@ -218,17 +224,21 @@ export class DateRangeFilter {
     this.selectionAnnouncement.set('');
 
     if (restoreFocus) {
-      const browserWindow = this.document.defaultView;
-
-      if (!browserWindow) {
-        return;
-      }
-
-      this.focusFrame = browserWindow.requestAnimationFrame(() => {
-        this.focusFrame = undefined;
-        this.filterButton().focus();
-      });
+      this.scheduleTriggerFocus();
     }
+  }
+
+  private scheduleTriggerFocus(): void {
+    const browserWindow = this.document.defaultView;
+
+    if (!browserWindow) {
+      return;
+    }
+
+    this.focusFrame = browserWindow.requestAnimationFrame(() => {
+      this.focusFrame = undefined;
+      this.filterButton().focus();
+    });
   }
 
   private cancelFocusFrame(): void {

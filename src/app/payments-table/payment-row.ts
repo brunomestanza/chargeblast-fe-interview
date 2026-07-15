@@ -176,8 +176,6 @@ export class PaymentRow {
   protected readonly paymentDetailsPath = computed(
     () => '/payments/' + encodeURIComponent(this.payment().id),
   );
-  protected readonly tooltipId = computed(() => 'relative-time-' + this.payment().id);
-
   protected statusLabel(status: PaymentStatus): string {
     return PAYMENT_STATUS_LABELS[status];
   }
@@ -220,9 +218,5 @@ export class PaymentRow {
     }
 
     this.detailsRequested.emit(this.payment().id);
-  }
-
-  protected paymentIconTooltipId(index: number): string {
-    return 'payment-method-' + this.payment().id + '-' + index;
   }
 }

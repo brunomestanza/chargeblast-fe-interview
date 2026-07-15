@@ -21,6 +21,40 @@ test('payments list has no accessibility violations', async ({ page }) => {
   expect(results.violations).toEqual([]);
 });
 
+/**
+ * Axe cannot flag this: a focusable logo or timestamp is valid markup, it just
+ * makes every row cost a handful of keystrokes to walk past. Each row may only
+ * hold the payment link and its copy button.
+ */
+test('table rows only offer tab stops that do something', async ({ page }) => {
+  await gotoPayments(page);
+
+  const rowCount = await page.locator('tbody tr').count();
+  const stops: string[] = [];
+
+  for (let i = 0; i < rowCount * 6; i++) {
+    await page.keyboard.press('Tab');
+    const stop = await page.evaluate(() => {
+      const active = document.activeElement;
+      if (!active || !active.closest('tbody')) {
+        return null;
+      }
+      return active.tagName.toLowerCase() + '.' + active.className.toString().split(' ')[0];
+    });
+
+    if (stop === null) {
+      if (stops.length > 0) {
+        break;
+      }
+      continue;
+    }
+    stops.push(stop);
+  }
+
+  expect(new Set(stops)).toEqual(new Set(['a.payment-id', 'button.copy-action']));
+  expect(stops.length).toBe(rowCount * 2);
+});
+
 test('payments list with an open filter popover has no accessibility violations', async ({
   page,
 }) => {
