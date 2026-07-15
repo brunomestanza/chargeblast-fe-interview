@@ -19,7 +19,7 @@ const BASE_PAYMENTS = parsePaymentData(paymentData);
       flex: 1 1 auto;
       flex-direction: column;
       width: 100%;
-      max-width: 1280px;
+      max-width: var(--dashboard-page-max-width, 1280px);
       min-width: 0;
       min-height: 0;
     }

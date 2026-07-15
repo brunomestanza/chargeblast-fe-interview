@@ -36,7 +36,9 @@
   --dashboard-content-padding-block-start: clamp(24px, 3vw, 40px);
   --dashboard-content-padding-block-end: clamp(32px, 5vw, 64px);
   --dashboard-content-padding-inline: clamp(24px, 5vw, 64px);
-  --top-navigation-height: 65px;
+  --dashboard-page-max-width: 1280px;
+  --dashboard-page-inline-gutter: 40px;
+  --top-navigation-height: 60px;
   min-width: 0;
 }
 
@@ -63,7 +65,7 @@
   height: calc(100dvh - var(--top-navigation-height));
   min-height: 0;
   padding-block-start: 7px;
-  padding-inline: 40px;
+  padding-inline: var(--dashboard-page-inline-gutter);
   background: #ffffff;
 }
 
@@ -76,12 +78,6 @@
   background: #ffffff;
 }
 
-@media (max-width: 1320px) {
-  .dashboard-shell__workspace {
-    --top-navigation-height: 113px;
-  }
-}
-
 @media (max-width: 720px), (max-height: 760px) {
   .dashboard-shell__workspace {
     --dashboard-content-padding-block-start: 16px;
@@ -91,11 +87,15 @@
 }
 
 @media (max-width: 720px) {
+  .dashboard-shell__workspace {
+    --dashboard-page-inline-gutter: 16px;
+  }
+
   .dashboard-shell {
     grid-template-columns: 72px minmax(0, 1fr);
   }
 
   .dashboard-shell__content:has(app-payments-page) {
-    padding: 16px;
+    padding: 16px var(--dashboard-page-inline-gutter);
   }
 }

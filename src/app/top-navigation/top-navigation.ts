@@ -6,7 +6,7 @@ import { DashboardIcon } from '../sidebar/dashboard-icon';
   selector: 'app-top-navigation',
   imports: [DashboardIcon, RouterLink, RouterLinkActive],
   templateUrl: './top-navigation.html',
-  styleUrl: './top-navigation.css',
+  styleUrls: ['./top-navigation.css', './top-navigation-responsive.css'],
 })
 export class TopNavigation {
   protected readonly routeMatchOptions: IsActiveMatchOptions = {
