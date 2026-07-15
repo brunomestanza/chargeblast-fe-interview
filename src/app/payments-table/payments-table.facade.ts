@@ -141,17 +141,15 @@ export class PaymentsTableFacade {
     return resolveDateRangeForToday(selection, today);
   });
 
-  readonly filteredPayments = computed(() => {
+  private readonly paymentsMatchingNonStatusFilters = computed(() => {
     const appliedViewState = this.appliedViewState();
     const dateRange = this.effectiveDateRange();
-    const selectedStatuses = appliedViewState.selectedStatuses;
     const selectedPaymentMethods = appliedViewState.selectedPaymentMethods;
     const amountRange = appliedViewState.amountRange;
     const textSearch = createPaymentTextSearch(appliedViewState.textSearch);
 
     if (
       dateRange === null &&
-      selectedStatuses.length === 0 &&
       selectedPaymentMethods.length === 0 &&
       amountRange === null &&
       textSearch === null
@@ -163,11 +161,34 @@ export class PaymentsTableFacade {
     return this.paymentsState().filter(
       (payment) =>
         (dateRange === null || isTimestampInDateRange(payment.createdAt, dateRange, timeZone)) &&
-        (selectedStatuses.length === 0 || selectedStatuses.includes(payment.status)) &&
         matchesPaymentMethodFilter(payment.paymentMethod, selectedPaymentMethods) &&
         (amountRange === null || matchesAmountRange(payment, amountRange)) &&
         matchesPaymentTextSearch(payment, textSearch),
     );
+  });
+
+  readonly statusPaymentCounts = computed<Readonly<Record<PaymentStatus, number>>>(() => {
+    const counts: Record<PaymentStatus, number> = {
+      succeeded: 0,
+      pending: 0,
+      failed: 0,
+      refunded: 0,
+    };
+
+    for (const payment of this.paymentsMatchingNonStatusFilters()) {
+      counts[payment.status] += 1;
+    }
+
+    return counts;
+  });
+
+  readonly filteredPayments = computed(() => {
+    const payments = this.paymentsMatchingNonStatusFilters();
+    const selectedStatuses = this.appliedViewState().selectedStatuses;
+
+    return selectedStatuses.length === 0
+      ? payments
+      : payments.filter((payment) => selectedStatuses.includes(payment.status));
   });
 
   readonly paymentCountLabel = computed(() => {

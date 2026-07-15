@@ -1,4 +1,4 @@
-export const PAYMENT_SKELETON_ROW_HEIGHT_PX = 60;
+export const PAYMENT_SKELETON_ROW_HEIGHT_PX = 36;
 
 export interface PaymentSkeletonLayout {
   readonly rowCount: number;
@@ -6,7 +6,7 @@ export interface PaymentSkeletonLayout {
 }
 
 export const DEFAULT_PAYMENT_SKELETON_LAYOUT: PaymentSkeletonLayout = {
-  rowCount: 15,
+  rowCount: 25,
   rowHeightPx: PAYMENT_SKELETON_ROW_HEIGHT_PX,
 };
 

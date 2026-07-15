@@ -32,10 +32,14 @@ export type { PaymentIconCategory } from './payment-method-icon.catalog';
     </span>
   `,
   styleUrl: './payment-method-icon.css',
+  host: {
+    '[class.payment-method-icon--compact]': 'compact()',
+  },
 })
 export class PaymentMethodIcon {
   readonly category = input.required<PaymentIconCategory>();
   readonly iconKey = input.required<string>();
+  readonly compact = input(false);
 
   private readonly definition = computed(() =>
     getPaymentIconDefinition(this.category(), this.iconKey()),

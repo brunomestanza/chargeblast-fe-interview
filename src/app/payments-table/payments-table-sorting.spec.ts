@@ -88,7 +88,7 @@ describe('PaymentsTable sorting', () => {
     );
     expect(element.querySelector('.sort-priority')).toBeNull();
     expect(getSortButton(element, 'Created').querySelector('path')?.getAttribute('d')).toBe(
-      'M3.25 8.5 7 4.75l3.75 3.75',
+      'M3.25 5.5 7 9.25l3.75-3.75',
     );
     expect(getSortButton(element, 'Amount').getAttribute('aria-describedby')).toBe(
       'payments-sort-description-amount',
@@ -151,10 +151,10 @@ describe('PaymentsTable sorting', () => {
     expect(renderedPaymentIds(element)).toEqual(['pay_1', 'pay_2', 'pay_3']);
     expect(element.querySelector('.sort-priority')).toBeNull();
     expect(customerButton.querySelector('path')?.getAttribute('d')).toBe(
-      'M3.25 5.5 7 9.25l3.75-3.75',
+      'M3.25 8.5 7 4.75l3.75 3.75',
     );
     expect(statusButton.querySelector('path')?.getAttribute('d')).toBe(
-      'M3.25 5.5 7 9.25l3.75-3.75',
+      'M3.25 8.5 7 4.75l3.75 3.75',
     );
     expect(customerButton.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
     expect(statusButton.closest('th')?.hasAttribute('aria-sort')).toBe(false);
@@ -166,7 +166,7 @@ describe('PaymentsTable sorting', () => {
 
     expect(renderedPaymentIds(element)).toEqual(['pay_3', 'pay_2', 'pay_1']);
     expect(customerButton.querySelector('path')?.getAttribute('d')).toBe(
-      'M3.25 8.5 7 4.75l3.75 3.75',
+      'M3.25 5.5 7 9.25l3.75-3.75',
     );
     expect(router.url).toBe('/?sort=customer.desc,status.asc');
 

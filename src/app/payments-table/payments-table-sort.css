@@ -1,11 +1,11 @@
 .sort-button {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
-  height: 44px;
+  height: 36px;
   min-width: 0;
-  padding: 0 18px;
+  padding: 8px 24px 8px 0;
   border: 0;
   color: inherit;
   background: transparent;
@@ -15,16 +15,17 @@
 
 .sort-button--right {
   justify-content: flex-end;
+  padding-right: 12px;
 }
 
 .sort-button--active {
-  color: #3c4257;
+  color: var(--color-ink);
 }
 
 .sort-button:focus-visible {
   position: relative;
   z-index: 1;
-  outline: 2px solid #303750;
+  outline: 2px solid #625afa;
   outline-offset: -3px;
 }
 
@@ -36,18 +37,19 @@
 
 .sort-indicator {
   display: inline-flex;
-  flex: 0 0 18px;
+  flex: 0 0 12px;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
-  color: #697386;
+  width: 12px;
+  height: 16px;
+  color: var(--color-muted);
+  opacity: 0;
   pointer-events: none;
 }
 
 .sort-indicator svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -56,7 +58,8 @@
 }
 
 .sort-button--active .sort-indicator {
-  color: #5046e5;
+  color: #625afa;
+  opacity: 1;
 }
 
 th:first-child > .sort-button {
@@ -70,11 +73,12 @@ th:last-child > .sort-button {
 @media (hover: hover) and (pointer: fine) {
   .sort-button:hover {
     color: var(--color-ink);
-    background: #eef1f5;
+    background: #f4f7fa;
   }
 
   .sort-button:not(.sort-button--active):hover .sort-indicator {
-    color: #3c4257;
+    color: var(--color-muted);
+    opacity: 1;
   }
 }
 

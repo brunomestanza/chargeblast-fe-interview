@@ -7,6 +7,12 @@
     <p class="payments-panel__count">{{ view.paymentCountLabel() }}</p>
   </header>
 
+  <app-payment-status-summary
+    [counts]="view.statusPaymentCounts()"
+    [value]="view.selectedStatuses()"
+    (valueChange)="view.changeStatuses($event)"
+  />
+
   <p id="payments-table-instructions" class="visually-hidden">
     Scroll horizontally to view every payment column and vertically to view additional payments.
     Created starts sorted descending. The first activation of a different header replaces that
@@ -135,10 +141,10 @@
                   <svg viewBox="0 0 14 14" focusable="false">
                     @switch (direction) {
                       @case ('asc') {
-                        <path d="M3.25 5.5 7 9.25l3.75-3.75" />
+                        <path d="M3.25 8.5 7 4.75l3.75 3.75" />
                       }
                       @case ('desc') {
-                        <path d="M3.25 8.5 7 4.75l3.75 3.75" />
+                        <path d="M3.25 5.5 7 9.25l3.75-3.75" />
                       }
                       @default {
                         <path d="M3.75 5.25 7 2l3.25 3.25" />

@@ -34,8 +34,8 @@ import type { PaymentTableColumnKey } from './payment-table-column';
         @case ('status') {
           <td data-column="status">
             <span class="skeleton-shape skeleton-status">
-              <span class="skeleton-status__dot"></span>
               <span class="skeleton-status__label"></span>
+              <span class="skeleton-status__dot"></span>
             </span>
           </td>
         }

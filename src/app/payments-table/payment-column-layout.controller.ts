@@ -31,7 +31,7 @@ const PAYMENT_TABLE_COLUMNS: readonly PaymentTableColumn[] = [
     label: PAYMENT_TABLE_COLUMN_LABELS.customer,
     align: 'left',
     columnClass: 'customer-column',
-    defaultWidth: 220,
+    defaultWidth: 260,
   },
   {
     key: 'amount',
@@ -50,14 +50,14 @@ const PAYMENT_TABLE_COLUMNS: readonly PaymentTableColumn[] = [
   {
     key: 'paymentMethod',
     label: PAYMENT_TABLE_COLUMN_LABELS.paymentMethod,
-    align: 'right',
+    align: 'left',
     columnClass: 'payment-method-column',
     defaultWidth: 190,
   },
   {
     key: 'created',
     label: PAYMENT_TABLE_COLUMN_LABELS.created,
-    align: 'right',
+    align: 'left',
     columnClass: 'created-column',
     defaultWidth: 175,
   },

@@ -28,6 +28,7 @@ import { PaymentTableViewportController } from './payment-table-viewport.control
 import { PaymentViewUrlAdapter } from './payment-view-url.adapter';
 import { PaymentRow } from './payment-row';
 import { PaymentSkeletonRow } from './payment-skeleton-row';
+import { PaymentStatusSummary } from './payment-status-summary/payment-status-summary';
 import type { PaymentSortColumn } from './payment-sort.contract';
 import { PaymentsTableFacade } from './payments-table.facade';
 
@@ -44,6 +45,7 @@ export { TEXT_SEARCH_DEBOUNCE_MS } from './payments-table.facade';
     CleanFiltersButton,
     ExportPaymentsButton,
     ExportSuccessToast,
+    PaymentStatusSummary,
     PaymentRow,
     PaymentSkeletonRow,
   ],

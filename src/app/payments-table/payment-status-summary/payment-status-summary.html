@@ -1,0 +1,61 @@
+<div class="payment-status-summary">
+  <div
+    #statusRail
+    class="payment-status-summary__rail"
+    role="tablist"
+    aria-label="Filter payments by status"
+    aria-orientation="horizontal"
+    (scroll)="updateScrollControls()"
+  >
+    @for (option of options(); track option.value ?? 'all'; let optionIndex = $index) {
+      <button
+        #statusOption
+        type="button"
+        role="tab"
+        class="payment-status-summary__option"
+        [class.payment-status-summary__option--selected]="isSelected(option.value)"
+        [attr.aria-selected]="isSelected(option.value)"
+        [attr.tabindex]="isFocusable(option.value, optionIndex) ? 0 : -1"
+        aria-controls="payments-table"
+        (click)="selectStatus(option.value)"
+        (keydown)="moveFocus($event, optionIndex)"
+      >
+        <span class="payment-status-summary__label">{{ option.label }}</span>
+        <span class="payment-status-summary__count">
+          {{ option.countLabel }}
+          <span class="visually-hidden">
+            {{ option.count === 1 ? 'payment' : 'payments' }}
+          </span>
+        </span>
+      </button>
+    }
+  </div>
+
+  @if (canScrollBackward()) {
+    <button
+      type="button"
+      class="payment-status-summary__scroll payment-status-summary__scroll--backward"
+      tabindex="-1"
+      aria-hidden="true"
+      (click)="scrollOptions(-1)"
+    >
+      <svg viewBox="0 0 12 12" aria-hidden="true">
+        <path d="m7.5 2.5-3.5 3.5 3.5 3.5" />
+      </svg>
+    </button>
+  }
+
+  @if (canScrollForward()) {
+    <button
+      type="button"
+      class="payment-status-summary__scroll payment-status-summary__scroll--forward"
+      tabindex="-1"
+      aria-hidden="true"
+      (click)="scrollOptions(1)"
+    >
+      <svg viewBox="0 0 12 12" aria-hidden="true">
+        <path d="m4.5 2.5 3.5 3.5-3.5 3.5" />
+      </svg>
+    </button>
+  }
+</div>
