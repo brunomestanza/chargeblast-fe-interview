@@ -134,12 +134,13 @@ describe('PaymentsTable rows', () => {
 
     const copyButton = fixture.nativeElement.querySelector('.copy-action') as HTMLButtonElement;
     copyButton.click();
-    await Promise.resolve();
-    fixture.detectChanges();
 
     expect(writeText).toHaveBeenCalledWith(payment.id);
-    expect(fixture.nativeElement.textContent).toContain('Copied');
-    expect(fixture.nativeElement.textContent).toContain('copied to clipboard');
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('Copied');
+      expect(fixture.nativeElement.textContent).toContain('copied to clipboard');
+    });
 
     fixture.destroy();
   });

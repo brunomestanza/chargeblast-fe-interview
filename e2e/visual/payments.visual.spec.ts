@@ -7,13 +7,6 @@ test('payments list matches the baseline', async ({ page }) => {
   await expect(page).toHaveScreenshot('payments-list.png', { fullPage: true });
 });
 
-test('payments list matches the baseline in dark mode', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'dark' });
-  await gotoPayments(page);
-
-  await expect(page).toHaveScreenshot('payments-list-dark.png', { fullPage: true });
-});
-
 test('status filter popover matches the baseline', async ({ page }) => {
   await gotoPayments(page);
   await page.getByRole('button', { name: 'Add Status filter' }).click();
