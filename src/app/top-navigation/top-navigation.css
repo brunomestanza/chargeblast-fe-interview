@@ -8,7 +8,6 @@
 }
 
 .top-navigation {
-  border-bottom: 1px solid #ebeced;
   background: #ffffff;
   font-family:
     -apple-system, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji',
@@ -31,11 +30,11 @@
     100% - var(--dashboard-page-inline-gutter, 40px) - var(--dashboard-page-inline-gutter, 40px)
   );
   max-width: var(--dashboard-page-max-width, 1280px);
-  height: 59px;
-  min-height: 59px;
+  height: 60px;
+  min-height: 60px;
   margin-inline: auto;
   gap: 24px;
-  padding-block: 12px 11px;
+  padding-block: 12px;
 }
 
 .top-navigation__search {
