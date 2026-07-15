@@ -1,4 +1,4 @@
-import type { Payment } from './payment';
+import type { Payment } from '../payments/payment';
 
 type PaymentTextSearch =
   | { readonly field: 'card-last-four'; readonly value: string }

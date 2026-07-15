@@ -1,13 +1,13 @@
-import paymentsFixture from '../../../../../public/data/payments.json';
-import { parsePaymentFixture } from '../../payment-mock';
+import paymentsData from '../../../../../public/data/payments.json';
+import { parsePaymentData } from '../../../payments/payment-data';
 import { paymentMethodFilterValue } from './payment-method-filter-match';
 import {
   PAYMENT_METHOD_FILTER_GROUPS,
   isPaymentMethodFilterValue,
   paymentMethodFilterLabel,
-} from './payment-method-filter-options.mock';
+} from './payment-method-filter-options';
 
-describe('payment method filter mock', () => {
+describe('payment method filter options', () => {
   it('exposes every supported option once in four semantic groups', () => {
     const options: { readonly value: string; readonly label: string }[] = [];
 
@@ -53,20 +53,20 @@ describe('payment method filter mock', () => {
     expect(paymentMethodFilterLabel('method:ach')).toBe('ACH Direct Debit');
   });
 
-  it('covers every payment method present in the payment fixture', () => {
-    const mockedValues = new Set<string>();
+  it('covers every payment method present in the payment data', () => {
+    const supportedValues = new Set<string>();
 
     for (const group of PAYMENT_METHOD_FILTER_GROUPS) {
       for (const option of group.options) {
-        mockedValues.add(option.value);
+        supportedValues.add(option.value);
       }
     }
 
-    const fixtureValues = parsePaymentFixture(paymentsFixture).map((payment) =>
+    const dataValues = parsePaymentData(paymentsData).map((payment) =>
       paymentMethodFilterValue(payment.paymentMethod),
     );
 
-    expect(fixtureValues).not.toContain(null);
-    expect([...new Set(fixtureValues)].sort()).toEqual([...mockedValues].sort());
+    expect(dataValues).not.toContain(null);
+    expect([...new Set(dataValues)].sort()).toEqual([...supportedValues].sort());
   });
 });

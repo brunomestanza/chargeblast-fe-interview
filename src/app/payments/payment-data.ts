@@ -59,22 +59,22 @@ function isPayment(value: unknown): value is Payment {
   );
 }
 
-export function parsePaymentFixture(value: unknown): readonly Payment[] {
+export function parsePaymentData(value: unknown): readonly Payment[] {
   if (!Array.isArray(value)) {
-    throw new Error('The payment fixture must be an array.');
+    throw new Error('The payment data must be an array.');
   }
 
   const rows: readonly unknown[] = value;
   const payments = rows.filter(isPayment);
 
   if (payments.length !== rows.length) {
-    throw new Error('The payment fixture contains an invalid payment.');
+    throw new Error('The payment data contains an invalid payment.');
   }
 
   const uniquePaymentIds = new Set(payments.map((payment) => payment.id));
 
   if (uniquePaymentIds.size !== payments.length) {
-    throw new Error('The payment fixture contains duplicate payment IDs.');
+    throw new Error('The payment data contains duplicate payment IDs.');
   }
 
   return payments;

@@ -1,6 +1,6 @@
 import type { DateRangeSelection } from './filters/date-range-filter/date-range';
 import type { AmountRange } from './filters/amount-range-filter/amount-range';
-import type { PaymentMethodFilterValue } from './filters/payment-method-filter/payment-method-filter-options.mock';
+import type { PaymentMethodFilterValue } from './filters/payment-method-filter/payment-method-filter-options';
 import type { PaymentStatus } from './payment';
 import {
   AMOUNT_RANGE_QUERY_PARAM,

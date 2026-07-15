@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { SETTINGS_SECTIONS, SettingsPage } from './settings-page';
+import { SettingsPage } from './settings-page';
+import { SETTINGS_SECTIONS } from './settings-page.data';
 
 describe('SettingsPage', () => {
   beforeEach(async () => {

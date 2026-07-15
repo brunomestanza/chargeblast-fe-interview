@@ -1,103 +1,19 @@
 import { Component, computed, input, output } from '@angular/core';
-import { PAYMENT_STATUS_LABELS, Payment, PaymentStatus } from './payment';
+import { PAYMENT_STATUS_LABELS, type Payment, type PaymentStatus } from '../payments/payment';
 import { PAYMENT_COLUMN_KEYS } from './payment-columns';
 import type { PaymentCopyState } from './payment-copy-state';
-import { PaymentIconCategory, PaymentMethodIcon } from './payment-method-icon';
-import { PaymentSortColumn } from './payment-sort';
+import {
+  formatCreatedDate,
+  formatCreatedTime,
+  formatCurrencyAmount,
+  formatRelativeTime,
+} from './payment-display-format';
+import { getPaymentMethodPresentation } from './payment-method-presentation';
+import { PaymentMethodIcon } from '../payments/payment-method-icon';
+import type { PaymentTableColumnKey } from './payment-table-column';
 
 export type { PaymentCopyState } from './payment-copy-state';
-
-const CURRENCY_FORMATTERS = new Map<string, Intl.NumberFormat>();
-const CREATED_DATE_FORMATTERS = new Map<string, Intl.DateTimeFormat>();
-const CREATED_TIME_FORMATTERS = new Map<string, Intl.DateTimeFormat>();
-const RELATIVE_TIME_FORMATTER = new Intl.RelativeTimeFormat('en-US', { numeric: 'always' });
-
-interface PaymentMethodIconView {
-  readonly category: PaymentIconCategory;
-  readonly key: string;
-}
-
-function getDateFormatter(timeZone: string): Intl.DateTimeFormat {
-  let formatter = CREATED_DATE_FORMATTERS.get(timeZone);
-
-  if (!formatter) {
-    formatter = new Intl.DateTimeFormat('en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      timeZone,
-    });
-    CREATED_DATE_FORMATTERS.set(timeZone, formatter);
-  }
-
-  return formatter;
-}
-
-function getTimeFormatter(timeZone: string): Intl.DateTimeFormat {
-  let formatter = CREATED_TIME_FORMATTERS.get(timeZone);
-
-  if (!formatter) {
-    formatter = new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZone,
-    });
-    CREATED_TIME_FORMATTERS.set(timeZone, formatter);
-  }
-
-  return formatter;
-}
-
-function roundRelativeValue(value: number): number {
-  return Math.sign(value) * Math.round(Math.abs(value));
-}
-
-export function formatCreatedDate(createdAt: string, timeZone: string): string {
-  return getDateFormatter(timeZone).format(new Date(createdAt));
-}
-
-export function formatCreatedTime(createdAt: string, timeZone: string): string {
-  return getTimeFormatter(timeZone).format(new Date(createdAt));
-}
-
-export function formatRelativeTime(createdAt: string, currentTime: number): string {
-  const differenceInSeconds = (Date.parse(createdAt) - currentTime) / 1000;
-  const absoluteDifference = Math.abs(differenceInSeconds);
-
-  if (absoluteDifference < 45) {
-    return 'just now';
-  }
-
-  if (absoluteDifference < 60 * 60) {
-    return RELATIVE_TIME_FORMATTER.format(roundRelativeValue(differenceInSeconds / 60), 'minute');
-  }
-
-  if (absoluteDifference < 60 * 60 * 24) {
-    return RELATIVE_TIME_FORMATTER.format(
-      roundRelativeValue(differenceInSeconds / (60 * 60)),
-      'hour',
-    );
-  }
-
-  if (absoluteDifference < 60 * 60 * 24 * 30) {
-    return RELATIVE_TIME_FORMATTER.format(
-      roundRelativeValue(differenceInSeconds / (60 * 60 * 24)),
-      'day',
-    );
-  }
-
-  if (absoluteDifference < 60 * 60 * 24 * 365) {
-    return RELATIVE_TIME_FORMATTER.format(
-      roundRelativeValue(differenceInSeconds / (60 * 60 * 24 * 30)),
-      'month',
-    );
-  }
-
-  return RELATIVE_TIME_FORMATTER.format(
-    roundRelativeValue(differenceInSeconds / (60 * 60 * 24 * 365)),
-    'year',
-  );
-}
+export { formatCreatedDate, formatCreatedTime, formatRelativeTime } from './payment-display-format';
 
 @Component({
   selector: 'tr[appPaymentRow]',
@@ -113,7 +29,7 @@ export class PaymentRow {
   readonly copyState = input<PaymentCopyState | null>(null);
   readonly currentTime = input<number | null>(null);
   readonly timeZone = input('UTC');
-  readonly columnOrder = input<readonly PaymentSortColumn[]>(PAYMENT_COLUMN_KEYS);
+  readonly columnOrder = input<readonly PaymentTableColumnKey[]>(PAYMENT_COLUMN_KEYS);
   readonly copyRequested = output<string>();
   readonly detailsRequested = output<string>();
 
@@ -127,17 +43,7 @@ export class PaymentRow {
   });
   protected readonly amountLabel = computed(() => {
     const payment = this.payment();
-    let formatter = CURRENCY_FORMATTERS.get(payment.currency);
-
-    if (!formatter) {
-      formatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: payment.currency,
-      });
-      CURRENCY_FORMATTERS.set(payment.currency, formatter);
-    }
-
-    return formatter.format(payment.amount);
+    return formatCurrencyAmount(payment.amount, payment.currency);
   });
   protected readonly createdDate = computed(() =>
     formatCreatedDate(this.payment().createdAt, this.timeZone()),
@@ -151,26 +57,13 @@ export class PaymentRow {
       ? 'Relative time will update after the page loads.'
       : formatRelativeTime(this.payment().createdAt, currentTime);
   });
-  protected readonly paymentMethodIcons = computed<readonly PaymentMethodIconView[]>(() => {
-    const paymentMethod = this.payment().paymentMethod;
-
-    if (paymentMethod.kind === 'standalone') {
-      return [{ category: 'method', key: paymentMethod.method }];
-    }
-
-    const brandIcon: PaymentMethodIconView = {
-      category: 'card-brand',
-      key: paymentMethod.brand,
-    };
-
-    return paymentMethod.wallet
-      ? [{ category: 'wallet', key: paymentMethod.wallet }, brandIcon]
-      : [brandIcon];
-  });
-  protected readonly paymentMethodLastFour = computed(() => {
-    const paymentMethod = this.payment().paymentMethod;
-    return paymentMethod.kind === 'card' ? paymentMethod.lastFour : null;
-  });
+  private readonly paymentMethodPresentation = computed(() =>
+    getPaymentMethodPresentation(this.payment().paymentMethod),
+  );
+  protected readonly paymentMethodIcons = computed(() => this.paymentMethodPresentation().icons);
+  protected readonly paymentMethodLastFour = computed(
+    () => this.paymentMethodPresentation().lastFour,
+  );
   protected readonly paymentDetailsPath = computed(
     () => '/payments/' + encodeURIComponent(this.payment().id),
   );

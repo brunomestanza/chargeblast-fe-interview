@@ -1,4 +1,4 @@
-import type { Payment } from '../../payment';
+import type { Payment } from '../../../payments/payment';
 import { convertPaymentAmountToUsdCents } from '../../exchange-rate';
 
 export interface AmountRange {

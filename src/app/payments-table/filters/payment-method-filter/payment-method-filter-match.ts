@@ -1,8 +1,8 @@
-import type { PaymentMethod } from '../../payment';
+import type { PaymentMethod } from '../../../payments/payment';
 import {
   isPaymentMethodFilterValue,
   type PaymentMethodFilterValue,
-} from './payment-method-filter-options.mock';
+} from './payment-method-filter-options';
 
 export function paymentMethodFilterValue(
   paymentMethod: PaymentMethod,

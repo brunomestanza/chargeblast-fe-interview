@@ -16,7 +16,7 @@ import {
   PAYMENT_METHOD_FILTER_GROUPS,
   paymentMethodFilterLabel,
   type PaymentMethodFilterValue,
-} from './payment-method-filter-options.mock';
+} from './payment-method-filter-options';
 
 @Component({
   selector: 'app-payment-method-filter',

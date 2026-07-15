@@ -5,18 +5,18 @@ import {
   formatAmountRangeLabel,
   matchesAmountRange,
 } from './filters/amount-range-filter/amount-range';
+import { dateKeyInTimeZone } from './filters/date-range-filter/date-key';
+import { formatDateRangeLabel } from './filters/date-range-filter/date-range-projection';
 import {
-  type DateRangeSelection,
-  dateKeyInTimeZone,
-  formatDateRangeLabel,
   isTimestampInDateRange,
   resolveDateRangeForToday,
-} from './filters/date-range-filter/date-range';
+  type DateRangeSelection,
+} from './filters/date-range-filter/date-range-selection';
 import { matchesPaymentMethodFilter } from './filters/payment-method-filter/payment-method-filter-match';
 import {
   paymentMethodFilterLabel,
   type PaymentMethodFilterValue,
-} from './filters/payment-method-filter/payment-method-filter-options.mock';
+} from './filters/payment-method-filter/payment-method-filter-options';
 import { PaymentClipboardAdapter } from './payment-clipboard.adapter';
 import type { PaymentCopyState } from './payment-copy-state';
 import { PaymentCsvDownloadAdapter } from './payment-csv-download.adapter';
@@ -28,7 +28,7 @@ import {
   serializeStatusQuery,
   serializeTextSearchQuery,
 } from './payment-filter-query';
-import { PAYMENT_STATUS_LABELS, type Payment, type PaymentStatus } from './payment';
+import { PAYMENT_STATUS_LABELS, type Payment, type PaymentStatus } from '../payments/payment';
 import { PAYMENT_QUERY_DELAY } from './payment-query-delay';
 import {
   DEFAULT_PAGE_SIZE,
@@ -46,12 +46,11 @@ import {
 import {
   DEFAULT_PAYMENT_SORT,
   PAYMENT_SORT_COLUMN_LABELS,
-  cyclePaymentSort,
-  serializePaymentSort,
-  sortPayments,
   type PaymentSortColumn,
   type PaymentSortCriterion,
-} from './payment-sort';
+} from './payment-sort.contract';
+import { cyclePaymentSort, sortPayments } from './payment-sort.operations';
+import { serializePaymentSort } from './payment-sort.query-codec';
 
 export const TEXT_SEARCH_DEBOUNCE_MS = 300;
 

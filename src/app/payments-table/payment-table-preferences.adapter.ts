@@ -9,7 +9,7 @@ import {
   serializeColumnOrder,
   serializeColumnWidths,
 } from './payment-columns';
-import type { PaymentSortColumn } from './payment-sort';
+import type { PaymentTableColumnKey } from './payment-table-column';
 
 export const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 export const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0];
@@ -18,7 +18,7 @@ export const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
 export type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 export interface PaymentColumnLayoutChange {
-  readonly columnOrder?: readonly PaymentSortColumn[];
+  readonly columnOrder?: readonly PaymentTableColumnKey[];
   readonly columnWidths?: PaymentColumnWidths;
 }
 
@@ -68,7 +68,7 @@ export class PaymentTablePreferencesAdapter {
     }
   }
 
-  readColumnOrder(): readonly PaymentSortColumn[] {
+  readColumnOrder(): readonly PaymentTableColumnKey[] {
     const browserWindow = this.document.defaultView;
 
     if (!browserWindow) {
@@ -96,7 +96,7 @@ export class PaymentTablePreferencesAdapter {
     }
   }
 
-  writeColumnOrder(order: readonly PaymentSortColumn[]): void {
+  writeColumnOrder(order: readonly PaymentTableColumnKey[]): void {
     try {
       this.document.defaultView?.localStorage.setItem(
         COLUMN_ORDER_STORAGE_KEY,

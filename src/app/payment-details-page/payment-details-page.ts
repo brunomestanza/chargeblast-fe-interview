@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PaymentMethodIcon } from '../payments-table/payment-method-icon';
-import { PAYMENT_DETAILS_FIXTURE, type PaymentDetailsFixture } from './payment-details.mock';
+import { PaymentMethodIcon } from '../payments/payment-method-icon';
+import { PAYMENT_DETAILS_DATA, type PaymentDetailsData } from './payment-details.data';
 
 @Component({
   selector: 'app-payment-details-page',
@@ -10,5 +10,5 @@ import { PAYMENT_DETAILS_FIXTURE, type PaymentDetailsFixture } from './payment-d
   styleUrls: ['./payment-details-page.css', './payment-details-content.css'],
 })
 export class PaymentDetailsPage {
-  protected readonly details: PaymentDetailsFixture = PAYMENT_DETAILS_FIXTURE;
+  protected readonly details: PaymentDetailsData = PAYMENT_DETAILS_DATA;
 }

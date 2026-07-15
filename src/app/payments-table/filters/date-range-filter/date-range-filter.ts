@@ -11,18 +11,17 @@ import {
   viewChild,
 } from '@angular/core';
 import { FilterButton } from '../filter-button/filter-button';
+import { dateKeyInTimeZone } from './date-key';
 import { DateRangeCalendar } from './date-range-calendar';
+import { formatDateRangeLabel, formatDateRangeSummary } from './date-range-projection';
 import {
   DATE_RANGE_PRESETS,
-  DateRangePreset,
-  DateRangeSelection,
   createPresetDateRange,
-  dateKeyInTimeZone,
-  formatDateRangeLabel,
-  formatDateRangeSummary,
   normalizeCustomDateRange,
   resolveDateRangeForToday,
-} from './date-range';
+  type DateRangePreset,
+  type DateRangeSelection,
+} from './date-range-selection';
 
 @Component({
   selector: 'app-date-range-filter',

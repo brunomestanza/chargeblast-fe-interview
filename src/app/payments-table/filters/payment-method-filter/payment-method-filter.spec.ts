@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { PaymentMethodFilter } from './payment-method-filter';
-import type { PaymentMethodFilterValue } from './payment-method-filter-options.mock';
+import type { PaymentMethodFilterValue } from './payment-method-filter-options';
 
 function findCheckbox(element: HTMLElement, label: string): HTMLInputElement {
   const checkbox = Array.from(
@@ -74,7 +74,7 @@ describe('PaymentMethodFilter', () => {
     return element;
   }
 
-  it('opens an accessible grouped dialog with every mocked option and focuses Visa', () => {
+  it('opens an accessible grouped dialog with every supported option and focuses Visa', () => {
     const fixture = createFilter();
     const element = fixture.nativeElement as HTMLElement;
     const trigger = element.querySelector<HTMLButtonElement>('.filter-button__trigger')!;

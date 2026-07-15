@@ -1,4 +1,4 @@
-import type { Payment } from './payment';
+import type { Payment } from '../payments/payment';
 
 export const PAYMENTS_CSV_MIME_TYPE = 'text/csv;charset=utf-8';
 

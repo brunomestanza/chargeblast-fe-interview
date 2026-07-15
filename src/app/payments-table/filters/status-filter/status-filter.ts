@@ -11,7 +11,11 @@ import {
   viewChild,
   viewChildren,
 } from '@angular/core';
-import { PAYMENT_STATUS_LABELS, PAYMENT_STATUS_OPTIONS, PaymentStatus } from '../../payment';
+import {
+  PAYMENT_STATUS_LABELS,
+  PAYMENT_STATUS_OPTIONS,
+  type PaymentStatus,
+} from '../../../payments/payment';
 import { FilterButton } from '../filter-button/filter-button';
 
 @Component({

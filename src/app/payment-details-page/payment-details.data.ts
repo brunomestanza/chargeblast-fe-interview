@@ -7,7 +7,7 @@ export interface PaymentActivityItem {
   readonly occurredLabel: string;
 }
 
-export interface PaymentDetailsFixture {
+export interface PaymentDetailsData {
   readonly amount: string;
   readonly currency: string;
   readonly status: 'Failed';
@@ -51,7 +51,7 @@ export interface PaymentDetailsFixture {
   readonly activity: readonly PaymentActivityItem[];
 }
 
-export const PAYMENT_DETAILS_FIXTURE = {
+export const PAYMENT_DETAILS_DATA = {
   amount: '£34.99',
   currency: 'GBP',
   status: 'Failed',
@@ -117,4 +117,4 @@ export const PAYMENT_DETAILS_FIXTURE = {
       occurredLabel: 'Aug 13, 2023, 7:01 AM',
     },
   ],
-} as const satisfies PaymentDetailsFixture;
+} as const satisfies PaymentDetailsData;

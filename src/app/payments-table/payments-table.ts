@@ -20,13 +20,13 @@ import { TextSearchFilter } from './filters/text-search-filter/text-search-filte
 import { PaymentClipboardAdapter } from './payment-clipboard.adapter';
 import { PaymentColumnLayoutController } from './payment-column-layout.controller';
 import { PaymentCsvDownloadAdapter } from './payment-csv-download.adapter';
-import type { Payment } from './payment';
+import type { Payment } from '../payments/payment';
 import { PaymentTablePreferencesAdapter, isPageSize } from './payment-table-preferences.adapter';
 import { PaymentTableViewportController } from './payment-table-viewport.controller';
 import { PaymentViewUrlAdapter } from './payment-view-url.adapter';
 import { PaymentRow } from './payment-row';
 import { PaymentSkeletonRow } from './payment-skeleton-row';
-import type { PaymentSortColumn } from './payment-sort';
+import type { PaymentSortColumn } from './payment-sort.contract';
 import { PaymentsTableFacade } from './payments-table.facade';
 
 export { TEXT_SEARCH_DEBOUNCE_MS } from './payments-table.facade';

@@ -8,10 +8,10 @@ import {
   serializeColumnOrder,
 } from './payment-columns';
 import { PaymentTablePreferencesAdapter } from './payment-table-preferences.adapter';
-import { PAYMENT_SORT_COLUMN_LABELS, PaymentSortColumn } from './payment-sort';
+import { PAYMENT_TABLE_COLUMN_LABELS, type PaymentTableColumnKey } from './payment-table-column';
 
 export interface PaymentTableColumn {
-  readonly key: PaymentSortColumn;
+  readonly key: PaymentTableColumnKey;
   readonly label: string;
   readonly align: 'left' | 'right';
   readonly columnClass: string;
@@ -21,49 +21,49 @@ export interface PaymentTableColumn {
 const PAYMENT_TABLE_COLUMNS: readonly PaymentTableColumn[] = [
   {
     key: 'paymentId',
-    label: PAYMENT_SORT_COLUMN_LABELS.paymentId,
+    label: PAYMENT_TABLE_COLUMN_LABELS.paymentId,
     align: 'left',
     columnClass: 'payment-id-column',
     defaultWidth: 248,
   },
   {
     key: 'customer',
-    label: PAYMENT_SORT_COLUMN_LABELS.customer,
+    label: PAYMENT_TABLE_COLUMN_LABELS.customer,
     align: 'left',
     columnClass: 'customer-column',
     defaultWidth: 220,
   },
   {
     key: 'amount',
-    label: PAYMENT_SORT_COLUMN_LABELS.amount,
+    label: PAYMENT_TABLE_COLUMN_LABELS.amount,
     align: 'right',
     columnClass: 'amount-column',
     defaultWidth: 150,
   },
   {
     key: 'status',
-    label: PAYMENT_SORT_COLUMN_LABELS.status,
+    label: PAYMENT_TABLE_COLUMN_LABELS.status,
     align: 'left',
     columnClass: 'status-column',
     defaultWidth: 130,
   },
   {
     key: 'paymentMethod',
-    label: PAYMENT_SORT_COLUMN_LABELS.paymentMethod,
+    label: PAYMENT_TABLE_COLUMN_LABELS.paymentMethod,
     align: 'right',
     columnClass: 'payment-method-column',
     defaultWidth: 190,
   },
   {
     key: 'created',
-    label: PAYMENT_SORT_COLUMN_LABELS.created,
+    label: PAYMENT_TABLE_COLUMN_LABELS.created,
     align: 'right',
     columnClass: 'created-column',
     defaultWidth: 175,
   },
 ];
 
-const PAYMENT_TABLE_COLUMN_MAP = new Map<PaymentSortColumn, PaymentTableColumn>(
+const PAYMENT_TABLE_COLUMN_MAP = new Map<PaymentTableColumnKey, PaymentTableColumn>(
   PAYMENT_TABLE_COLUMNS.map((column) => [column.key, column]),
 );
 const COLUMN_REORDER_HOLD_MS = 1_000;
@@ -72,17 +72,17 @@ const COLUMN_RESIZE_KEYBOARD_STEP = 8;
 const COLUMN_RESIZE_KEYBOARD_STEP_LARGE = 24;
 
 interface ColumnResizeState {
-  readonly key: PaymentSortColumn;
+  readonly key: PaymentTableColumnKey;
   readonly pointerId: number;
   readonly startX: number;
   readonly startWidth: number;
 }
 
 interface ColumnDragState {
-  readonly key: PaymentSortColumn;
+  readonly key: PaymentTableColumnKey;
   readonly pointerId: number;
   readonly startIndex: number;
-  readonly startOrder: readonly PaymentSortColumn[];
+  readonly startOrder: readonly PaymentTableColumnKey[];
   readonly startX: number;
   readonly startY: number;
   readonly headerRow: HTMLElement;
@@ -97,20 +97,22 @@ export class PaymentColumnLayoutController {
 
   readonly minColumnWidth = MIN_COLUMN_WIDTH;
   readonly maxColumnWidth = MAX_COLUMN_WIDTH;
-  readonly columnOrder = signal<readonly PaymentSortColumn[]>(this.preferences.readColumnOrder());
+  readonly columnOrder = signal<readonly PaymentTableColumnKey[]>(
+    this.preferences.readColumnOrder(),
+  );
   readonly columnWidths = signal<PaymentColumnWidths>(this.preferences.readColumnWidths());
   readonly orderedColumns = computed<readonly PaymentTableColumn[]>(() =>
     this.columnOrder().map((key) => PAYMENT_TABLE_COLUMN_MAP.get(key)!),
   );
-  readonly draggingColumn = signal<PaymentSortColumn | null>(null);
-  readonly resizingColumn = signal<PaymentSortColumn | null>(null);
+  readonly draggingColumn = signal<PaymentTableColumnKey | null>(null);
+  readonly resizingColumn = signal<PaymentTableColumnKey | null>(null);
   readonly announcement = signal('');
 
   private columnResizeState: ColumnResizeState | undefined;
   private columnDragState: ColumnDragState | undefined;
   private columnDragCaptureCell: HTMLElement | undefined;
   private columnHoldTimer: ReturnType<typeof setTimeout> | undefined;
-  private suppressedSortColumn: PaymentSortColumn | null = null;
+  private suppressedSortColumn: PaymentTableColumnKey | null = null;
   private stopObservingPreferences: (() => void) | undefined;
 
   constructor() {
@@ -137,13 +139,13 @@ export class PaymentColumnLayoutController {
     );
   }
 
-  consumeSortSuppression(column: PaymentSortColumn): boolean {
+  consumeSortSuppression(column: PaymentTableColumnKey): boolean {
     const shouldSuppress = this.suppressedSortColumn === column;
     this.suppressedSortColumn = null;
     return shouldSuppress;
   }
 
-  columnWidth(column: PaymentSortColumn): number {
+  columnWidth(column: PaymentTableColumnKey): number {
     return this.columnWidths()[column] ?? PAYMENT_TABLE_COLUMN_MAP.get(column)!.defaultWidth;
   }
 
@@ -251,7 +253,11 @@ export class PaymentColumnLayoutController {
     this.columnDragState = undefined;
   }
 
-  onReorderHandlePointerDown(event: PointerEvent, index: number, column: PaymentSortColumn): void {
+  onReorderHandlePointerDown(
+    event: PointerEvent,
+    index: number,
+    column: PaymentTableColumnKey,
+  ): void {
     if (event.pointerType === 'mouse' && event.button !== 0) {
       return;
     }
@@ -284,7 +290,7 @@ export class PaymentColumnLayoutController {
     this.activateColumnDrag();
   }
 
-  onReorderHandleKeydown(event: KeyboardEvent, index: number, column: PaymentSortColumn): void {
+  onReorderHandleKeydown(event: KeyboardEvent, index: number, column: PaymentTableColumnKey): void {
     const lastIndex = this.columnOrder().length - 1;
     let targetIndex: number;
 
@@ -319,7 +325,7 @@ export class PaymentColumnLayoutController {
     this.applyColumnMove(index, targetIndex);
   }
 
-  onResizePointerDown(event: PointerEvent, column: PaymentSortColumn): void {
+  onResizePointerDown(event: PointerEvent, column: PaymentTableColumnKey): void {
     if (event.pointerType === 'mouse' && event.button !== 0) {
       return;
     }
@@ -383,7 +389,7 @@ export class PaymentColumnLayoutController {
     );
   }
 
-  onResizeKeydown(event: KeyboardEvent, column: PaymentSortColumn): void {
+  onResizeKeydown(event: KeyboardEvent, column: PaymentTableColumnKey): void {
     const step = event.shiftKey ? COLUMN_RESIZE_KEYBOARD_STEP_LARGE : COLUMN_RESIZE_KEYBOARD_STEP;
     const currentWidth = this.columnWidth(column);
     let nextWidth: number;
@@ -554,7 +560,7 @@ export class PaymentColumnLayoutController {
     );
   }
 
-  private setColumnWidth(column: PaymentSortColumn, width: number): void {
+  private setColumnWidth(column: PaymentTableColumnKey, width: number): void {
     this.columnWidths.update((widths) => ({ ...widths, [column]: width }));
   }
 
@@ -569,7 +575,7 @@ export class PaymentColumnLayoutController {
     this.announcement.set(message);
   }
 
-  private columnLabel(column: PaymentSortColumn): string {
-    return PAYMENT_SORT_COLUMN_LABELS[column];
+  private columnLabel(column: PaymentTableColumnKey): string {
+    return PAYMENT_TABLE_COLUMN_LABELS[column];
   }
 }

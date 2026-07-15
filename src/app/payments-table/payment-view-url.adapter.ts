@@ -19,7 +19,7 @@ import {
   serializeStatusQuery,
   serializeTextSearchQuery,
 } from './payment-filter-query';
-import { parsePaymentSort, serializePaymentSort } from './payment-sort';
+import { parsePaymentSort, serializePaymentSort } from './payment-sort.query-codec';
 import type { PaymentViewState } from './payment-view-state';
 
 export const SORT_QUERY_PARAM = 'sort';

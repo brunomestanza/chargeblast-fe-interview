@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { Payment } from './payment';
-import { formatCreatedDate, formatRelativeTime } from './payment-row';
+import { formatCreatedDate, formatRelativeTime } from './payment-display-format';
+import type { Payment } from './payment';
 import { PaymentsTable } from './payments-table';
 import { payment, setupPaymentsTableTesting } from './testing/payments-table.testing';
 

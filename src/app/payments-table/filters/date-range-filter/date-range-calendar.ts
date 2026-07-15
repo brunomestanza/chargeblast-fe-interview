@@ -13,12 +13,11 @@ import {
 import {
   addDateKeyDays,
   addDateKeyMonths,
-  buildCalendarMonth,
   endOfDateKeyWeek,
-  formatMonthLabel,
   startOfDateKeyMonth,
   startOfDateKeyWeek,
-} from './date-range';
+} from './date-key';
+import { buildCalendarMonth, formatMonthLabel } from './date-range-projection';
 
 const WEEKDAYS: readonly { readonly short: string; readonly full: string }[] = [
   { short: 'Mo', full: 'Monday' },

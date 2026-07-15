@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { PAYMENT_COLUMN_KEYS } from './payment-columns';
-import type { PaymentSortColumn } from './payment-sort';
+import type { PaymentTableColumnKey } from './payment-table-column';
 
 @Component({
   selector: 'tr[appPaymentSkeletonRow]',
@@ -72,5 +72,5 @@ import type { PaymentSortColumn } from './payment-sort';
   },
 })
 export class PaymentSkeletonRow {
-  readonly columnOrder = input<readonly PaymentSortColumn[]>(PAYMENT_COLUMN_KEYS);
+  readonly columnOrder = input<readonly PaymentTableColumnKey[]>(PAYMENT_COLUMN_KEYS);
 }

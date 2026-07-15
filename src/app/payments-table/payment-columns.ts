@@ -1,4 +1,4 @@
-import { PAYMENT_SORT_COLUMNS, PaymentSortColumn } from './payment-sort';
+import { PAYMENT_TABLE_COLUMN_KEYS, type PaymentTableColumnKey } from './payment-table-column';
 
 export const COLUMN_ORDER_STORAGE_KEY = 'chargeblast.payments.column-order';
 export const COLUMN_WIDTHS_STORAGE_KEY = 'chargeblast.payments.column-widths';
@@ -6,9 +6,9 @@ export const COLUMN_WIDTHS_STORAGE_KEY = 'chargeblast.payments.column-widths';
 export const MIN_COLUMN_WIDTH = 96;
 export const MAX_COLUMN_WIDTH = 720;
 
-export const PAYMENT_COLUMN_KEYS: readonly PaymentSortColumn[] = PAYMENT_SORT_COLUMNS;
+export const PAYMENT_COLUMN_KEYS: readonly PaymentTableColumnKey[] = PAYMENT_TABLE_COLUMN_KEYS;
 
-export type PaymentColumnWidths = Readonly<Partial<Record<PaymentSortColumn, number>>>;
+export type PaymentColumnWidths = Readonly<Partial<Record<PaymentTableColumnKey, number>>>;
 
 export function clampColumnWidth(width: number): number {
   if (!Number.isFinite(width)) {
@@ -20,17 +20,17 @@ export function clampColumnWidth(width: number): number {
 
 export function normalizeColumnOrder(
   order: readonly string[] | null,
-  canonicalOrder: readonly PaymentSortColumn[] = PAYMENT_COLUMN_KEYS,
-): PaymentSortColumn[] {
+  canonicalOrder: readonly PaymentTableColumnKey[] = PAYMENT_COLUMN_KEYS,
+): PaymentTableColumnKey[] {
   const canonical = new Set<string>(canonicalOrder);
-  const seen = new Set<PaymentSortColumn>();
-  const normalized: PaymentSortColumn[] = [];
+  const seen = new Set<PaymentTableColumnKey>();
+  const normalized: PaymentTableColumnKey[] = [];
 
   if (order) {
     for (const key of order) {
-      if (canonical.has(key) && !seen.has(key as PaymentSortColumn)) {
-        seen.add(key as PaymentSortColumn);
-        normalized.push(key as PaymentSortColumn);
+      if (canonical.has(key) && !seen.has(key as PaymentTableColumnKey)) {
+        seen.add(key as PaymentTableColumnKey);
+        normalized.push(key as PaymentTableColumnKey);
       }
     }
   }
@@ -46,8 +46,8 @@ export function normalizeColumnOrder(
 
 export function parseStoredColumnOrder(
   value: string | null,
-  canonicalOrder: readonly PaymentSortColumn[] = PAYMENT_COLUMN_KEYS,
-): PaymentSortColumn[] {
+  canonicalOrder: readonly PaymentTableColumnKey[] = PAYMENT_COLUMN_KEYS,
+): PaymentTableColumnKey[] {
   if (value === null) {
     return [...canonicalOrder];
   }
@@ -68,7 +68,7 @@ export function parseStoredColumnOrder(
 
 export function parseStoredColumnWidths(
   value: string | null,
-  canonicalOrder: readonly PaymentSortColumn[] = PAYMENT_COLUMN_KEYS,
+  canonicalOrder: readonly PaymentTableColumnKey[] = PAYMENT_COLUMN_KEYS,
 ): PaymentColumnWidths {
   if (value === null) {
     return {};
@@ -82,11 +82,11 @@ export function parseStoredColumnWidths(
     }
 
     const valid = new Set<string>(canonicalOrder);
-    const widths: Partial<Record<PaymentSortColumn, number>> = {};
+    const widths: Partial<Record<PaymentTableColumnKey, number>> = {};
 
     for (const [key, raw] of Object.entries(parsed)) {
       if (valid.has(key) && typeof raw === 'number' && Number.isFinite(raw)) {
-        widths[key as PaymentSortColumn] = clampColumnWidth(raw);
+        widths[key as PaymentTableColumnKey] = clampColumnWidth(raw);
       }
     }
 
@@ -96,7 +96,7 @@ export function parseStoredColumnWidths(
   }
 }
 
-export function serializeColumnOrder(order: readonly PaymentSortColumn[]): string {
+export function serializeColumnOrder(order: readonly PaymentTableColumnKey[]): string {
   return JSON.stringify(order);
 }
 
@@ -105,10 +105,10 @@ export function serializeColumnWidths(widths: PaymentColumnWidths): string {
 }
 
 export function moveColumn(
-  order: readonly PaymentSortColumn[],
+  order: readonly PaymentTableColumnKey[],
   fromIndex: number,
   toIndex: number,
-): PaymentSortColumn[] {
+): PaymentTableColumnKey[] {
   const result = [...order];
 
   if (fromIndex < 0 || fromIndex >= result.length) {

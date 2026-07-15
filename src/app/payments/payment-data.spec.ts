@@ -1,5 +1,5 @@
 import type { Payment } from './payment';
-import { parsePaymentFixture, rebasePaymentDates } from './payment-mock';
+import { parsePaymentData, rebasePaymentDates } from './payment-data';
 
 const payments: readonly Payment[] = [
   {
@@ -30,16 +30,16 @@ const payments: readonly Payment[] = [
   },
 ];
 
-describe('payment mock', () => {
+describe('payment data', () => {
   it('parses valid payments without weakening their types', () => {
-    expect(parsePaymentFixture(payments)).toEqual(payments);
+    expect(parsePaymentData(payments)).toEqual(payments);
   });
 
   it('rejects invalid payment values and duplicate IDs', () => {
-    expect(() => parsePaymentFixture([{ ...payments[0], status: 'cancelled' }])).toThrow(
+    expect(() => parsePaymentData([{ ...payments[0], status: 'cancelled' }])).toThrow(
       'invalid payment',
     );
-    expect(() => parsePaymentFixture([payments[0], payments[0]])).toThrow('duplicate payment IDs');
+    expect(() => parsePaymentData([payments[0], payments[0]])).toThrow('duplicate payment IDs');
   });
 
   it('anchors the newest payment to the visit time and preserves date intervals', () => {

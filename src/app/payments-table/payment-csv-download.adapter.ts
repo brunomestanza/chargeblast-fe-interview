@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Service, inject } from '@angular/core';
-import type { Payment } from './payment';
+import type { Payment } from '../payments/payment';
 import {
   createPaymentsCsvFilename,
   PAYMENTS_CSV_MIME_TYPE,
