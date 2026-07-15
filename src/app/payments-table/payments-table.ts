@@ -21,6 +21,7 @@ import { PaymentClipboardAdapter } from './payment-clipboard.adapter';
 import { PaymentColumnLayoutController } from './payment-column-layout.controller';
 import { PaymentCsvDownloadAdapter } from './payment-csv-download.adapter';
 import type { Payment } from '../payments/payment';
+import { PaymentQueryLifecycleController } from './payment-query-lifecycle.controller';
 import { PaymentTablePreferencesAdapter, isPageSize } from './payment-table-preferences.adapter';
 import { PaymentTableFeedbackController } from './payment-table-feedback.controller';
 import { PaymentTableViewportController } from './payment-table-viewport.controller';
@@ -50,6 +51,7 @@ export { TEXT_SEARCH_DEBOUNCE_MS } from './payments-table.facade';
     PaymentClipboardAdapter,
     PaymentColumnLayoutController,
     PaymentCsvDownloadAdapter,
+    PaymentQueryLifecycleController,
     PaymentTableFeedbackController,
     PaymentTablePreferencesAdapter,
     PaymentTableViewportController,

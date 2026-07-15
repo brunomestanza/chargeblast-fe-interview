@@ -27,7 +27,7 @@ import {
   serializeTextSearchQuery,
 } from './payment-filter-query';
 import { PAYMENT_STATUS_LABELS, type Payment, type PaymentStatus } from '../payments/payment';
-import { PAYMENT_QUERY_DELAY } from './payment-query-delay';
+import { PaymentQueryLifecycleController } from './payment-query-lifecycle.controller';
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZE_OPTIONS,
@@ -74,18 +74,17 @@ const NOOP_VIEW_EFFECTS: PaymentsTableViewEffects = {
 export class PaymentsTableFacade {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly queryDelay = inject(PAYMENT_QUERY_DELAY);
   private readonly preferences = inject(PaymentTablePreferencesAdapter);
   private readonly url = inject(PaymentViewUrlAdapter);
   private readonly csvDownload = inject(PaymentCsvDownloadAdapter);
   private readonly feedback = inject(PaymentTableFeedbackController);
+  private readonly queryLifecycle = inject(PaymentQueryLifecycleController);
 
   private readonly paymentsState = signal<readonly Payment[]>([]);
   readonly payments = this.paymentsState.asReadonly();
 
   readonly copyState = this.feedback.copyState;
-  private readonly loadingState = signal(false);
-  readonly isLoading = this.loadingState.asReadonly();
+  readonly isLoading = this.queryLifecycle.isLoading;
   private readonly currentTimeState = signal<number | null>(null);
   readonly currentTime = this.currentTimeState.asReadonly();
   private readonly timeZoneState = signal('UTC');
@@ -225,14 +224,31 @@ export class PaymentsTableFacade {
 
   private viewEffects: PaymentsTableViewEffects = NOOP_VIEW_EFFECTS;
   private textSearchTimer: ReturnType<typeof setTimeout> | undefined;
-  private queryTimer: ReturnType<typeof setTimeout> | undefined;
-  private queryRequestId = 0;
   private clockTimer: number | undefined;
   private browserStateStarted = false;
   private stopObservingPageSize: (() => void) | undefined;
 
   constructor() {
     this.pageSizeState.set(this.preferences.readPageSize());
+    this.queryLifecycle.connect({
+      prepareRequest: () => {
+        this.resetTableScrollPosition();
+        this.viewEffects.updateSkeletonLayout();
+      },
+      loadingStarted: () => this.feedback.clearResultAnnouncements(),
+      applyViewState: (viewState) => {
+        this.currentPageState.set(1);
+        this.appliedViewState.set(viewState);
+      },
+      completeRequest: ({ viewState, announceResult, writeUrl }) => {
+        this.resetTableScrollPosition();
+        announceResult();
+
+        if (writeUrl) {
+          this.url.write(viewState);
+        }
+      },
+    });
     this.url.connect({
       today: () => dateKeyInTimeZone(this.currentTimeState() ?? Date.now(), this.timeZoneState()),
       applyViewState: (change) => this.applyViewStateFromUrl(change),
@@ -240,7 +256,6 @@ export class PaymentsTableFacade {
 
     this.destroyRef.onDestroy(() => {
       this.clearTextSearchTimer();
-      this.cancelPendingQuery();
       this.stopClock();
       this.stopObservingPageSize?.();
       this.stopObservingPageSize = undefined;
@@ -286,7 +301,7 @@ export class PaymentsTableFacade {
   }
 
   exportCurrentView(): void {
-    if (this.loadingState()) {
+    if (this.isLoading()) {
       return;
     }
 
@@ -422,11 +437,11 @@ export class PaymentsTableFacade {
     this.clearTextSearchTimer();
 
     if (
-      this.loadingState() &&
+      this.isLoading() &&
       serializeTextSearchQuery(parseTextSearchQuery(value)) !==
         serializeTextSearchQuery(this.requestedTextSearch())
     ) {
-      this.cancelPendingQuery();
+      this.queryLifecycle.cancel();
     }
 
     this.textSearchTimer = setTimeout(() => {
@@ -487,7 +502,7 @@ export class PaymentsTableFacade {
     this.requestedTextSearch.set(nextTextSearch);
     this.textSearchInputState.set(nextTextSearch ?? '');
 
-    const shouldResumeUnappliedView = !this.loadingState() && this.hasUnappliedRequestedViewState();
+    const shouldResumeUnappliedView = !this.isLoading() && this.hasUnappliedRequestedViewState();
 
     if (!(sortChanged || filtersChanged || shouldResumeUnappliedView)) {
       return;
@@ -522,7 +537,7 @@ export class PaymentsTableFacade {
       return;
     }
 
-    this.cancelPendingQuery();
+    this.queryLifecycle.cancel();
     this.currentPageState.set(1);
     this.appliedViewState.set(this.captureRequestedViewState());
     this.resetTableScrollPosition();
@@ -655,50 +670,11 @@ export class PaymentsTableFacade {
   }
 
   private requestPayments(announceResult: () => void, writeUrl = true): void {
-    const requestedViewState = this.captureRequestedViewState();
-
-    this.cancelPendingQuery();
-    const requestId = ++this.queryRequestId;
-    this.resetTableScrollPosition();
-    this.viewEffects.updateSkeletonLayout();
-    this.loadingState.set(true);
-    this.feedback.clearResultAnnouncements();
-
-    const applyResponse = (): void => {
-      if (requestId !== this.queryRequestId) {
-        return;
-      }
-
-      this.queryTimer = undefined;
-      this.currentPageState.set(1);
-      this.appliedViewState.set(requestedViewState);
-      this.loadingState.set(false);
-      this.resetTableScrollPosition();
-      announceResult();
-
-      if (writeUrl) {
-        this.url.write(requestedViewState);
-      }
-    };
-    const delay = this.queryDelay();
-
-    if (delay <= 0) {
-      applyResponse();
-      return;
-    }
-
-    this.queryTimer = setTimeout(applyResponse, delay);
-  }
-
-  private cancelPendingQuery(): void {
-    this.queryRequestId += 1;
-
-    if (this.queryTimer !== undefined) {
-      clearTimeout(this.queryTimer);
-      this.queryTimer = undefined;
-    }
-
-    this.loadingState.set(false);
+    this.queryLifecycle.request({
+      viewState: this.captureRequestedViewState(),
+      announceResult,
+      writeUrl,
+    });
   }
 
   private resetTableScrollPosition(): void {
