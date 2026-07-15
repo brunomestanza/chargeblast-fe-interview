@@ -84,6 +84,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .top-navigation__search input,
   .top-navigation__product-links a,
   .top-navigation__utility-links a {
     transition-duration: 0s;

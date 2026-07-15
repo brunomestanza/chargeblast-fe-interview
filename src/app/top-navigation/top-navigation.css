@@ -39,10 +39,10 @@
 
 .top-navigation__search {
   position: relative;
-  width: auto;
-  max-width: none;
+  width: 100%;
+  max-width: 600px;
   min-width: 220px;
-  flex: 1 1 auto;
+  flex: 1 1 600px;
 }
 
 .top-navigation__search > svg {
@@ -59,6 +59,7 @@
 
 .top-navigation__search input {
   width: 100%;
+  max-width: 360px;
   height: 36px;
   padding: 7px 12px 7px 32px;
   border-radius: 8px;
@@ -68,6 +69,7 @@
   font-size: 14px;
   line-height: 20px;
   outline: none;
+  transition: max-width 100ms ease;
 }
 
 .top-navigation__search input::placeholder {
@@ -80,8 +82,13 @@
   outline-offset: 2px;
 }
 
+.top-navigation__search:focus-within input {
+  max-width: 100%;
+}
+
 .top-navigation__actions {
   min-width: 0;
+  margin-left: auto;
   flex: 0 0 auto;
   justify-content: flex-end;
   gap: 12px;
