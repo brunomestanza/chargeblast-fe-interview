@@ -37,16 +37,9 @@ describe('PaymentsTable filters', () => {
     element.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
     fixture.detectChanges();
 
-    const preset = Array.from(
-      element.querySelectorAll<HTMLButtonElement>('.date-filter__presets button'),
-    ).find((button) => button.textContent?.trim() === '30d')!;
-    const apply = Array.from(
-      element.querySelectorAll<HTMLButtonElement>('.date-filter__actions button'),
-    ).find((button) => button.textContent?.trim() === 'Apply')!;
-
-    preset.click();
+    setNumberInput(element.querySelector<HTMLInputElement>('input[type="number"]')!, '30');
     fixture.detectChanges();
-    apply.click();
+    findButton(element, 'Apply').click();
     fixture.detectChanges();
 
     expect(renderedPaymentIds(element)).toEqual(['pay_recent']);
@@ -302,7 +295,7 @@ describe('PaymentsTable filters', () => {
 
     dateFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
     fixture.detectChanges();
-    findButton(dateFilter, '30d').click();
+    setNumberInput(dateFilter.querySelector<HTMLInputElement>('input[type="number"]')!, '30');
     fixture.detectChanges();
     findButton(dateFilter, 'Apply').click();
     fixture.detectChanges();
@@ -360,7 +353,7 @@ describe('PaymentsTable filters', () => {
 
     dateFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
     fixture.detectChanges();
-    findButton(dateFilter, '30d').click();
+    setNumberInput(dateFilter.querySelector<HTMLInputElement>('input[type="number"]')!, '30');
     fixture.detectChanges();
     findButton(dateFilter, 'Apply').click();
     fixture.detectChanges();

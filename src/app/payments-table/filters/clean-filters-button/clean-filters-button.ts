@@ -2,9 +2,12 @@ import { Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-clean-filters-button',
+  host: {
+    '[class.clean-filters-button--hidden]': 'disabled()',
+  },
   template: `
     <button type="button" [disabled]="disabled()" (click)="cleanRequested.emit($event)">
-      Clean all filters
+      Clear filters
     </button>
   `,
   styleUrl: './clean-filters-button.css',

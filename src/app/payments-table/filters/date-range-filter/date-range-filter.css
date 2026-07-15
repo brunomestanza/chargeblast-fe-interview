@@ -8,166 +8,167 @@
 .date-filter__popover {
   position: absolute;
   z-index: 100;
-  top: calc(100% + 6px);
+  top: calc(100% + 4px);
   left: 0;
-  width: 352px;
-  max-width: calc(100vw - 32px);
-  overflow: hidden;
-  color: #1a1f36;
+  box-sizing: border-box;
+  width: 264px;
+  max-width: calc(100vw - 16px);
+  padding: 12px;
+  color: #1a2c44;
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow:
-    0 0 0 1px rgba(31, 45, 61, 0.1),
-    0 8px 24px rgba(31, 45, 61, 0.14),
-    0 2px 6px rgba(31, 45, 61, 0.06);
+    0 0 0 1px #d4dee9,
+    0 5px 15px rgba(0, 0, 0, 0.12),
+    0 15px 35px rgba(48, 49, 61, 0.08);
   transform-origin: top left;
-  animation: date-filter-enter 160ms cubic-bezier(0.215, 0.61, 0.355, 1);
+  animation: date-filter-enter 150ms cubic-bezier(0, 0.09, 0.4, 1);
 }
 
-.date-filter__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px 10px;
-}
-
-.date-filter__eyebrow,
-.date-filter__footer p,
 h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -0.005em;
+}
+
+form {
+  display: grid;
+  gap: 10px;
   margin: 0;
 }
 
-.date-filter__eyebrow {
-  margin-bottom: 1px;
-  color: #697386;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 16px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.date-filter__select-shell {
+  position: relative;
+  min-width: 0;
 }
 
-h2 {
-  font-size: 16px;
-  font-weight: 650;
-  line-height: 22px;
-  letter-spacing: -0.01em;
+.date-filter__select-shell > svg {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: #3c4f69;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+  pointer-events: none;
+  transform: translateY(-50%);
 }
 
-.date-filter__close,
-.date-filter__presets button,
-.date-filter__actions button {
-  touch-action: manipulation;
-}
-
-.date-filter__close {
-  display: inline-flex;
-  flex: 0 0 32px;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 0;
+select,
+input,
+.date-filter__apply {
+  box-sizing: border-box;
+  height: 28px;
+  min-height: 28px;
   border-radius: 6px;
-  color: #697386;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+select,
+input {
+  min-width: 0;
+  border: 1px solid #d4dee9;
+  color: #273951;
+  background: #ffffff;
+  box-shadow: 0 1px 1px rgba(31, 45, 61, 0.04);
+}
+
+select {
+  width: 100%;
+  padding: 3px 28px 3px 8px;
+  appearance: none;
   cursor: pointer;
 }
 
-.date-filter__close svg {
+input {
+  width: 100%;
+  padding: 3px 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+input[type='number'] {
+  appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.date-filter__value-row {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.date-filter__relative-row {
+  grid-template-columns: 16px 72px 84px;
+}
+
+.date-filter__date-row {
+  grid-template-columns: 16px minmax(0, 1fr);
+}
+
+.date-filter__direction {
   width: 16px;
   height: 16px;
   fill: none;
-  stroke: currentColor;
+  stroke: #533afd;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.6;
+  stroke-width: 1.7;
 }
 
-.date-filter__presets {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  padding: 0 16px 12px;
-  border-bottom: 1px solid rgba(31, 45, 61, 0.1);
-}
-
-.date-filter__presets button {
-  min-height: 32px;
-  padding: 0 8px;
-  border: 1px solid rgba(31, 45, 61, 0.16);
-  border-radius: 6px;
-  color: #4f566b;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-  cursor: pointer;
-}
-
-.date-filter__presets .date-filter__preset--selected {
-  border-color: rgba(99, 91, 255, 0.45);
-  color: #5145cd;
-  background: #f0efff;
-}
-
-.date-filter__footer {
+.date-filter__between-fields {
   display: grid;
   gap: 8px;
-  padding: 10px 16px 12px;
-  border-top: 1px solid rgba(31, 45, 61, 0.1);
-  background: #ffffff;
 }
 
-.date-filter__footer p {
-  min-height: 20px;
-  color: #697386;
-  font-size: 12px;
-  line-height: 20px;
+.date-filter__and {
+  color: #596780;
+  font-size: 11px;
+  line-height: 16px;
   text-align: center;
 }
 
-.date-filter__actions {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 8px;
-}
-
-.date-filter__actions button {
-  min-height: 32px;
-  padding: 0 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 20px;
-  cursor: pointer;
-}
-
-.date-filter__cancel {
-  border: 1px solid rgba(31, 45, 61, 0.18);
-  color: #3c4257;
-  background: #ffffff;
-}
-
 .date-filter__apply {
-  border: 1px solid #635bff;
+  width: 100%;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border: 0;
   color: #ffffff;
-  background: #635bff;
-  box-shadow: 0 1px 2px rgba(80, 70, 229, 0.24);
+  background: #533afd;
+  box-shadow:
+    0 0 0 1px #533afd,
+    0 1px 2px rgba(31, 45, 61, 0.18);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .date-filter__apply:disabled {
-  border-color: #d8dee8;
-  color: #87909f;
-  background: #eef1f5;
-  box-shadow: none;
+  color: #ffffff;
+  background: #533afd;
+  box-shadow: 0 0 0 1px #533afd;
   cursor: not-allowed;
+  opacity: 0.55;
 }
 
-.date-filter__close:focus-visible,
-.date-filter__presets button:focus-visible,
-.date-filter__actions button:focus-visible {
-  outline: 2px solid #303750;
+select:focus-visible,
+input:focus-visible,
+.date-filter__apply:focus-visible {
+  outline: 2px solid #0196ed;
   outline-offset: 2px;
+  box-shadow: 0 0 0 1px #533afd;
 }
 
 .visually-hidden {
@@ -182,34 +183,23 @@ h2 {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .date-filter__close:hover,
-  .date-filter__presets button:not(.date-filter__preset--selected):hover,
-  .date-filter__cancel:hover {
-    background: #f7f9fc;
+  select:hover,
+  input:hover {
+    border-color: #aab7c4;
   }
 
   .date-filter__apply:not(:disabled):hover {
-    background: #5145cd;
-  }
-}
-
-@media (pointer: coarse) {
-  .date-filter__close {
-    flex-basis: 44px;
-    width: 44px;
-    height: 44px;
-  }
-
-  .date-filter__presets button,
-  .date-filter__actions button {
-    min-height: 44px;
+    background: #4530e6;
+    box-shadow:
+      0 0 0 1px #4530e6,
+      0 1px 2px rgba(31, 45, 61, 0.18);
   }
 }
 
 @keyframes date-filter-enter {
   from {
     opacity: 0;
-    transform: translateY(-4px) scale(0.98);
+    transform: scale(0.95) translateY(-4px);
   }
 
   to {
@@ -218,53 +208,39 @@ h2 {
   }
 }
 
-@media (max-width: 480px) {
-  .date-filter__popover {
-    position: fixed;
-    top: 50%;
-    right: 8px;
-    left: 8px;
-    width: auto;
-    max-width: none;
-    max-height: calc(100dvh - 16px - env(safe-area-inset-bottom));
-    overflow-y: auto;
-    transform: translateY(-50%);
-    transform-origin: center;
-    animation-name: date-filter-enter-mobile;
-  }
-
-  .date-filter__presets {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .date-filter__footer {
-    position: sticky;
-    bottom: 0;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-  }
-}
-
-@media (max-width: 340px) {
-  .date-filter__popover {
-    right: 4px;
-    left: 4px;
-  }
-}
-
-@keyframes date-filter-enter-mobile {
-  from {
-    opacity: 0;
-    transform: translateY(calc(-50% - 4px)) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(-50%) scale(1);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .date-filter__popover {
     animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  :host {
+    position: static;
+  }
+}
+
+@media (forced-colors: active) {
+  .date-filter__popover,
+  select,
+  input {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .date-filter__apply,
+  .date-filter__apply:disabled {
+    border: 1px solid ButtonText;
+    color: ButtonText;
+    background: ButtonFace;
+    box-shadow: none;
+  }
+
+  select:focus-visible,
+  input:focus-visible,
+  .date-filter__apply:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
   }
 }

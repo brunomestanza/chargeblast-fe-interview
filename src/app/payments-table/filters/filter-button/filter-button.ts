@@ -6,23 +6,10 @@ import { Component, ElementRef, computed, input, output, viewChild } from '@angu
     <div
       class="filter-button"
       [class.filter-button--active]="hasValue()"
+      [class.filter-button--expanded]="expanded()"
       role="group"
       [attr.aria-label]="label() + ' filter'"
     >
-      @if (hasValue()) {
-        <button
-          type="button"
-          class="filter-button__clear"
-          [attr.aria-label]="'Clear ' + label() + ' filter'"
-          (click)="clearRequested.emit()"
-        >
-          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-            <circle cx="10" cy="10" r="7.25" />
-            <path d="m7.5 7.5 5 5m0-5-5 5" />
-          </svg>
-        </button>
-      }
-
       <button
         #trigger
         type="button"
@@ -34,9 +21,15 @@ import { Component, ElementRef, computed, input, output, viewChild } from '@angu
         (click)="editRequested.emit($event)"
       >
         @if (!hasValue()) {
-          <svg class="filter-button__add" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-            <circle cx="10" cy="10" r="7.25" />
-            <path d="M10 6.5v7M6.5 10h7" />
+          <svg class="filter-button__add" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path
+              d="M8.75 4.25a.75.75 0 0 0-1.5 0v3h-3a.75.75 0 0 0 0 1.5h3v3a.75.75 0 0 0 1.5 0v-3h3a.75.75 0 0 0 0-1.5h-3v-3Z"
+            />
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M16 8a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-1.5 0A6.5 6.5 0 1 1 8 1.5 6.5 6.5 0 0 1 14.5 8Z"
+            />
           </svg>
         }
 
@@ -48,14 +41,38 @@ import { Component, ElementRef, computed, input, output, viewChild } from '@angu
           <svg
             class="filter-button__chevron"
             [class.filter-button__chevron--expanded]="expanded()"
-            viewBox="0 0 16 16"
+            viewBox="0 0 8 8"
             aria-hidden="true"
             focusable="false"
           >
-            <path d="m4.5 6.25 3.5 3.5 3.5-3.5" />
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M.606 2.334a.75.75 0 0 0-.022 1.06l2.875 3a.75.75 0 0 0 1.082 0L7.416 3.4a.75.75 0 0 0-1.082-1.038L4 4.79 1.667 2.357a.75.75 0 0 0-1.06-.022Z"
+            />
           </svg>
         }
       </button>
+
+      @if (hasValue()) {
+        <button
+          type="button"
+          class="filter-button__clear"
+          [attr.aria-label]="'Clear ' + label() + ' filter'"
+          (click)="clearRequested.emit()"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path
+              d="M5.53 4.47a.75.75 0 0 0-1.06 1.06L6.94 8l-2.47 2.47a.75.75 0 1 0 1.06 1.06L8 9.06l2.47 2.47a.75.75 0 1 0 1.06-1.06L9.06 8l2.47-2.47a.75.75 0 0 0-1.06-1.06L8 6.94 5.53 4.47Z"
+            />
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M16 8a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-1.5 0A6.5 6.5 0 1 1 8 1.5 6.5 6.5 0 0 1 14.5 8Z"
+            />
+          </svg>
+        </button>
+      }
     </div>
   `,
   styleUrl: './filter-button.css',

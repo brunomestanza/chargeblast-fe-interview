@@ -1,5 +1,5 @@
 <app-filter-button
-  label="Payment method"
+  label="Payment Method"
   [value]="valueLabel()"
   [accessibleValue]="accessibleValueLabel()"
   [expanded]="open()"
@@ -15,9 +15,9 @@
     role="dialog"
     [attr.aria-labelledby]="popoverId() + '-title'"
   >
-    <h2 [id]="popoverId() + '-title'">Filter by: payment method</h2>
+    <h2 [id]="popoverId() + '-title'">Filtered by: payment method</h2>
 
-    <div class="payment-method-filter__groups">
+    <div class="payment-method-filter__groups" [id]="popoverId() + '-methods'">
       @for (group of groups; track group.key) {
         <fieldset class="payment-method-filter__group">
           <legend>{{ group.label }}</legend>
@@ -33,7 +33,18 @@
                   [checked]="isSelected(option.value)"
                   (change)="updatePaymentMethod(option.value, methodCheckbox.checked)"
                 />
-                <span>{{ option.label }}</span>
+                <span class="payment-method-filter__checkbox" aria-hidden="true"></span>
+                <svg
+                  class="payment-method-filter__checkmark"
+                  viewBox="0 0 14 14"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M9.846 3.801a.929.929 0 0 1 1.37 0 1.076 1.076 0 0 1 0 1.456l-4.64 4.94a.929.929 0 0 1-1.37 0L2.784 7.623a1.076 1.076 0 0 1 0-1.456.929.929 0 0 1 1.37 0L5.89 8.013l3.955-4.212Z"
+                  />
+                </svg>
+                <span class="payment-method-filter__label">{{ option.label }}</span>
               </label>
             }
           </div>

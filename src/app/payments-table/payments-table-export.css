@@ -1,26 +1,60 @@
-.filter-toolbar__text-controls {
+.filter-toolbar {
+  --filter-accent: #533afd;
+  --filter-accent-icon: #625afa;
+  --filter-border: #d4dee9;
+  --filter-ink: #1a2c44;
+  --filter-label: #3c4f69;
+  position: relative;
+  z-index: 2;
+  display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px 16px;
+  min-height: 40px;
+  padding: 0 24px 12px;
+  border-top: 1px solid var(--color-border);
+  font-family:
+    -apple-system, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol';
 }
 
-.filter-toolbar__text-controls app-text-search-filter {
-  flex: 1 1 180px;
-  min-width: 180px;
+.filter-toolbar__filters {
+  position: relative;
+  display: flex;
+  flex: 1 1 280px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.filter-toolbar__filters app-text-search-filter {
+  flex: 0 1 220px;
+  min-width: 160px;
 }
 
 .filter-toolbar__actions {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   margin-inline-start: auto;
 }
 
 @media (max-width: 640px) {
-  .filter-toolbar__text-controls {
+  .filter-toolbar {
+    min-height: 40px;
+    padding-block: 0 12px;
+    padding-inline: 20px;
+  }
+
+  .filter-toolbar__filters {
     flex-basis: 100%;
   }
 
-  .filter-toolbar__text-controls app-text-search-filter {
+  .filter-toolbar__filters app-text-search-filter {
     flex-basis: 100%;
     min-width: 100%;
   }

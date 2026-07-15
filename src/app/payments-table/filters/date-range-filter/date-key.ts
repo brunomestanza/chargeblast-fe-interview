@@ -40,39 +40,10 @@ export function dateKeyInTimeZone(timestamp: number | string, timeZone: string):
   return `${year}-${month}-${day}`;
 }
 
-export function startOfDateKeyMonth(date: string): string {
-  const { year, month } = parseDateKey(date);
-  return createDateKey({ year, month, day: 1 });
-}
-
 export function addDateKeyDays(date: string, amount: number): string {
   const nextDate = dateKeyToUtcDate(date);
   nextDate.setUTCDate(nextDate.getUTCDate() + amount);
   return utcDateToKey(nextDate);
-}
-
-export function addDateKeyMonths(date: string, amount: number): string {
-  const { year, month, day } = parseDateKey(date);
-  const targetMonth = new Date(Date.UTC(year, month - 1 + amount, 1));
-  const targetYear = targetMonth.getUTCFullYear();
-  const targetMonthNumber = targetMonth.getUTCMonth() + 1;
-  const lastDay = new Date(Date.UTC(targetYear, targetMonthNumber, 0)).getUTCDate();
-
-  return createDateKey({
-    year: targetYear,
-    month: targetMonthNumber,
-    day: Math.min(day, lastDay),
-  });
-}
-
-export function startOfDateKeyWeek(date: string): string {
-  const weekday = dateKeyToUtcDate(date).getUTCDay();
-  const daysSinceMonday = (weekday + 6) % 7;
-  return addDateKeyDays(date, -daysSinceMonday);
-}
-
-export function endOfDateKeyWeek(date: string): string {
-  return addDateKeyDays(startOfDateKeyWeek(date), 6);
 }
 
 export function dateKeyToUtcDate(date: string): Date {

@@ -27,6 +27,18 @@ function findButton(element: HTMLElement, label: string): HTMLButtonElement {
   return button;
 }
 
+function clickOptionText(element: HTMLElement, label: string): void {
+  const text = findCheckbox(element, label)
+    .closest('label')
+    ?.querySelector<HTMLElement>('.status-filter__label');
+
+  if (!text) {
+    throw new Error(`Option text ${label} was not found.`);
+  }
+
+  text.click();
+}
+
 describe('StatusFilter', () => {
   let animationFrames: Map<number, FrameRequestCallback>;
   let nextAnimationFrame: number;
@@ -88,7 +100,7 @@ describe('StatusFilter', () => {
 
     expect(dialog.getAttribute('aria-labelledby')).toBe('payments-status-filter-title');
     expect(heading.id).toBe('payments-status-filter-title');
-    expect(heading.textContent).toBe('Filter by: status');
+    expect(heading.textContent).toBe('Filtered by: status');
     expect(element.querySelector('fieldset')).not.toBeNull();
     expect(element.querySelector('legend')?.textContent).toContain('Select payment statuses');
     expect(Array.from(checkboxes, (checkbox) => checkbox.value)).toEqual([
@@ -110,7 +122,7 @@ describe('StatusFilter', () => {
     const valueChange = vi.fn<(value: readonly PaymentStatus[]) => void>();
     fixture.componentInstance.valueChange.subscribe(valueChange);
 
-    findCheckbox(element, 'Succeeded').click();
+    clickOptionText(element, 'Succeeded');
     fixture.detectChanges();
     findCheckbox(element, 'Failed').click();
     fixture.detectChanges();

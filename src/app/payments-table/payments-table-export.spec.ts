@@ -95,8 +95,8 @@ describe('PaymentsTable export', () => {
         Array.from(actionGroup.querySelectorAll('button')).map((button) =>
           button.textContent?.trim(),
         ),
-      ).toEqual(['Clean all filters', 'Export']);
-      expect(getComputedStyle(actionGroup).gap).toBe('12px');
+      ).toEqual(['Export']);
+      expect(getComputedStyle(actionGroup).gap).toBe('6px');
       expect(element.querySelectorAll('tbody tr')).toHaveLength(25);
       expect(exportButton.type).toBe('button');
       expect(exportButton.getAttribute('aria-label')).toBe('Export current payments view as CSV');

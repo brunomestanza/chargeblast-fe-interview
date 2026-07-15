@@ -40,39 +40,39 @@
   </p>
 
   <section class="filter-toolbar" aria-label="Payment controls">
-    <app-date-range-filter
-      [value]="view.dateRange()"
-      [referenceTime]="view.currentTime()"
-      [timeZone]="view.timeZone()"
-      (valueChange)="view.changeDateRange($event)"
-    />
-    <app-status-filter
-      [value]="view.selectedStatuses()"
-      (valueChange)="view.changeStatuses($event)"
-    />
-    <app-payment-method-filter
-      [value]="view.selectedPaymentMethods()"
-      (valueChange)="view.changePaymentMethods($event)"
-    />
-    <app-amount-range-filter
-      [value]="view.amountRange()"
-      (valueChange)="view.changeAmountRange($event)"
-    />
-    <div class="filter-toolbar__text-controls">
+    <div class="filter-toolbar__filters">
+      <app-date-range-filter
+        [value]="view.dateRange()"
+        [referenceTime]="view.currentTime()"
+        [timeZone]="view.timeZone()"
+        (valueChange)="view.changeDateRange($event)"
+      />
+      <app-amount-range-filter
+        [value]="view.amountRange()"
+        (valueChange)="view.changeAmountRange($event)"
+      />
+      <app-status-filter
+        [value]="view.selectedStatuses()"
+        (valueChange)="view.changeStatuses($event)"
+      />
+      <app-payment-method-filter
+        [value]="view.selectedPaymentMethods()"
+        (valueChange)="view.changePaymentMethods($event)"
+      />
       <app-text-search-filter
         [value]="view.textSearchInput()"
         (valueChange)="view.changeTextSearch($event)"
       />
-      <div class="filter-toolbar__actions">
-        <app-clean-filters-button
-          [disabled]="!view.hasActiveFilters()"
-          (cleanRequested)="clearAllFilters($event)"
-        />
-        <app-export-payments-button
-          [disabled]="view.isLoading()"
-          (exportRequested)="view.exportCurrentView()"
-        />
-      </div>
+      <app-clean-filters-button
+        [disabled]="!view.hasActiveFilters()"
+        (cleanRequested)="clearAllFilters($event)"
+      />
+    </div>
+    <div class="filter-toolbar__actions">
+      <app-export-payments-button
+        [disabled]="view.isLoading()"
+        (exportRequested)="view.exportCurrentView()"
+      />
     </div>
   </section>
 

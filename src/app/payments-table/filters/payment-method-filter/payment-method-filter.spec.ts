@@ -27,6 +27,18 @@ function findButton(element: HTMLElement, label: string): HTMLButtonElement {
   return button;
 }
 
+function clickOptionText(element: HTMLElement, label: string): void {
+  const text = findCheckbox(element, label)
+    .closest('label')
+    ?.querySelector<HTMLElement>('.payment-method-filter__label');
+
+  if (!text) {
+    throw new Error(`Option text ${label} was not found.`);
+  }
+
+  text.click();
+}
+
 describe('PaymentMethodFilter', () => {
   let animationFrames: Map<number, FrameRequestCallback>;
   let nextAnimationFrame: number;
@@ -74,12 +86,12 @@ describe('PaymentMethodFilter', () => {
     return element;
   }
 
-  it('opens an accessible grouped dialog with every supported option and focuses Visa', () => {
+  it('opens an accessible dialog with every option and focuses the first checkbox', () => {
     const fixture = createFilter();
     const element = fixture.nativeElement as HTMLElement;
     const trigger = element.querySelector<HTMLButtonElement>('.filter-button__trigger')!;
 
-    expect(trigger.getAttribute('aria-label')).toBe('Add Payment method filter');
+    expect(trigger.getAttribute('aria-label')).toBe('Add Payment Method filter');
     expect(element.querySelector('.filter-button__clear')).toBeNull();
 
     openFilter(fixture);
@@ -91,7 +103,14 @@ describe('PaymentMethodFilter', () => {
 
     expect(dialog.getAttribute('aria-labelledby')).toBe('payments-payment-method-filter-title');
     expect(heading.id).toBe('payments-payment-method-filter-title');
-    expect(heading.textContent).toBe('Filter by: payment method');
+    expect(heading.textContent).toBe('Filtered by: payment method');
+    expect(element.querySelector('.payment-method-filter__selector')).toBeNull();
+    expect(element.querySelector('.payment-method-filter__groups')?.id).toBe(
+      'payments-payment-method-filter-methods',
+    );
+    expect(findButton(element, 'Apply')).toBeTruthy();
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(trigger.getAttribute('aria-controls')).toBe('payments-payment-method-filter');
     expect(
       Array.from(fieldsets, (fieldset) => fieldset.querySelector('legend')?.textContent),
     ).toEqual(['Card', 'Wallet', 'ACH and bank payments', 'Services']);
@@ -119,8 +138,6 @@ describe('PaymentMethodFilter', () => {
       'method:afterpay',
     ]);
     expect(document.activeElement).toBe(checkboxes[0]);
-    expect(trigger.getAttribute('aria-expanded')).toBe('true');
-    expect(trigger.getAttribute('aria-controls')).toBe('payments-payment-method-filter');
   });
 
   it('applies values across groups in selection order and shows their labels', () => {
@@ -129,11 +146,15 @@ describe('PaymentMethodFilter', () => {
     const valueChange = vi.fn<(value: readonly PaymentMethodFilterValue[]) => void>();
     fixture.componentInstance.valueChange.subscribe(valueChange);
 
-    findCheckbox(element, 'Visa').click();
+    clickOptionText(element, 'Visa');
     findCheckbox(element, 'Apple Pay').click();
     findCheckbox(element, 'ACH Direct Debit').click();
     findCheckbox(element, 'PayPal').click();
     fixture.detectChanges();
+    expect(findCheckbox(element, 'Visa').checked).toBe(true);
+    expect(findCheckbox(element, 'Apple Pay').checked).toBe(true);
+    expect(findCheckbox(element, 'ACH Direct Debit').checked).toBe(true);
+    expect(findCheckbox(element, 'PayPal').checked).toBe(true);
     findButton(element, 'Apply').click();
     fixture.detectChanges();
     flushAnimationFrames();
@@ -162,7 +183,7 @@ describe('PaymentMethodFilter', () => {
       element
         .querySelector<HTMLButtonElement>('.filter-button__trigger')
         ?.getAttribute('aria-label'),
-    ).toBe('Edit Payment method filter, currently Visa, Apple Pay, ACH Direct Debit, PayPal');
+    ).toBe('Edit Payment Method filter, currently Visa, Apple Pay, ACH Direct Debit, PayPal');
   });
 
   it('discards a draft on Escape and restores focus to the trigger', () => {
@@ -171,6 +192,7 @@ describe('PaymentMethodFilter', () => {
     const valueChange = vi.fn<(value: readonly PaymentMethodFilterValue[]) => void>();
     fixture.componentInstance.valueChange.subscribe(valueChange);
 
+    expect(document.activeElement).toBe(findCheckbox(element, 'Link'));
     findCheckbox(element, 'Visa').click();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();

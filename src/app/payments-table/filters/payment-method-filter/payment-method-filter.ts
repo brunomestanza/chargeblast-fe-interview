@@ -22,7 +22,11 @@ import {
   selector: 'app-payment-method-filter',
   imports: [FilterButton],
   templateUrl: './payment-method-filter.html',
-  styleUrl: './payment-method-filter.css',
+  styleUrls: [
+    './payment-method-filter.css',
+    './payment-method-filter-options.css',
+    './payment-method-filter-forced-colors.css',
+  ],
   host: {
     '(document:pointerdown)': 'onDocumentPointerDown($event)',
     '(document:focusin)': 'onDocumentFocusIn($event)',
@@ -56,7 +60,6 @@ export class PaymentMethodFilter {
     const labels = this.selectedLabels();
     return labels.length > 0 ? labels.join(', ') : null;
   });
-
   private readonly filterButton = viewChild.required(FilterButton);
   private readonly methodCheckboxes = viewChildren<ElementRef<HTMLInputElement>>('methodCheckbox');
   private focusFrame: number | undefined;

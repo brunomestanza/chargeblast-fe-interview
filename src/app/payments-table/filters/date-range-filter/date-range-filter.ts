@@ -11,21 +11,31 @@ import {
   viewChild,
 } from '@angular/core';
 import { FilterButton } from '../filter-button/filter-button';
-import { dateKeyInTimeZone } from './date-key';
-import { DateRangeCalendar } from './date-range-calendar';
-import { formatDateRangeLabel, formatDateRangeSummary } from './date-range-projection';
+import { addDateKeyDays, dateKeyInTimeZone, parseDateKey } from './date-key';
+import { formatDateRangeLabel } from './date-range-projection';
 import {
-  DATE_RANGE_PRESETS,
   createPresetDateRange,
   normalizeCustomDateRange,
   resolveDateRangeForToday,
-  type DateRangePreset,
   type DateRangeSelection,
 } from './date-range-selection';
 
+type DateFilterOperator = 'in-the-last' | 'equals' | 'between';
+
+const DATE_FILTER_OPERATORS: readonly {
+  readonly value: DateFilterOperator;
+  readonly label: string;
+}[] = [
+  { value: 'in-the-last', label: 'is in the last' },
+  { value: 'equals', label: 'is equal to' },
+  { value: 'between', label: 'is between' },
+];
+
+const MAX_RELATIVE_DAY_COUNT = 100_000;
+
 @Component({
   selector: 'app-date-range-filter',
-  imports: [DateRangeCalendar, FilterButton],
+  imports: [FilterButton],
   templateUrl: './date-range-filter.html',
   styleUrl: './date-range-filter.css',
   host: {
@@ -46,15 +56,15 @@ export class DateRangeFilter {
 
   readonly valueChange = output<DateRangeSelection | null>();
 
-  protected readonly presets = DATE_RANGE_PRESETS;
+  protected readonly operators = DATE_FILTER_OPERATORS;
   protected readonly open = signal(false);
-  protected readonly draftPreset = signal<DateRangePreset | null>(null);
-  protected readonly draftStart = signal<string | null>(null);
-  protected readonly draftEnd = signal<string | null>(null);
-  protected readonly calendarActiveDate = signal('1970-01-01');
-  protected readonly selectionAnnouncement = signal('');
+  protected readonly draftOperator = signal<DateFilterOperator>('in-the-last');
+  protected readonly draftRelativeDays = signal('');
+  protected readonly draftStart = signal('');
+  protected readonly draftEnd = signal('');
 
   private readonly filterButton = viewChild.required(FilterButton);
+  private readonly operatorControl = viewChild<ElementRef<HTMLSelectElement>>('operatorControl');
   private focusFrame: number | undefined;
 
   protected readonly today = computed(() =>
@@ -64,22 +74,15 @@ export class DateRangeFilter {
     const value = this.value();
     return value ? formatDateRangeLabel(value) : null;
   });
-  protected readonly canApply = computed(
-    () => this.draftStart() !== null && this.draftEnd() !== null,
-  );
-  protected readonly draftSummary = computed(() => {
-    const start = this.draftStart();
-    const end = this.draftEnd();
-
-    if (start === null) {
-      return 'Select a start and end date.';
+  protected readonly canApply = computed(() => {
+    switch (this.draftOperator()) {
+      case 'in-the-last':
+        return parseRelativeDayCount(this.draftRelativeDays()) !== null;
+      case 'equals':
+        return this.isSelectableDate(this.draftStart());
+      case 'between':
+        return this.isSelectableDate(this.draftStart()) && this.isSelectableDate(this.draftEnd());
     }
-
-    if (end === null) {
-      return `${formatDateRangeSummary(start, start)} selected as the start date.`;
-    }
-
-    return formatDateRangeSummary(start, end);
   });
 
   constructor() {
@@ -95,79 +98,39 @@ export class DateRangeFilter {
     const today = this.today();
     const appliedValue = this.value();
     const currentValue = appliedValue ? resolveDateRangeForToday(appliedValue, today) : null;
-    const initialFocus = currentValue?.end ?? today;
 
-    this.draftPreset.set(currentValue?.preset ?? null);
-    this.draftStart.set(currentValue?.start ?? null);
-    this.draftEnd.set(currentValue?.end ?? null);
-    this.calendarActiveDate.set(initialFocus);
-    this.selectionAnnouncement.set('');
+    this.initializeDraft(currentValue);
     this.open.set(true);
+    this.scheduleOperatorFocus();
   }
 
-  protected selectPreset(preset: DateRangePreset): void {
-    if (preset === 'custom') {
-      if (this.draftPreset() !== 'custom') {
-        this.draftStart.set(null);
-        this.draftEnd.set(null);
-      }
+  protected changeOperator(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
 
-      this.draftPreset.set('custom');
-      this.selectionAnnouncement.set('Custom date range selected. Choose a start date.');
-      return;
+    if (isDateFilterOperator(value)) {
+      this.draftOperator.set(value);
     }
-
-    const selection = createPresetDateRange(preset, this.today());
-
-    this.draftPreset.set(selection.preset);
-    this.draftStart.set(selection.start);
-    this.draftEnd.set(selection.end);
-    this.calendarActiveDate.set(selection.end);
-    this.selectionAnnouncement.set(`${formatDateRangeLabel(selection)} selected.`);
   }
 
-  protected selectDate(date: string): void {
-    if (date > this.today()) {
-      return;
-    }
-
-    const start = this.draftStart();
-    const end = this.draftEnd();
-
-    this.draftPreset.set('custom');
-    this.calendarActiveDate.set(date);
-
-    if (start === null || end !== null) {
-      this.draftStart.set(date);
-      this.draftEnd.set(null);
-      this.selectionAnnouncement.set(
-        `${formatDateRangeSummary(date, date)} selected as the start date. Choose an end date.`,
-      );
-      return;
-    }
-
-    const selection = normalizeCustomDateRange(start, date);
-
-    this.draftStart.set(selection.start);
-    this.draftEnd.set(selection.end);
-    this.selectionAnnouncement.set(
-      `${formatDateRangeSummary(selection.start, selection.end)} selected.`,
-    );
+  protected changeRelativeDays(event: Event): void {
+    this.draftRelativeDays.set((event.target as HTMLInputElement).value);
   }
 
-  protected applyFilter(): void {
-    const start = this.draftStart();
-    const end = this.draftEnd();
-    const preset = this.draftPreset();
+  protected changeStart(event: Event): void {
+    this.draftStart.set((event.target as HTMLInputElement).value);
+  }
 
-    if (start === null || end === null) {
+  protected changeEnd(event: Event): void {
+    this.draftEnd.set((event.target as HTMLInputElement).value);
+  }
+
+  protected applyFilter(event?: Event): void {
+    event?.preventDefault();
+    const selection = this.createDraftSelection();
+
+    if (selection === null) {
       return;
     }
-
-    const selection =
-      preset === 'today' || preset === 'last-7-days' || preset === 'last-30-days'
-        ? { preset, start, end }
-        : normalizeCustomDateRange(start, end);
 
     this.valueChange.emit(selection);
     this.closeFilter(true);
@@ -220,7 +183,6 @@ export class DateRangeFilter {
   protected closeFilter(restoreFocus: boolean): void {
     this.cancelFocusFrame();
     this.open.set(false);
-    this.selectionAnnouncement.set('');
 
     if (restoreFocus) {
       this.scheduleTriggerFocus();
@@ -240,6 +202,95 @@ export class DateRangeFilter {
     });
   }
 
+  private scheduleOperatorFocus(): void {
+    const browserWindow = this.document.defaultView;
+
+    if (!browserWindow) {
+      return;
+    }
+
+    this.focusFrame = browserWindow.requestAnimationFrame(() => {
+      this.focusFrame = undefined;
+      this.operatorControl()?.nativeElement.focus();
+    });
+  }
+
+  private initializeDraft(value: DateRangeSelection | null): void {
+    if (value === null) {
+      this.draftOperator.set('in-the-last');
+      this.draftRelativeDays.set('');
+      this.draftStart.set('');
+      this.draftEnd.set('');
+      return;
+    }
+
+    switch (value.preset) {
+      case 'today':
+        this.setRelativeDraft(1);
+        return;
+      case 'last-7-days':
+        this.setRelativeDraft(7);
+        return;
+      case 'last-30-days':
+        this.setRelativeDraft(30);
+        return;
+      case 'custom':
+        this.draftOperator.set(value.start === value.end ? 'equals' : 'between');
+        this.draftRelativeDays.set('');
+        this.draftStart.set(value.start);
+        this.draftEnd.set(value.end);
+    }
+  }
+
+  private setRelativeDraft(dayCount: number): void {
+    this.draftOperator.set('in-the-last');
+    this.draftRelativeDays.set(String(dayCount));
+    this.draftStart.set('');
+    this.draftEnd.set('');
+  }
+
+  private createDraftSelection(): DateRangeSelection | null {
+    switch (this.draftOperator()) {
+      case 'in-the-last': {
+        const dayCount = parseRelativeDayCount(this.draftRelativeDays());
+
+        if (dayCount === null) {
+          return null;
+        }
+
+        const today = this.today();
+
+        switch (dayCount) {
+          case 1:
+            return createPresetDateRange('today', today);
+          case 7:
+            return createPresetDateRange('last-7-days', today);
+          case 30:
+            return createPresetDateRange('last-30-days', today);
+          default:
+            return normalizeCustomDateRange(addDateKeyDays(today, -(dayCount - 1)), today);
+        }
+      }
+      case 'equals':
+        return this.isSelectableDate(this.draftStart())
+          ? normalizeCustomDateRange(this.draftStart(), this.draftStart())
+          : null;
+      case 'between':
+        return this.isSelectableDate(this.draftStart()) && this.isSelectableDate(this.draftEnd())
+          ? normalizeCustomDateRange(this.draftStart(), this.draftEnd())
+          : null;
+    }
+  }
+
+  private isSelectableDate(value: string): boolean {
+    try {
+      parseDateKey(value);
+      return value <= this.today();
+    } catch {
+      return false;
+    }
+  }
+
   private cancelFocusFrame(): void {
     const browserWindow = this.document.defaultView;
 
@@ -248,4 +299,20 @@ export class DateRangeFilter {
       this.focusFrame = undefined;
     }
   }
+}
+
+function isDateFilterOperator(value: string): value is DateFilterOperator {
+  return DATE_FILTER_OPERATORS.some((operator) => operator.value === value);
+}
+
+function parseRelativeDayCount(value: string): number | null {
+  const normalizedValue = value.trim();
+
+  if (!/^[1-9]\d*$/.test(normalizedValue)) {
+    return null;
+  }
+
+  const dayCount = Number(normalizedValue);
+
+  return Number.isSafeInteger(dayCount) && dayCount <= MAX_RELATIVE_DAY_COUNT ? dayCount : null;
 }

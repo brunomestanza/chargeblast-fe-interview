@@ -1,0 +1,33 @@
+@media (forced-colors: active) {
+  .payment-method-filter__popover {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .payment-method-filter__group + .payment-method-filter__group,
+  .payment-method-filter__footer {
+    border-color: CanvasText;
+  }
+
+  .payment-method-filter__checkbox {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .payment-method-filter__apply {
+    border: 1px solid ButtonText;
+    color: ButtonText;
+    background: ButtonFace;
+    box-shadow: none;
+  }
+
+  .payment-method-filter__apply:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .payment-method-filter__option input:focus-visible + .payment-method-filter__checkbox {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

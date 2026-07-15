@@ -1,0 +1,23 @@
+@media (forced-colors: active) {
+  .amount-range-filter__popover,
+  input,
+  .amount-range-filter__operator {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .amount-range-filter__apply,
+  .amount-range-filter__apply:disabled {
+    border: 1px solid ButtonText;
+    color: ButtonText;
+    background: ButtonFace;
+    box-shadow: none;
+  }
+
+  .amount-range-filter__operator:focus-visible,
+  input:focus-visible,
+  .amount-range-filter__apply:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

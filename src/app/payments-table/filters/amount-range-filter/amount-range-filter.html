@@ -16,16 +16,40 @@
     [attr.aria-labelledby]="popoverId() + '-title'"
     [attr.aria-describedby]="popoverId() + '-hint'"
   >
-    <h2 [id]="popoverId() + '-title'">Filter by: amount</h2>
+    <h2 [id]="popoverId() + '-title'">Filtered by: amount</h2>
 
     <form novalidate (submit)="applyFilter($event)">
+      <div class="amount-range-filter__operator-shell">
+        <label class="visually-hidden" [for]="popoverId() + '-operator'">
+          Amount comparison operator
+        </label>
+        <select
+          class="amount-range-filter__operator"
+          [id]="popoverId() + '-operator'"
+          name="amount-comparison-operator"
+        >
+          <option value="between">is between</option>
+        </select>
+        <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+          <path d="m3.25 4.75 2.75-2.5 2.75 2.5M3.25 7.25 6 9.75l2.75-2.5" />
+        </svg>
+      </div>
+
       <div class="amount-range-filter__fields">
+        <svg
+          class="amount-range-filter__range-arrow"
+          viewBox="0 0 16 16"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M2.5 8h10M9 4.5 12.5 8 9 11.5" />
+        </svg>
+
         <div class="amount-range-filter__field">
-          <label [for]="popoverId() + '-minimum'">
+          <label class="visually-hidden" [for]="popoverId() + '-minimum'">
             Minimum<span class="visually-hidden"> amount in USD</span>
           </label>
           <div class="amount-range-filter__input-shell">
-            <span aria-hidden="true">$</span>
             <input
               #minimumInput
               [id]="popoverId() + '-minimum'"
@@ -52,12 +76,13 @@
           </div>
         </div>
 
+        <span class="amount-range-filter__and" aria-hidden="true">and</span>
+
         <div class="amount-range-filter__field">
-          <label [for]="popoverId() + '-maximum'">
+          <label class="visually-hidden" [for]="popoverId() + '-maximum'">
             Maximum<span class="visually-hidden"> amount in USD</span>
           </label>
           <div class="amount-range-filter__input-shell">
-            <span aria-hidden="true">$</span>
             <input
               [id]="popoverId() + '-maximum'"
               type="number"
@@ -84,8 +109,8 @@
         </div>
       </div>
 
-      <p class="amount-range-filter__hint" [id]="popoverId() + '-hint'">
-        Enter both amounts to find payments within this USD range.
+      <p class="amount-range-filter__hint visually-hidden" [id]="popoverId() + '-hint'">
+        Enter a maximum amount and optionally a minimum to find payments within this USD range.
       </p>
 
       <footer class="amount-range-filter__footer">

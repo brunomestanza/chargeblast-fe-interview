@@ -75,7 +75,7 @@ describe('PaymentsTable URL synchronization', () => {
 
     dateFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
     fixture.detectChanges();
-    findButton(dateFilter, '30d').click();
+    setNumberInput(dateFilter.querySelector<HTMLInputElement>('input[type="number"]')!, '30');
     fixture.detectChanges();
     findButton(dateFilter, 'Apply').click();
     fixture.detectChanges();

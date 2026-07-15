@@ -5,6 +5,16 @@ import { Component, ElementRef, computed, input, output, viewChild } from '@angu
   template: `
     <label class="visually-hidden" for="payments-text-search">Search payments</label>
     <div class="text-search-filter">
+      <svg
+        class="text-search-filter__search-icon"
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle cx="6.75" cy="6.75" r="4.25" />
+        <path d="m10 10 3.5 3.5" />
+      </svg>
+
       <input
         #searchInput
         id="payments-text-search"
@@ -28,9 +38,15 @@ import { Component, ElementRef, computed, input, output, viewChild } from '@angu
           aria-label="Clear text search filter"
           (click)="clearValue()"
         >
-          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-            <circle cx="10" cy="10" r="7.25" />
-            <path d="m7.5 7.5 5 5m0-5-5 5" />
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path
+              d="M5.53 4.47a.75.75 0 0 0-1.06 1.06L6.94 8l-2.47 2.47a.75.75 0 1 0 1.06 1.06L8 9.06l2.47 2.47a.75.75 0 1 0 1.06-1.06L9.06 8l2.47-2.47a.75.75 0 0 0-1.06-1.06L8 6.94 5.53 4.47Z"
+            />
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M16 8a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-1.5 0A6.5 6.5 0 1 1 8 1.5 6.5 6.5 0 0 1 14.5 8Z"
+            />
           </svg>
         </button>
       }

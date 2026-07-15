@@ -1,5 +1,5 @@
 <app-filter-button
-  label="Date range"
+  label="Date"
   [value]="valueLabel()"
   [expanded]="open()"
   [controls]="popoverId()"
@@ -14,64 +14,136 @@
     role="dialog"
     [attr.aria-labelledby]="popoverId() + '-title'"
   >
-    <header class="date-filter__header">
-      <div>
-        <p class="date-filter__eyebrow">Filter by</p>
-        <h2 [id]="popoverId() + '-title'">Date range</h2>
-      </div>
-      <button
-        type="button"
-        class="date-filter__close"
-        aria-label="Close date range filter"
-        (click)="closeFilter(true)"
-      >
-        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-          <path d="m6.25 6.25 7.5 7.5m0-7.5-7.5 7.5" />
-        </svg>
-      </button>
-    </header>
-
-    <div class="date-filter__presets" role="group" aria-label="Quick date ranges">
-      @for (preset of presets; track preset.value) {
-        <button
-          type="button"
-          [class.date-filter__preset--selected]="draftPreset() === preset.value"
-          [attr.aria-pressed]="draftPreset() === preset.value"
-          (click)="selectPreset(preset.value)"
-        >
-          {{ preset.label }}
-        </button>
-      }
-    </div>
-
-    <app-date-range-calendar
-      [today]="today()"
-      [activeDate]="calendarActiveDate()"
-      [selectionStart]="draftStart()"
-      [selectionEnd]="draftEnd()"
-      [labelId]="popoverId() + '-month'"
-      (dateSelected)="selectDate($event)"
-    />
-
-    <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
-      {{ selectionAnnouncement() }}
+    <h2 [id]="popoverId() + '-title'">Filtered by: date</h2>
+    <p class="visually-hidden" [id]="popoverId() + '-date-format-hint'">
+      Enter dates in YYYY-MM-DD format.
     </p>
 
-    <footer class="date-filter__footer">
-      <p>{{ draftSummary() }}</p>
-      <div class="date-filter__actions">
-        <button type="button" class="date-filter__cancel" (click)="closeFilter(true)">
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="date-filter__apply"
-          [disabled]="!canApply()"
-          (click)="applyFilter()"
+    <form (submit)="applyFilter($event)">
+      <div class="date-filter__select-shell date-filter__operator">
+        <label class="visually-hidden" [for]="popoverId() + '-operator'"> Filter selection </label>
+        <select
+          #operatorControl
+          [id]="popoverId() + '-operator'"
+          [value]="draftOperator()"
+          (change)="changeOperator($event)"
         >
-          Apply
-        </button>
+          @for (operator of operators; track operator.value) {
+            <option [value]="operator.value">{{ operator.label }}</option>
+          }
+        </select>
+        <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+          <path d="m2.5 4 3.5-3 3.5 3M2.5 8 6 11l3.5-3" />
+        </svg>
       </div>
-    </footer>
+
+      @switch (draftOperator()) {
+        @case ('in-the-last') {
+          <div class="date-filter__value-row date-filter__relative-row">
+            <svg
+              class="date-filter__direction"
+              viewBox="0 0 16 16"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M3 8h9m-3.5-3.5L12 8l-3.5 3.5" />
+            </svg>
+            <label class="visually-hidden" [for]="popoverId() + '-relative-days'">
+              Number of days
+            </label>
+            <input
+              [id]="popoverId() + '-relative-days'"
+              type="number"
+              min="1"
+              max="100000"
+              step="1"
+              inputmode="numeric"
+              autocomplete="off"
+              [value]="draftRelativeDays()"
+              (input)="changeRelativeDays($event)"
+            />
+            <div class="date-filter__select-shell date-filter__unit">
+              <label class="visually-hidden" [for]="popoverId() + '-unit'">Date unit</label>
+              <select [id]="popoverId() + '-unit'" aria-label="Date unit">
+                <option value="days">days</option>
+              </select>
+              <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+                <path d="m2.5 4 3.5-3 3.5 3M2.5 8 6 11l3.5-3" />
+              </svg>
+            </div>
+          </div>
+        }
+        @case ('equals') {
+          <div class="date-filter__value-row date-filter__date-row">
+            <svg
+              class="date-filter__direction"
+              viewBox="0 0 16 16"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M3 8h9m-3.5-3.5L12 8l-3.5 3.5" />
+            </svg>
+            <label class="visually-hidden" [for]="popoverId() + '-date'">Date</label>
+            <input
+              [id]="popoverId() + '-date'"
+              type="text"
+              inputmode="numeric"
+              placeholder="YYYY-MM-DD"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="10"
+              [value]="draftStart()"
+              [attr.aria-describedby]="popoverId() + '-date-format-hint'"
+              (input)="changeStart($event)"
+            />
+          </div>
+        }
+        @case ('between') {
+          <div class="date-filter__between-fields">
+            <div class="date-filter__value-row date-filter__date-row">
+              <svg
+                class="date-filter__direction"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M3 8h9m-3.5-3.5L12 8l-3.5 3.5" />
+              </svg>
+              <label class="visually-hidden" [for]="popoverId() + '-start'">Start date</label>
+              <input
+                [id]="popoverId() + '-start'"
+                type="text"
+                inputmode="numeric"
+                placeholder="YYYY-MM-DD"
+                autocomplete="off"
+                spellcheck="false"
+                maxlength="10"
+                [value]="draftStart()"
+                [attr.aria-describedby]="popoverId() + '-date-format-hint'"
+                (input)="changeStart($event)"
+              />
+            </div>
+            <div class="date-filter__value-row date-filter__date-row">
+              <span class="date-filter__and" aria-hidden="true">and</span>
+              <label class="visually-hidden" [for]="popoverId() + '-end'">End date</label>
+              <input
+                [id]="popoverId() + '-end'"
+                type="text"
+                inputmode="numeric"
+                placeholder="YYYY-MM-DD"
+                autocomplete="off"
+                spellcheck="false"
+                maxlength="10"
+                [value]="draftEnd()"
+                [attr.aria-describedby]="popoverId() + '-date-format-hint'"
+                (input)="changeEnd($event)"
+              />
+            </div>
+          </div>
+        }
+      }
+
+      <button type="submit" class="date-filter__apply" [disabled]="!canApply()">Apply</button>
+    </form>
   </section>
 }

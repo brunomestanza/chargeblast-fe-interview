@@ -18,7 +18,7 @@ import {
 describe('PaymentsTable text search', () => {
   setupPaymentsTableTesting();
 
-  it('renders an accessible text search and keeps Clean all filters disabled without filters', async () => {
+  it('renders an accessible text search and keeps Clear filters disabled without filters', async () => {
     const fixture = TestBed.createComponent(PaymentsTable);
     fixture.componentRef.setInput('payments', explicitSortPayments);
     fixture.detectChanges();
@@ -27,7 +27,7 @@ describe('PaymentsTable text search', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     const searchInput = element.querySelector<HTMLInputElement>('#payments-text-search');
-    const cleanFiltersButton = findButton(element, 'Clean all filters');
+    const cleanFiltersButton = findButton(element, 'Clear filters');
 
     expect(searchInput?.type).toBe('search');
     expect(searchInput?.getAttribute('aria-controls')).toBe('payments-table');
@@ -170,7 +170,7 @@ describe('PaymentsTable text search', () => {
     try {
       const element = fixture.nativeElement as HTMLElement;
       const searchInput = element.querySelector<HTMLInputElement>('#payments-text-search')!;
-      const cleanFiltersButton = findButton(element, 'Clean all filters');
+      const cleanFiltersButton = findButton(element, 'Clear filters');
 
       setTextSearchInput(searchInput, 'amy');
       fixture.detectChanges();
@@ -374,7 +374,7 @@ describe('PaymentsTable text search', () => {
     try {
       const element = fixture.nativeElement as HTMLElement;
       const searchInput = element.querySelector<HTMLInputElement>('#payments-text-search')!;
-      const cleanFiltersButton = findButton(element, 'Clean all filters');
+      const cleanFiltersButton = findButton(element, 'Clear filters');
 
       expect(renderedPaymentIds(element)).toEqual(['pay_10']);
       expect(cleanFiltersButton.disabled).toBe(false);
@@ -408,7 +408,7 @@ describe('PaymentsTable text search', () => {
     }
   });
 
-  it('delays Clean all filters and supersedes an older pending request', async () => {
+  it('delays Clear filters and supersedes an older pending request', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl('/?status=failed');
 
@@ -423,7 +423,7 @@ describe('PaymentsTable text search', () => {
 
     try {
       const element = fixture.nativeElement as HTMLElement;
-      const cleanFiltersButton = findButton(element, 'Clean all filters');
+      const cleanFiltersButton = findButton(element, 'Clear filters');
 
       getSortButton(element, 'Amount').click();
       fixture.detectChanges();

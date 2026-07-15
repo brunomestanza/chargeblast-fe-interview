@@ -9,16 +9,6 @@ export interface DateRangeSelection {
   readonly end: string;
 }
 
-export const DATE_RANGE_PRESETS: readonly {
-  readonly value: DateRangePreset;
-  readonly label: string;
-}[] = [
-  { value: 'today', label: 'Today' },
-  { value: 'last-7-days', label: '7d' },
-  { value: 'last-30-days', label: '30d' },
-  { value: 'custom', label: 'Custom' },
-];
-
 export function createPresetDateRange(
   preset: QuickDateRangePreset,
   today: string,

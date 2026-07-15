@@ -1,13 +1,17 @@
 :host {
-  display: block;
+  display: inline-flex;
   flex: 0 0 auto;
 }
 
+:host.clean-filters-button--hidden {
+  display: none;
+}
+
 button {
-  min-height: 32px;
+  height: 24px;
   padding: 0 4px;
   border: 0;
-  color: #5046e5;
+  color: #533afd;
   background: transparent;
   font-size: 12px;
   font-weight: 600;
@@ -23,8 +27,12 @@ button:disabled {
 }
 
 button:focus-visible {
-  outline: 2px solid #303750;
+  border-radius: 4px;
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px #0196ed,
+    0 0 0 4px rgba(1, 150, 237, 0.18);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -35,14 +43,13 @@ button:focus-visible {
   }
 }
 
-@media (any-pointer: coarse) {
-  button {
-    min-height: 44px;
-  }
-}
-
 @media (forced-colors: active) {
   button:not(:disabled) {
     color: LinkText;
+  }
+
+  button:focus-visible {
+    outline-color: Highlight;
+    box-shadow: none;
   }
 }

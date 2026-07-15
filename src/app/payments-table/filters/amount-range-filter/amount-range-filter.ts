@@ -25,7 +25,7 @@ interface AmountRangeDraft {
 }
 
 const EMPTY_AMOUNT_RANGE_DRAFT: AmountRangeDraft = {
-  minimumUsd: 0,
+  minimumUsd: null,
   maximumUsd: null,
 };
 
@@ -33,7 +33,7 @@ const EMPTY_AMOUNT_RANGE_DRAFT: AmountRangeDraft = {
   selector: 'app-amount-range-filter',
   imports: [FilterButton, FormField],
   templateUrl: './amount-range-filter.html',
-  styleUrl: './amount-range-filter.css',
+  styleUrls: ['./amount-range-filter.css', './amount-range-filter-forced-colors.css'],
   host: {
     '(document:pointerdown)': 'onDocumentPointerDown($event)',
     '(document:focusin)': 'onDocumentFocusIn($event)',
@@ -54,7 +54,6 @@ export class AmountRangeFilter {
   protected readonly suppressEntranceMotion = signal(false);
   private readonly draftModel = signal<AmountRangeDraft>(EMPTY_AMOUNT_RANGE_DRAFT);
   protected readonly amountForm = form(this.draftModel, (amount) => {
-    required(amount.minimumUsd, { message: 'Enter a minimum amount.' });
     min(amount.minimumUsd, 0, { message: 'Minimum cannot be below $0.00.' });
     validate(amount.minimumUsd, ({ value }) =>
       value() !== null && usdAmountToCents(value()) === null
@@ -126,7 +125,7 @@ export class AmountRangeFilter {
   protected applyFilter(event: SubmitEvent): void {
     event.preventDefault();
     const draft = this.draftModel();
-    const range = createAmountRange(draft.minimumUsd, draft.maximumUsd);
+    const range = createAmountRange(draft.minimumUsd ?? 0, draft.maximumUsd);
 
     if (range === null) {
       this.amountForm().markAsTouched();

@@ -58,7 +58,7 @@ describe('AmountRangeFilter', () => {
     return [fields[0], fields[1]];
   }
 
-  it('opens an accessible USD range dialog with the required defaults and focuses minimum', () => {
+  it('opens an accessible USD range dialog with the expected defaults and focuses minimum', () => {
     const fixture = createFilter();
     const element = fixture.nativeElement as HTMLElement;
     const trigger = element.querySelector<HTMLButtonElement>('.filter-button__trigger')!;
@@ -74,27 +74,32 @@ describe('AmountRangeFilter', () => {
     const [minimum, maximum] = inputs(element);
     const apply = element.querySelector<HTMLButtonElement>('.amount-range-filter__apply')!;
     const hint = element.querySelector<HTMLElement>('.amount-range-filter__hint')!;
+    const operator = element.querySelector<HTMLSelectElement>('.amount-range-filter__operator')!;
 
     expect(dialog.getAttribute('aria-labelledby')).toBe('payments-amount-range-filter-title');
     expect(dialog.getAttribute('aria-describedby')).toBe('payments-amount-range-filter-hint');
-    expect(heading.textContent).toBe('Filter by: amount');
+    expect(heading.textContent).toBe('Filtered by: amount');
     expect(minimum.labels?.[0]?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
       'Minimum amount in USD',
     );
     expect(maximum.labels?.[0]?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
       'Maximum amount in USD',
     );
-    expect(minimum.value).toBe('0');
+    expect(minimum.value).toBe('');
     expect(maximum.value).toBe('');
-    expect(minimum.required).toBe(true);
+    expect(minimum.required).toBe(false);
     expect(maximum.required).toBe(true);
     expect(minimum.min).toBe('0');
     expect(maximum.min).toBe('1');
     expect(minimum.step).toBe('0.01');
     expect(maximum.step).toBe('0.01');
     expect(hint.textContent?.trim()).toBe(
-      'Enter both amounts to find payments within this USD range.',
+      'Enter a maximum amount and optionally a minimum to find payments within this USD range.',
     );
+    expect(operator.labels?.[0]?.textContent?.trim()).toBe('Amount comparison operator');
+    expect(operator.options).toHaveLength(1);
+    expect(operator.value).toBe('between');
+    expect(operator.selectedOptions[0]?.textContent).toBe('is between');
     expect(minimum.getAttribute('aria-describedby')).toContain(hint.id);
     expect(maximum.getAttribute('aria-describedby')).toContain(hint.id);
     expect(apply.disabled).toBe(true);
@@ -208,6 +213,28 @@ describe('AmountRangeFilter', () => {
     expect(document.activeElement).toBe(
       element.querySelector<HTMLButtonElement>('.filter-button__trigger'),
     );
+  });
+
+  it('treats an empty minimum as zero when applying only a maximum', () => {
+    const fixture = createFilter();
+    const element = openFilter(fixture);
+    const [minimum, maximum] = inputs(element);
+    const valueChange = vi.fn<(value: AmountRange | null) => void>();
+    fixture.componentInstance.valueChange.subscribe(valueChange);
+
+    expect(minimum.value).toBe('');
+    setNumberInput(maximum, '100');
+    fixture.detectChanges();
+
+    const apply = element.querySelector<HTMLButtonElement>('.amount-range-filter__apply')!;
+    expect(apply.disabled).toBe(false);
+    apply.click();
+    fixture.detectChanges();
+
+    expect(valueChange).toHaveBeenCalledWith({
+      minimumUsdCents: 0,
+      maximumUsdCents: 10_000,
+    });
   });
 
   it('accepts equal bounds and renders the exact active label', () => {

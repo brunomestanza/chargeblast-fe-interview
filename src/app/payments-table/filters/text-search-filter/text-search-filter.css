@@ -7,29 +7,32 @@
 .text-search-filter {
   position: relative;
   min-width: 0;
+  height: 24px;
 }
 
 .text-search-filter__input {
   display: block;
+  box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  min-height: 32px;
-  padding: 0 12px;
-  border: 1px dashed #c5cedb;
+  height: 24px;
+  padding: 3px 8px 3px 24px;
+  border: 1px dashed #d4dee9;
   border-radius: 999px;
-  color: #1a1f36;
-  background: #ffffff;
-  font-size: 14px;
-  line-height: 20px;
+  color: #273951;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
   outline: none;
   touch-action: manipulation;
+  appearance: none;
 }
 
 .text-search-filter__input--active {
-  padding-inline-end: 36px;
+  padding-inline-end: 26px;
   border-style: solid;
-  border-color: #cbd3df;
-  box-shadow: 0 1px 2px rgba(31, 45, 61, 0.06);
+  background: #ffffff;
 }
 
 .text-search-filter__input::-webkit-search-cancel-button {
@@ -37,46 +40,63 @@
 }
 
 .text-search-filter__input::placeholder {
-  color: #697386;
+  color: #3c4f69;
   opacity: 1;
 }
 
 .text-search-filter__input:focus-visible {
-  outline: 2px solid #303750;
+  outline: 2px solid #0196ed;
   outline-offset: 2px;
+  box-shadow: 0 0 0 1px #d4dee9;
+}
+
+.text-search-filter__search-icon {
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  inset-inline-start: 7px;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: #3c4f69;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.text-search-filter:has(.text-search-filter__input--active) .text-search-filter__search-icon {
+  stroke: #625afa;
 }
 
 .text-search-filter__clear {
   position: absolute;
-  inset-block: 0;
-  inset-inline-end: 0;
+  z-index: 1;
+  top: 6px;
+  inset-inline-end: 7px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  min-height: 32px;
+  width: 12px;
+  height: 12px;
   padding: 0;
   border: 0;
-  border-radius: 0 999px 999px 0;
-  color: #4f566b;
+  color: #625afa;
   background: transparent;
   cursor: pointer;
   touch-action: manipulation;
 }
 
 .text-search-filter__clear svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.55;
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
 }
 
 .text-search-filter__clear:focus-visible {
-  outline: 2px solid #303750;
-  outline-offset: -3px;
+  border-radius: 999px;
+  outline: 2px solid #0196ed;
+  outline-offset: 2px;
 }
 
 .visually-hidden {
@@ -90,29 +110,24 @@
   border: 0;
 }
 
-@media (any-pointer: coarse) {
-  .text-search-filter__input,
-  .text-search-filter__clear {
-    min-height: 44px;
-  }
-
-  .text-search-filter__input--active {
-    padding-inline-end: 48px;
-  }
-
-  .text-search-filter__clear {
-    width: 44px;
-  }
-}
-
 @media (hover: hover) and (pointer: fine) {
+  .text-search-filter__input:not(.text-search-filter__input--active):hover {
+    background: #fcfdfe;
+  }
+
   .text-search-filter__clear:hover {
-    background: #f7f9fc;
+    color: #4b2de8;
   }
 }
 
 @media (forced-colors: active) {
   .text-search-filter__input {
     border-color: ButtonText;
+  }
+
+  .text-search-filter__input:focus-visible,
+  .text-search-filter__clear:focus-visible {
+    outline-color: Highlight;
+    box-shadow: none;
   }
 }

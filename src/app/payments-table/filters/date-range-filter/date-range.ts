@@ -1,20 +1,6 @@
+export { addDateKeyDays, dateKeyInTimeZone } from './date-key';
+export { formatDateRangeLabel, formatDateRangeSummary } from './date-range-projection';
 export {
-  addDateKeyDays,
-  addDateKeyMonths,
-  dateKeyInTimeZone,
-  endOfDateKeyWeek,
-  startOfDateKeyMonth,
-  startOfDateKeyWeek,
-} from './date-key';
-export {
-  buildCalendarMonth,
-  formatDateRangeLabel,
-  formatDateRangeSummary,
-  formatMonthLabel,
-} from './date-range-projection';
-export type { CalendarDay } from './date-range-projection';
-export {
-  DATE_RANGE_PRESETS,
   createPresetDateRange,
   isTimestampInDateRange,
   normalizeCustomDateRange,
