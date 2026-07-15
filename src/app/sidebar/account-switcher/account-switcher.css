@@ -5,7 +5,9 @@
 
 .account-switcher {
   position: relative;
-  padding: 12px 12px 8px;
+  /* 14px inset + the trigger's 6px padding lands the avatar on the 20px
+     gutter the nav links below align to. */
+  padding: 8px 14px;
 }
 
 .account-switcher__trigger,
@@ -21,9 +23,9 @@
 
 .account-switcher__trigger {
   min-height: 44px;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: 7px;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 8px;
   background: transparent;
   cursor: pointer;
 }
@@ -31,19 +33,19 @@
 .account-switcher__name {
   min-width: 0;
   overflow: hidden;
-  color: #1a1f36;
+  color: #1a2c44;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 20px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .account-switcher__chevron {
-  width: 16px;
-  height: 16px;
+  width: 8px;
+  height: 8px;
   margin-left: auto;
-  color: #697386;
+  color: #50617a;
 }
 
 .company-mark,
@@ -72,8 +74,8 @@
 }
 
 .company-mark--trigger {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
 
 .company-mark[data-tone='violet'] {
@@ -92,7 +94,7 @@
 .account-menu {
   position: absolute;
   top: calc(100% - 2px);
-  left: 12px;
+  left: 14px;
   z-index: 100;
   width: min(300px, calc(100vw - 24px));
   max-height: calc(100dvh - 72px);
@@ -170,7 +172,7 @@
 }
 
 .account-menu__check {
-  color: #635bff;
+  color: #533afd;
 }
 
 .account-menu__divider {
@@ -213,8 +215,8 @@
 }
 
 .company-search input:focus {
-  border-color: #635bff;
-  box-shadow: 0 0 0 2px rgba(99, 91, 255, 0.18);
+  border-color: #533afd;
+  box-shadow: 0 0 0 2px rgba(83, 58, 253, 0.18);
 }
 
 .account-menu__company-row {

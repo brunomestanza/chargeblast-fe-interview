@@ -25,6 +25,13 @@ export type { DashboardIconName } from './dashboard-icon.types';
       stroke-linecap: round;
       stroke-linejoin: round;
     }
+
+    /* Stripe ships its nav glyphs as solid shapes rather than strokes, so these
+       opt out of the outline treatment the rest of the set relies on. */
+    svg[data-filled] {
+      fill: currentColor;
+      stroke: none;
+    }
   `,
   host: {
     'aria-hidden': 'true',
