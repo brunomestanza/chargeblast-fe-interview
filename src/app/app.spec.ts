@@ -33,7 +33,7 @@ describe('App', () => {
     expect(compiled.querySelector('app-sidebar')).toBeTruthy();
     expect(compiled.querySelector('app-top-navigation')).toBeTruthy();
     expect(compiled.querySelector('app-payments-table')).toBeTruthy();
-    expect(compiled.querySelector('h1')?.textContent).toContain('Payments');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Transactions');
     expect(newestPaymentTime).toBeGreaterThanOrEqual(beforeRender);
     expect(newestPaymentTime).toBeLessThanOrEqual(Date.now());
   });

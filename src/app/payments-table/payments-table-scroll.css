@@ -4,7 +4,6 @@
   flex-direction: column;
 }
 
-.payments-panel__header,
 .filter-toolbar,
 .pagination {
   flex: 0 0 auto;

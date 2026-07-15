@@ -1,11 +1,5 @@
 <section class="payments-panel">
-  <header class="payments-panel__header">
-    <div>
-      <p class="payments-panel__eyebrow">Transactions</p>
-      <h1 id="payments-title">Payments</h1>
-    </div>
-    <p class="payments-panel__count">{{ view.paymentCountLabel() }}</p>
-  </header>
+  <p class="payments-panel__count visually-hidden">{{ view.paymentCountLabel() }}</p>
 
   <app-payment-status-summary
     [counts]="view.statusPaymentCounts()"

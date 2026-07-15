@@ -1,0 +1,109 @@
+<header class="transactions-header">
+  <div class="transactions-header__title-row">
+    <h1>Transactions</h1>
+
+    <div class="transactions-header__actions" aria-label="Transaction actions">
+      <a
+        class="transactions-header__button transactions-header__button--primary"
+        routerLink="/mock"
+      >
+        <svg aria-hidden="true" viewBox="0 0 12 12">
+          <path
+            d="M6.85 1a.85.85 0 1 0-1.7 0v4.15H1a.85.85 0 0 0 0 1.7h4.15V11a.85.85 0 1 0 1.7 0V6.85H11a.85.85 0 1 0 0-1.7H6.85V1Z"
+          />
+        </svg>
+        <span>Create payment</span>
+      </a>
+
+      <a
+        class="transactions-header__button transactions-header__button--secondary"
+        routerLink="/mock"
+      >
+        <svg aria-hidden="true" viewBox="0 0 12 12">
+          <path
+            d="M1.25.25A.75.75 0 0 1 2 1v8.75c0 .138.112.25.25.25H11a.75.75 0 0 1 0 1.5H2.25A1.75 1.75 0 0 1 .5 9.75V1a.75.75 0 0 1 .75-.75Z"
+          />
+          <path
+            d="M4 4.25a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0V5A.75.75 0 0 1 4 4.25Zm3-2a.75.75 0 0 1 .75.75v5a.75.75 0 0 1-1.5 0V3A.75.75 0 0 1 7 2.25Zm3-2a.75.75 0 0 1 .75.75v7a.75.75 0 0 1-1.5 0V1A.75.75 0 0 1 10 .25Z"
+          />
+        </svg>
+        <span>Analyze</span>
+      </a>
+    </div>
+  </div>
+
+  <nav class="transactions-header__tabs" aria-label="Transaction views">
+    <a
+      class="transactions-header__tab transactions-header__tab--active"
+      routerLink="/"
+      queryParamsHandling="preserve"
+      [preserveFragment]="true"
+      aria-current="page"
+    >
+      Payments
+    </a>
+    <a class="transactions-header__tab transactions-header__tab--payouts" routerLink="/mock">
+      Payouts
+    </a>
+    <a class="transactions-header__tab transactions-header__tab--all-activity" routerLink="/mock">
+      All activity
+    </a>
+    <a class="transactions-header__tab transactions-header__tab--more" routerLink="/mock">
+      <span>More</span>
+      <svg aria-hidden="true" viewBox="0 0 12 12">
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+          d="M1.9 3.65a.85.85 0 0 1 1.2 0L6 6.548 8.9 3.65a.85.85 0 1 1 1.2 1.202l-3.5 3.5a.85.85 0 0 1-1.2 0l-3.5-3.5a.85.85 0 0 1 0-1.202Z"
+        />
+      </svg>
+    </a>
+  </nav>
+</header>
+
+@if (isInvoiceSuggestionVisible()) {
+  <aside class="invoice-suggestion" role="note" aria-label="Invoice suggestion">
+    <a
+      class="invoice-suggestion__overlay"
+      routerLink="/mock"
+      aria-label="Create and send your first invoice"
+    ></a>
+
+    <div class="invoice-suggestion__message">
+      <svg aria-hidden="true" viewBox="0 0 16 16">
+        <path
+          d="M5 13.25a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Zm1 1.25h4v.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-.5Z"
+        />
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+          d="M11.05 8.014c.594-.691.95-1.583.95-2.56C12 3.283 10.22 1.5 8 1.5c-2.22 0-4 1.782-4 3.955 0 .976.356 1.868.95 2.56.522.605 1.067 1.452 1.213 2.485h3.674c.146-1.033.691-1.88 1.212-2.486Zm1.136.978c-.498.58-.886 1.277-.886 2.04a.967.967 0 0 1-.967.968H5.667a.967.967 0 0 1-.967-.967c0-.764-.388-1.461-.886-2.04A5.407 5.407 0 0 1 2.5 5.454C2.5 2.442 4.962 0 8 0s5.5 2.442 5.5 5.455c0 1.35-.495 2.585-1.314 3.537Z"
+        />
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+          d="M8.125 4.25c-.76 0-1.375.616-1.375 1.375a.625.625 0 1 1-1.25 0A2.625 2.625 0 0 1 8.125 3a.625.625 0 1 1 0 1.25Z"
+        />
+      </svg>
+      <p>Create and send your first invoice directly from the Stripe Dashboard—no code required.</p>
+    </div>
+
+    <div class="invoice-suggestion__actions">
+      <span class="invoice-suggestion__link">Send first invoice</span>
+      <button
+        class="invoice-suggestion__dismiss"
+        type="button"
+        aria-label="Dismiss invoice suggestion"
+        (click)="dismissInvoiceSuggestion()"
+      >
+        <svg aria-hidden="true" viewBox="0 0 12 12">
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M1.249 1.249a.85.85 0 0 1 1.202 0L6 4.798l3.549-3.549a.85.85 0 1 1 1.202 1.202L7.202 6l3.549 3.549a.85.85 0 1 1-1.202 1.202L6 7.202l-3.549 3.549a.85.85 0 1 1-1.202-1.202L4.798 6l-3.55-3.549a.85.85 0 0 1 0-1.202Z"
+          />
+        </svg>
+      </button>
+    </div>
+  </aside>
+}

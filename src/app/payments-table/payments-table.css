@@ -28,48 +28,6 @@
   isolation: isolate;
 }
 
-.payments-panel__header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  min-height: 92px;
-  padding: 22px 24px 20px;
-}
-
-.payments-panel__eyebrow,
-.payments-panel__count,
-h1 {
-  margin: 0;
-}
-
-.payments-panel__eyebrow {
-  margin-bottom: 4px;
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 18px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-h1 {
-  font-size: 24px;
-  font-weight: 650;
-  line-height: 30px;
-  letter-spacing: -0.025em;
-  text-wrap: balance;
-}
-
-.payments-panel__count {
-  min-width: max-content;
-  padding-bottom: 2px;
-  color: var(--color-muted);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  line-height: 20px;
-}
-
 .table-scroll {
   width: 100%;
   overflow-x: auto;
@@ -237,16 +195,6 @@ th {
 @media (max-width: 640px) {
   .payments-panel {
     border-radius: 0;
-  }
-
-  .payments-panel__header {
-    min-height: 84px;
-    padding: 18px 20px 16px;
-  }
-
-  h1 {
-    font-size: 22px;
-    line-height: 28px;
   }
 
   .pagination {

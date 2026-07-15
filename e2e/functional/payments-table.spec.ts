@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('renders the payments table with rows', async ({ page }) => {
-  await expect(page.getByRole('heading', { name: 'Payments', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Transactions', level: 1 })).toBeVisible();
   expect(await paymentRows(page).count()).toBeGreaterThan(0);
 });
 

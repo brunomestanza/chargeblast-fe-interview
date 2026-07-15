@@ -1,0 +1,192 @@
+.transactions-header__button:focus-visible,
+.invoice-suggestion__overlay:focus-visible,
+.invoice-suggestion__dismiss:focus-visible {
+  z-index: 1;
+  outline: none;
+  box-shadow:
+    0 0 0 1px transparent,
+    0 0 0 4px rgba(1, 150, 237, 0.36);
+}
+
+.invoice-suggestion__overlay:focus-visible {
+  outline-offset: 1px;
+}
+
+.transactions-header__button--primary:focus-visible {
+  box-shadow:
+    0 0 0 1px #533afd,
+    0 0 0 4px rgba(1, 150, 237, 0.36);
+}
+
+.transactions-header__button--secondary:focus-visible {
+  box-shadow:
+    0 0 0 1px #d4dee9,
+    0 0 0 4px rgba(1, 150, 237, 0.36);
+}
+
+.transactions-header__button--primary:active {
+  color: #e0d9fb;
+  background: #4e11e2;
+  box-shadow: 0 0 0 1px #44139f;
+}
+
+.transactions-header__button--secondary:active {
+  color: #3c4f69;
+  background: #f4f7fa;
+}
+
+.transactions-header__tab::before {
+  position: absolute;
+  z-index: -1;
+  inset: 4px;
+  border-radius: 8px;
+  content: '';
+}
+
+.transactions-header__tab:focus-visible {
+  outline: none;
+}
+
+.transactions-header__tab:focus-visible::before {
+  box-shadow:
+    0 0 0 1px transparent,
+    0 0 0 4px rgba(1, 150, 237, 0.36);
+}
+
+.transactions-header__tab:active {
+  color: #4c18d5;
+}
+
+.transactions-header__tab--active:active {
+  color: #4e11e2;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .transactions-header__button--primary:hover {
+    background: #533afd;
+    box-shadow: 0 0 0 1px #44139f;
+  }
+
+  .transactions-header__button--secondary:hover {
+    background: #ffffff;
+    box-shadow: 0 0 0 1px #95a4ba;
+  }
+
+  .transactions-header__button--primary:hover:active {
+    color: #e0d9fb;
+    background: #4e11e2;
+  }
+
+  .transactions-header__button--secondary:hover:active {
+    color: #3c4f69;
+    background: #f4f7fa;
+  }
+
+  .transactions-header__tab:not(.transactions-header__tab--active):hover {
+    color: #1a2c44;
+  }
+
+  .transactions-header__tab:not(.transactions-header__tab--active):hover::before {
+    background: #f4f7fa;
+  }
+
+  .transactions-header__tab--active:hover {
+    color: #4e11e2;
+  }
+
+  .transactions-header__tab--active:hover::before {
+    background: #f7f5fd;
+  }
+
+  .invoice-suggestion:hover {
+    background: #ecf1f6;
+  }
+
+  .invoice-suggestion__dismiss:hover {
+    background: #ecf1f6;
+    color: #30313d;
+  }
+}
+
+@media (max-width: 640px) {
+  .invoice-suggestion {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .invoice-suggestion__message {
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .invoice-suggestion__message svg {
+    margin-top: 0;
+  }
+
+  .invoice-suggestion__actions {
+    min-height: 20px;
+  }
+
+  .invoice-suggestion__dismiss {
+    position: absolute;
+    top: 10px;
+    right: 2px;
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .invoice-suggestion__dismiss {
+    width: 32px;
+    height: 32px;
+    padding: 10px;
+  }
+}
+
+@container (max-width: 260px) {
+  .transactions-header__tab--all-activity {
+    display: none;
+  }
+
+  .transactions-header__tab--more {
+    display: flex;
+  }
+}
+
+@container (max-width: 230px) {
+  .transactions-header__actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .transactions-header__tab--payouts {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .transactions-header__button,
+  .transactions-header__tab,
+  .invoice-suggestion,
+  .invoice-suggestion__dismiss {
+    transition-duration: 0ms;
+  }
+}
+
+@media (forced-colors: active) {
+  .transactions-header__button,
+  .transactions-header__tab--active,
+  .invoice-suggestion__dismiss {
+    border: 1px solid ButtonText;
+  }
+
+  .transactions-header__button:focus-visible,
+  .transactions-header__tab:focus-visible,
+  .invoice-suggestion__overlay:focus-visible,
+  .invoice-suggestion__dismiss:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
