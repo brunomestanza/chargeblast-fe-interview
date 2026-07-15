@@ -120,31 +120,3 @@ export function moveColumn(
   result.splice(clampedTo, 0, moved);
   return result;
 }
-
-export function readStoredColumnOrder(
-  browserWindow: Window | null = typeof window === 'undefined' ? null : window,
-): PaymentSortColumn[] {
-  if (!browserWindow) {
-    return [...PAYMENT_COLUMN_KEYS];
-  }
-
-  try {
-    return parseStoredColumnOrder(browserWindow.localStorage.getItem(COLUMN_ORDER_STORAGE_KEY));
-  } catch {
-    return [...PAYMENT_COLUMN_KEYS];
-  }
-}
-
-export function readStoredColumnWidths(
-  browserWindow: Window | null = typeof window === 'undefined' ? null : window,
-): PaymentColumnWidths {
-  if (!browserWindow) {
-    return {};
-  }
-
-  try {
-    return parseStoredColumnWidths(browserWindow.localStorage.getItem(COLUMN_WIDTHS_STORAGE_KEY));
-  } catch {
-    return {};
-  }
-}

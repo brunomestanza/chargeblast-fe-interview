@@ -1,13 +1,11 @@
 import { Component, computed, input, output } from '@angular/core';
 import { PAYMENT_STATUS_LABELS, Payment, PaymentStatus } from './payment';
 import { PAYMENT_COLUMN_KEYS } from './payment-columns';
+import type { PaymentCopyState } from './payment-copy-state';
 import { PaymentIconCategory, PaymentMethodIcon } from './payment-method-icon';
 import { PaymentSortColumn } from './payment-sort';
 
-export interface PaymentCopyState {
-  readonly paymentId: string;
-  readonly status: 'copied' | 'failed';
-}
+export type { PaymentCopyState } from './payment-copy-state';
 
 const CURRENCY_FORMATTERS = new Map<string, Intl.NumberFormat>();
 const CREATED_DATE_FORMATTERS = new Map<string, Intl.DateTimeFormat>();

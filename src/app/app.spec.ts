@@ -2,8 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { App } from './app';
 import { routes } from './app.routes';
-
-const PAGE_SIZE_STORAGE_KEY = 'chargeblast.payments.page-size';
+import { PAGE_SIZE_STORAGE_KEY } from './payments-table/payment-table-preferences.adapter';
 
 describe('App', () => {
   beforeEach(async () => {

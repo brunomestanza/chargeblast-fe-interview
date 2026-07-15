@@ -4,7 +4,7 @@
       <p class="payments-panel__eyebrow">Transactions</p>
       <h1 id="payments-title">Payments</h1>
     </div>
-    <p class="payments-panel__count">{{ paymentCountLabel() }}</p>
+    <p class="payments-panel__count">{{ view.paymentCountLabel() }}</p>
   </header>
 
   <p id="payments-table-instructions" class="visually-hidden">
@@ -14,18 +14,18 @@
     the sort queue. Activate an active header to change it to descending, then remove it. Earlier
     columns in the queue take priority.
   </p>
-  <p class="visually-hidden" aria-live="polite">{{ copyAnnouncement() }}</p>
+  <p class="visually-hidden" aria-live="polite">{{ view.copyAnnouncement() }}</p>
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
-    {{ sortAnnouncement() }}
+    {{ view.sortAnnouncement() }}
   </p>
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
-    {{ filterAnnouncement() }}
+    {{ view.filterAnnouncement() }}
   </p>
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
-    {{ columnAnnouncement() }}
+    {{ columns.announcement() }}
   </p>
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
-    {{ isLoading() ? 'Loading payments.' : '' }}
+    {{ view.isLoading() ? 'Loading payments.' : '' }}
   </p>
   <p
     id="payments-export-status"
@@ -34,37 +34,43 @@
     aria-live="polite"
     aria-atomic="true"
   >
-    @for (toast of exportToasts(); track toast.id) {
+    @for (toast of view.exportToasts(); track toast.id) {
       <span>{{ toast.message }}</span>
     }
   </p>
 
   <section class="filter-toolbar" aria-label="Payment controls">
     <app-date-range-filter
-      [value]="dateRange()"
-      [referenceTime]="currentTime()"
-      [timeZone]="timeZone()"
-      (valueChange)="changeDateRange($event)"
+      [value]="view.dateRange()"
+      [referenceTime]="view.currentTime()"
+      [timeZone]="view.timeZone()"
+      (valueChange)="view.changeDateRange($event)"
     />
-    <app-status-filter [value]="selectedStatuses()" (valueChange)="changeStatuses($event)" />
+    <app-status-filter
+      [value]="view.selectedStatuses()"
+      (valueChange)="view.changeStatuses($event)"
+    />
     <app-payment-method-filter
-      [value]="selectedPaymentMethods()"
-      (valueChange)="changePaymentMethods($event)"
+      [value]="view.selectedPaymentMethods()"
+      (valueChange)="view.changePaymentMethods($event)"
     />
-    <app-amount-range-filter [value]="amountRange()" (valueChange)="changeAmountRange($event)" />
+    <app-amount-range-filter
+      [value]="view.amountRange()"
+      (valueChange)="view.changeAmountRange($event)"
+    />
     <div class="filter-toolbar__text-controls">
       <app-text-search-filter
-        [value]="textSearchInput()"
-        (valueChange)="changeTextSearch($event)"
+        [value]="view.textSearchInput()"
+        (valueChange)="view.changeTextSearch($event)"
       />
       <div class="filter-toolbar__actions">
         <app-clean-filters-button
-          [disabled]="!hasActiveFilters()"
+          [disabled]="!view.hasActiveFilters()"
           (cleanRequested)="clearAllFilters($event)"
         />
         <app-export-payments-button
-          [disabled]="isLoading()"
-          (exportRequested)="exportCurrentView()"
+          [disabled]="view.isLoading()"
+          (exportRequested)="view.exportCurrentView()"
         />
       </div>
     </div>
@@ -73,12 +79,12 @@
   <div
     #tableScroll
     class="table-scroll"
-    [class.table-scroll--loading]="isLoading()"
-    [style.--payment-skeleton-row-height]="skeletonRowHeight()"
+    [class.table-scroll--loading]="view.isLoading()"
+    [style.--payment-skeleton-row-height]="viewport.skeletonRowHeight()"
     role="region"
     aria-label="Payments data"
     aria-describedby="payments-table-instructions"
-    [attr.aria-busy]="isLoading()"
+    [attr.aria-busy]="view.isLoading()"
     tabindex="0"
   >
     <table id="payments-table">
@@ -90,38 +96,38 @@
         Earlier columns in the queue take priority.
       </caption>
       <colgroup>
-        @for (column of orderedColumns(); track column.key) {
+        @for (column of columns.orderedColumns(); track column.key) {
           <col
             [class]="column.columnClass"
             [attr.data-column]="column.key"
-            [style.width.px]="columnWidth(column.key)"
+            [style.width.px]="columns.columnWidth(column.key)"
           />
         }
       </colgroup>
       <thead>
         <tr
-          (pointerdown)="onHeaderPointerDown($event)"
-          (pointermove)="onHeaderPointerMove($event)"
-          (pointerup)="onHeaderPointerUp($event)"
-          (pointercancel)="onHeaderPointerCancel($event)"
+          (pointerdown)="columns.onHeaderPointerDown($event)"
+          (pointermove)="columns.onHeaderPointerMove($event)"
+          (pointerup)="columns.onHeaderPointerUp($event)"
+          (pointercancel)="columns.onHeaderPointerCancel($event)"
         >
-          @for (column of orderedColumns(); track column.key; let columnIndex = $index) {
+          @for (column of columns.orderedColumns(); track column.key; let columnIndex = $index) {
             <th
               scope="col"
               class="column-header"
               [attr.data-column]="column.key"
-              [class.column-header--dragging]="draggingColumn() === column.key"
-              [class.column-header--resizing]="resizingColumn() === column.key"
-              [attr.aria-sort]="sortAriaValue(column.key)"
+              [class.column-header--dragging]="columns.draggingColumn() === column.key"
+              [class.column-header--resizing]="columns.resizingColumn() === column.key"
+              [attr.aria-sort]="view.sortAriaValue(column.key)"
             >
-              @let direction = sortDirection(column.key);
+              @let direction = view.sortDirection(column.key);
               <button
                 type="button"
                 class="sort-button"
                 [class.sort-button--right]="column.align === 'right'"
                 [class.sort-button--active]="direction !== null"
                 aria-controls="payments-table"
-                [attr.aria-describedby]="sortDescriptionId(column.key)"
+                [attr.aria-describedby]="view.sortDescriptionId(column.key)"
                 (click)="changeSort(column.key)"
               >
                 <span class="sort-button__label">{{ column.label }}</span>
@@ -142,16 +148,16 @@
                   </svg>
                 </span>
               </button>
-              <span class="visually-hidden" [id]="sortDescriptionId(column.key)">
-                {{ sortDescription(column.key) }}
+              <span class="visually-hidden" [id]="view.sortDescriptionId(column.key)">
+                {{ view.sortDescription(column.key) }}
               </span>
               <button
                 type="button"
                 class="reorder-handle"
-                [class.reorder-handle--active]="draggingColumn() === column.key"
-                [attr.aria-label]="reorderHandleLabel(column, columnIndex)"
-                (pointerdown)="onReorderHandlePointerDown($event, columnIndex, column.key)"
-                (keydown)="onReorderHandleKeydown($event, columnIndex, column.key)"
+                [class.reorder-handle--active]="columns.draggingColumn() === column.key"
+                [attr.aria-label]="columns.reorderHandleLabel(column, columnIndex)"
+                (pointerdown)="columns.onReorderHandlePointerDown($event, columnIndex, column.key)"
+                (keydown)="columns.onReorderHandleKeydown($event, columnIndex, column.key)"
                 (click)="$event.stopPropagation()"
               >
                 <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
@@ -168,44 +174,44 @@
                 role="separator"
                 aria-orientation="vertical"
                 tabindex="0"
-                [attr.aria-label]="resizeHandleLabel(column)"
-                [attr.aria-valuenow]="columnWidth(column.key)"
-                [attr.aria-valuemin]="minColumnWidth"
-                [attr.aria-valuemax]="maxColumnWidth"
-                (pointerdown)="onResizePointerDown($event, column.key)"
-                (pointermove)="onResizePointerMove($event)"
-                (pointerup)="onResizePointerUp($event)"
-                (pointercancel)="onResizePointerUp($event)"
-                (lostpointercapture)="onResizePointerUp($event)"
-                (keydown)="onResizeKeydown($event, column.key)"
+                [attr.aria-label]="columns.resizeHandleLabel(column)"
+                [attr.aria-valuenow]="columns.columnWidth(column.key)"
+                [attr.aria-valuemin]="columns.minColumnWidth"
+                [attr.aria-valuemax]="columns.maxColumnWidth"
+                (pointerdown)="columns.onResizePointerDown($event, column.key)"
+                (pointermove)="columns.onResizePointerMove($event)"
+                (pointerup)="columns.onResizePointerUp($event)"
+                (pointercancel)="columns.onResizePointerUp($event)"
+                (lostpointercapture)="columns.onResizePointerUp($event)"
+                (keydown)="columns.onResizeKeydown($event, column.key)"
                 (click)="$event.stopPropagation()"
               ></span>
             </th>
           }
         </tr>
       </thead>
-      @if (isLoading()) {
+      @if (view.isLoading()) {
         <tbody class="payments-skeleton" aria-hidden="true">
-          @for (skeletonRow of skeletonRows(); track skeletonRow) {
-            <tr appPaymentSkeletonRow [columnOrder]="columnOrder()"></tr>
+          @for (skeletonRow of viewport.skeletonRows(); track skeletonRow) {
+            <tr appPaymentSkeletonRow [columnOrder]="columns.columnOrder()"></tr>
           }
         </tbody>
       } @else {
         <tbody>
-          @if (paginatedPayments().length === 0) {
+          @if (view.paginatedPayments().length === 0) {
             <tr class="payments-empty">
               <td colspan="6">No payments match the selected filters.</td>
             </tr>
           } @else {
-            @for (payment of paginatedPayments(); track payment.id) {
+            @for (payment of view.paginatedPayments(); track payment.id) {
               <tr
                 appPaymentRow
                 [payment]="payment"
-                [copyState]="copyState()"
-                [currentTime]="currentTime()"
-                [timeZone]="timeZone()"
-                [columnOrder]="columnOrder()"
-                (copyRequested)="copyPaymentId($event)"
+                [copyState]="view.copyState()"
+                [currentTime]="view.currentTime()"
+                [timeZone]="view.timeZone()"
+                [columnOrder]="columns.columnOrder()"
+                (copyRequested)="view.copyPaymentId($event)"
                 (detailsRequested)="openPaymentDetails($event)"
               ></tr>
             }
@@ -224,31 +230,31 @@
           aria-controls="payments-table"
           (change)="changePageSize($event)"
         >
-          @for (option of pageSizeOptions; track option) {
-            <option [value]="option" [selected]="option === pageSize()">{{ option }}</option>
+          @for (option of view.pageSizeOptions; track option) {
+            <option [value]="option" [selected]="option === view.pageSize()">{{ option }}</option>
           }
         </select>
       </div>
       <p id="payments-pagination-range" aria-live="polite" aria-atomic="true">
-        {{ paginationRangeLabel() }}
+        {{ view.paginationRangeLabel() }}
       </p>
     </div>
 
     <nav class="pagination__navigation" aria-label="Payments pagination">
-      <span class="pagination__page">Page {{ currentPage() }} of {{ pageCount() }}</span>
+      <span class="pagination__page">Page {{ view.currentPage() }} of {{ view.pageCount() }}</span>
       <button
         type="button"
         aria-controls="payments-table"
-        [disabled]="currentPage() === 1"
-        (click)="showPreviousPage()"
+        [disabled]="view.currentPage() === 1"
+        (click)="view.showPreviousPage()"
       >
         Previous
       </button>
       <button
         type="button"
         aria-controls="payments-table"
-        [disabled]="currentPage() === pageCount()"
-        (click)="showNextPage()"
+        [disabled]="view.currentPage() === view.pageCount()"
+        (click)="view.showNextPage()"
       >
         Next
       </button>
@@ -256,6 +262,6 @@
   </footer>
 </section>
 
-@for (toast of exportToasts(); track toast.id) {
+@for (toast of view.exportToasts(); track toast.id) {
   <app-export-success-toast [message]="toast.message" />
 }
