@@ -33,6 +33,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
+button:disabled svg {
+  fill: #9aa3b2;
+}
+
 button:focus-visible {
   outline: 2px solid #0196ed;
   outline-offset: 2px;
@@ -40,13 +44,11 @@ button:focus-visible {
 }
 
 svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.5;
+  width: 12px;
+  height: 12px;
+  /* Stripe tints the glyph a step lighter than the label rather than letting
+     it inherit, so this can't ride on currentColor. */
+  fill: #3c4f69;
 }
 
 @media (hover: hover) and (pointer: fine) {
