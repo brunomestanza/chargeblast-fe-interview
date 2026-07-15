@@ -1,8 +1,7 @@
 .payments-panel {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  height: min(1156.5px, calc(100dvh - clamp(48px, 10vw, 128px)));
-  max-height: 1156.5px;
 }
 
 .payments-panel__header,
@@ -14,18 +13,22 @@
 .table-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: scroll;
+  overflow-y: auto;
   scrollbar-gutter: stable;
+}
+
+.table-scroll.table-scroll--loading {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  overscroll-behavior: none;
+}
+
+.table-scroll--loading table {
+  height: 100%;
 }
 
 th {
   position: sticky;
   top: 0;
   z-index: 1;
-}
-
-@media (max-width: 720px), (max-height: 760px) {
-  .payments-panel {
-    height: min(1156.5px, calc(100dvh - 32px));
-  }
 }

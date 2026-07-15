@@ -440,7 +440,7 @@ describe('PaymentsTable', () => {
     }
   });
 
-  it('loads the initial rows immediately inside the capped scrolling table', async () => {
+  it('loads the initial rows immediately inside the available-height table', async () => {
     paymentQueryDelay.mockReturnValue(1_500);
     const fixture = TestBed.createComponent(PaymentsTable);
     fixture.componentRef.setInput('payments', createPayments(25));
@@ -456,13 +456,13 @@ describe('PaymentsTable', () => {
     expect(renderedPaymentIds(element)).toHaveLength(25);
     expect(element.querySelector('.payments-skeleton')).toBeNull();
     expect(tableScroll.getAttribute('aria-busy')).toBe('false');
-    expect(getComputedStyle(panel).maxHeight).toBe('1156.5px');
-    expect(getComputedStyle(tableScroll).overflowY).toBe('scroll');
+    expect(getComputedStyle(panel).flexGrow).toBe('1');
+    expect(getComputedStyle(tableScroll).overflowY).toBe('auto');
     expect(getComputedStyle(columnHeader).position).toBe('sticky');
     expect(paymentQueryDelay).not.toHaveBeenCalled();
   });
 
-  it('shows 15 table-shaped skeleton rows and applies a filter only after the response delay', async () => {
+  it('locks vertical scroll while table-shaped skeleton rows fill the response delay', async () => {
     const fixture = TestBed.createComponent(PaymentsTable);
     fixture.componentRef.setInput('payments', explicitSortPayments);
     fixture.detectChanges();
@@ -476,6 +476,10 @@ describe('PaymentsTable', () => {
       const element = fixture.nativeElement as HTMLElement;
       const router = TestBed.inject(Router);
       const statusFilter = element.querySelector<HTMLElement>('app-status-filter')!;
+      const tableScroll = element.querySelector<HTMLElement>('.table-scroll')!;
+
+      tableScroll.scrollTop = 120;
+      tableScroll.scrollLeft = 64;
 
       statusFilter.querySelector<HTMLButtonElement>('.filter-button__trigger')!.click();
       fixture.detectChanges();
@@ -483,11 +487,15 @@ describe('PaymentsTable', () => {
       findButton(statusFilter, 'Apply').click();
       fixture.detectChanges();
 
-      const tableScroll = element.querySelector<HTMLElement>('.table-scroll')!;
       const skeletonRows = element.querySelectorAll<HTMLElement>('.payment-skeleton-row');
 
       expect(tableScroll.getAttribute('aria-busy')).toBe('true');
-      expect(skeletonRows).toHaveLength(15);
+      expect(tableScroll.classList).toContain('table-scroll--loading');
+      expect(getComputedStyle(tableScroll).overflowX).toBe('hidden');
+      expect(getComputedStyle(tableScroll).overflowY).toBe('hidden');
+      expect(tableScroll.scrollTop).toBe(0);
+      expect(tableScroll.scrollLeft).toBe(64);
+      expect(skeletonRows.length).toBeGreaterThan(0);
       expect(renderedPaymentIds(element)).toEqual([]);
       expect(router.url).toBe('/');
       expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe(
@@ -517,7 +525,7 @@ describe('PaymentsTable', () => {
       vi.advanceTimersByTime(999);
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
       expect(router.url).toBe('/');
 
       vi.advanceTimersByTime(1);
@@ -527,6 +535,8 @@ describe('PaymentsTable', () => {
 
       expect(element.querySelector('.payments-skeleton')).toBeNull();
       expect(tableScroll.getAttribute('aria-busy')).toBe('false');
+      expect(tableScroll.classList).not.toContain('table-scroll--loading');
+      expect(getComputedStyle(tableScroll).overflowY).toBe('auto');
       expect(findButton(element, 'Export').disabled).toBe(false);
       expect(renderedPaymentIds(element)).toEqual(['pay_10']);
       expect(router.url).toBe('/?status=failed');
@@ -559,14 +569,14 @@ describe('PaymentsTable', () => {
       amountButton.click();
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
       expect(amountButton.closest('th')?.getAttribute('aria-sort')).toBe('descending');
       expect(router.url).toBe('/');
 
       vi.advanceTimersByTime(499);
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
 
       vi.advanceTimersByTime(1);
       fixture.detectChanges();
@@ -677,7 +687,7 @@ describe('PaymentsTable', () => {
       fixture.detectChanges();
 
       expect(router.url).toBe('/?status=failed');
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
       expect(getSortButton(element, 'Created').closest('th')?.getAttribute('aria-sort')).toBe(
         'descending',
       );
@@ -685,7 +695,7 @@ describe('PaymentsTable', () => {
       vi.advanceTimersByTime(499);
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
 
       vi.advanceTimersByTime(1);
       fixture.detectChanges();
@@ -723,7 +733,7 @@ describe('PaymentsTable', () => {
       await router.navigateByUrl('/?status=failed');
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
 
       setTextSearchInput(searchInput, 'ben');
       fixture.detectChanges();
@@ -735,7 +745,7 @@ describe('PaymentsTable', () => {
       fixture.detectChanges();
 
       expect(searchInput.value).toBe('');
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
 
       vi.advanceTimersByTime(500);
       fixture.detectChanges();
@@ -782,12 +792,12 @@ describe('PaymentsTable', () => {
       amountButton.click();
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
 
       await router.navigateByUrl('/?sort=amount.asc');
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
       expect(amountButton.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
 
       vi.advanceTimersByTime(500);
@@ -862,13 +872,13 @@ describe('PaymentsTable', () => {
       vi.advanceTimersByTime(1);
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
       expect(router.url).toBe('/');
 
       vi.advanceTimersByTime(999);
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
 
       vi.advanceTimersByTime(1);
       fixture.detectChanges();
@@ -904,7 +914,7 @@ describe('PaymentsTable', () => {
       vi.advanceTimersByTime(TEXT_SEARCH_DEBOUNCE_MS);
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
 
       vi.advanceTimersByTime(100);
       setTextSearchInput(searchInput, 'ben');
@@ -922,7 +932,7 @@ describe('PaymentsTable', () => {
       vi.advanceTimersByTime(1);
       fixture.detectChanges();
 
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
 
       vi.advanceTimersByTime(500);
       fixture.detectChanges();
@@ -1225,7 +1235,7 @@ describe('PaymentsTable', () => {
 
       expect(cleanFiltersButton.disabled).toBe(true);
       expect(element.querySelectorAll('.filter-button__value')).toHaveLength(0);
-      expect(element.querySelectorAll('.payment-skeleton-row')).toHaveLength(15);
+      expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
       expect(router.url).toBe('/?status=failed');
 
       vi.advanceTimersByTime(500);

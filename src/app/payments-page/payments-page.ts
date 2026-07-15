@@ -11,10 +11,12 @@ const BASE_PAYMENTS = parsePaymentFixture(paymentFixture);
   template: `<app-payments-table [payments]="payments()" />`,
   styles: `
     :host {
-      display: block;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
       width: 100%;
-      max-width: 1180px;
       min-width: 0;
+      min-height: 0;
     }
   `,
 })

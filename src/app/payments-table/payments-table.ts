@@ -80,6 +80,11 @@ import {
 } from './payment-csv';
 import { PAYMENT_QUERY_DELAY } from './payment-query-delay';
 import { PaymentCopyState, PaymentRow } from './payment-row';
+import {
+  DEFAULT_PAYMENT_SKELETON_LAYOUT,
+  PaymentSkeletonLayout,
+  calculatePaymentSkeletonLayout,
+} from './payment-skeleton-layout';
 import { PaymentSkeletonRow } from './payment-skeleton-row';
 import { createPaymentTextSearch, matchesPaymentTextSearch } from './payment-text-search';
 import {
@@ -220,8 +225,6 @@ const INITIAL_PAYMENT_VIEW_STATE: PaymentViewState = {
   amountRange: null,
   textSearch: null,
 };
-const PAYMENT_SKELETON_ROWS = Array.from({ length: 15 }, (_, index) => index);
-
 type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 function isPageSize(value: number): value is PageSize {
@@ -284,7 +287,11 @@ export class PaymentsTable {
 
   protected readonly copyState = signal<PaymentCopyState | null>(null);
   protected readonly isLoading = signal(false);
-  protected readonly skeletonRows = PAYMENT_SKELETON_ROWS;
+  private readonly skeletonLayout = signal<PaymentSkeletonLayout>(DEFAULT_PAYMENT_SKELETON_LAYOUT);
+  protected readonly skeletonRows = computed(() =>
+    Array.from({ length: this.skeletonLayout().rowCount }, (_, index) => index),
+  );
+  protected readonly skeletonRowHeight = computed(() => this.skeletonLayout().rowHeightPx + 'px');
   protected readonly currentTime = signal<number | null>(null);
   protected readonly timeZone = signal('UTC');
   protected readonly minColumnWidth = MIN_COLUMN_WIDTH;
@@ -426,6 +433,7 @@ export class PaymentsTable {
   private queryTimer: ReturnType<typeof setTimeout> | undefined;
   private queryRequestId = 0;
   private clockTimer: number | undefined;
+  private skeletonResizeObserver: ResizeObserver | undefined;
   private columnResizeState: ColumnResizeState | undefined;
   private columnDragState: ColumnDragState | undefined;
   private columnDragCaptureCell: HTMLElement | undefined;
@@ -489,7 +497,10 @@ export class PaymentsTable {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((queryParams) => this.applyViewStateFromUrl(queryParams));
     this.startUrlSync();
-    afterNextRender(() => this.startBrowserState());
+    afterNextRender(() => {
+      this.startBrowserState();
+      this.startSkeletonSizing();
+    });
     this.destroyRef.onDestroy(() => {
       this.clearFeedbackTimer();
       this.clearExportToastTimer();
@@ -497,6 +508,8 @@ export class PaymentsTable {
       this.cancelPendingQuery();
       this.clearColumnHoldTimer();
       this.stopClock();
+      this.skeletonResizeObserver?.disconnect();
+      this.skeletonResizeObserver = undefined;
       const browserWindow = this.document.defaultView;
       browserWindow?.removeEventListener('storage', this.handlePageSizeStorageChange);
       browserWindow?.removeEventListener('storage', this.handleColumnStorageChange);
@@ -1219,6 +1232,63 @@ export class PaymentsTable {
     this.clockTimer = browserWindow.setInterval(() => this.currentTime.set(Date.now()), 60_000);
   }
 
+  private startSkeletonSizing(): void {
+    const browserWindow = this.document.defaultView;
+    const tableScroll = this.tableScroll()?.nativeElement;
+    const tableHead = tableScroll?.querySelector<HTMLTableSectionElement>('thead');
+
+    if (!browserWindow || !tableScroll || !tableHead) {
+      return;
+    }
+
+    const measure = (): void => this.updateSkeletonLayout(tableScroll, tableHead);
+
+    measure();
+
+    const ResizeObserverConstructor = browserWindow.ResizeObserver;
+
+    if (typeof ResizeObserverConstructor !== 'function') {
+      return;
+    }
+
+    this.skeletonResizeObserver = new ResizeObserverConstructor(measure);
+    this.skeletonResizeObserver.observe(tableScroll);
+    this.skeletonResizeObserver.observe(tableHead);
+  }
+
+  private updateSkeletonLayout(
+    tableScroll = this.tableScroll()?.nativeElement,
+    tableHead = tableScroll?.querySelector<HTMLTableSectionElement>('thead'),
+  ): void {
+    if (!tableScroll || !tableHead || this.destroyRef.destroyed) {
+      return;
+    }
+
+    const tableScrollStyles = this.document.defaultView?.getComputedStyle(tableScroll);
+    const borderHeight = tableScrollStyles
+      ? (Number.parseFloat(tableScrollStyles.borderTopWidth) || 0) +
+        (Number.parseFloat(tableScrollStyles.borderBottomWidth) || 0)
+      : 0;
+    const viewportHeight = tableScroll.getBoundingClientRect().height - borderHeight;
+    const headerHeight = tableHead.getBoundingClientRect().height;
+
+    if (!(viewportHeight > headerHeight)) {
+      return;
+    }
+
+    const nextLayout = calculatePaymentSkeletonLayout(viewportHeight, headerHeight);
+    const currentLayout = this.skeletonLayout();
+
+    if (
+      nextLayout.rowCount === currentLayout.rowCount &&
+      Math.abs(nextLayout.rowHeightPx - currentLayout.rowHeightPx) < 0.01
+    ) {
+      return;
+    }
+
+    this.skeletonLayout.set(nextLayout);
+  }
+
   private startUrlSync(): void {
     if (this.router.navigated) {
       this.enableUrlSync();
@@ -1613,6 +1683,8 @@ export class PaymentsTable {
 
     this.cancelPendingQuery();
     const requestId = ++this.queryRequestId;
+    this.resetTableScrollPosition();
+    this.updateSkeletonLayout();
     this.isLoading.set(true);
     this.sortAnnouncement.set('');
     this.filterAnnouncement.set('');

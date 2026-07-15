@@ -57,6 +57,13 @@
   outline-offset: -2px;
 }
 
+.dashboard-shell__content:has(app-payments-page) {
+  align-items: stretch;
+  justify-content: flex-start;
+  height: calc(100dvh - var(--top-navigation-height));
+  min-height: 0;
+}
+
 .dashboard-shell__content:has(app-settings-page) {
   padding: 0;
   background: #ffffff;

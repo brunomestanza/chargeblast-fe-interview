@@ -73,6 +73,8 @@
   <div
     #tableScroll
     class="table-scroll"
+    [class.table-scroll--loading]="isLoading()"
+    [style.--payment-skeleton-row-height]="skeletonRowHeight()"
     role="region"
     aria-label="Payments data"
     aria-describedby="payments-table-instructions"
@@ -89,7 +91,11 @@
       </caption>
       <colgroup>
         @for (column of orderedColumns(); track column.key) {
-          <col [class]="column.columnClass" [style.width.px]="columnWidth(column.key)" />
+          <col
+            [class]="column.columnClass"
+            [attr.data-column]="column.key"
+            [style.width.px]="columnWidth(column.key)"
+          />
         }
       </colgroup>
       <thead>
@@ -103,6 +109,7 @@
             <th
               scope="col"
               class="column-header"
+              [attr.data-column]="column.key"
               [class.column-header--dragging]="draggingColumn() === column.key"
               [class.column-header--resizing]="resizingColumn() === column.key"
               [attr.aria-sort]="sortAriaValue(column.key)"
@@ -179,8 +186,8 @@
       </thead>
       @if (isLoading()) {
         <tbody class="payments-skeleton" aria-hidden="true">
-          @for (skeletonRow of skeletonRows; track skeletonRow) {
-            <tr appPaymentSkeletonRow></tr>
+          @for (skeletonRow of skeletonRows(); track skeletonRow) {
+            <tr appPaymentSkeletonRow [columnOrder]="columnOrder()"></tr>
           }
         </tbody>
       } @else {
