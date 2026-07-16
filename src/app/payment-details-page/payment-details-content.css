@@ -502,9 +502,8 @@
   line-height: 20px;
 }
 
-/* Stripe renders event descriptions and log endpoints at body weight — only
-   the related-objects labels above are bold. */
-.event-list strong,
+/* Stripe keeps the log endpoint at body weight; event descriptions stay bold
+   like the related-objects labels above. */
 .log-row strong {
   font-weight: 400;
 }

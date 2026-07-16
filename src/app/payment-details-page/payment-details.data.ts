@@ -11,7 +11,7 @@ export interface PaymentActivityItem {
 export interface PaymentEventItem {
   readonly description: string;
   readonly occurredAt: string;
-  /** Full timestamp Stripe uses in the event log, e.g. "16/08/2023 15:43:00". */
+  /** Full timestamp Stripe uses in the event log, e.g. "8/16/23, 3:43:00 PM". */
   readonly occurredLabel: string;
 }
 
@@ -147,17 +147,17 @@ export const PAYMENT_DETAILS_DATA = {
     {
       description: 'A payment attempt on pi_3JkvRcA5MgunUWVePmAl2PC for £34.99 GBP was declined',
       occurredAt: '2023-08-16T15:43:00-03:00',
-      occurredLabel: '16/08/2023 15:43:00',
+      occurredLabel: '8/16/23, 3:43:00 PM',
     },
     {
       description: 'The payment pi_3JkvRcA5MgunUWVePmAl2PC for £34.99 GBP failed',
       occurredAt: '2023-08-16T08:57:00-03:00',
-      occurredLabel: '16/08/2023 08:57:00',
+      occurredLabel: '8/16/23, 8:57:00 AM',
     },
     {
       description: 'A new payment pi_3JkvRcA5MgunUWVePmAl2PC for £34.99 GBP was created',
       occurredAt: '2023-08-13T07:01:00-03:00',
-      occurredLabel: '13/08/2023 07:01:00',
+      occurredLabel: '8/13/23, 7:01:00 AM',
     },
   ],
   logs: [
@@ -167,7 +167,7 @@ export const PAYMENT_DETAILS_DATA = {
       status: '402 ERR',
       ok: false,
       occurredAt: '2023-08-16T15:43:00-03:00',
-      occurredLabel: '16/08/2023 15:43:00',
+      occurredLabel: '8/16/23, 3:43:00 PM',
     },
   ],
 } as const satisfies PaymentDetailsData;
