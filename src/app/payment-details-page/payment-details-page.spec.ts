@@ -26,10 +26,20 @@ describe('PaymentDetailsPage', () => {
     expect(element.querySelectorAll('.activity-list > li')).toHaveLength(3);
     expect(sectionHeadings).toEqual([
       'Recent activity',
+      'Checkout summary',
       'Payment breakdown',
       'Payment method',
+      'Allowed payment methods',
+      'Tax calculation',
+      'Risk analysis',
+      'Related payments',
+      'Related objects',
+      'Receipt history',
+      'Events',
+      'Logs',
       'Details',
       'Customer',
+      'Metadata',
     ]);
     expect(element.querySelector('nav[aria-label="Breadcrumb"] a')?.getAttribute('href')).toBe('/');
     expect(element.querySelectorAll('dl')).toHaveLength(4);

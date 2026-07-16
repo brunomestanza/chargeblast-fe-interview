@@ -1,48 +1,79 @@
 <article class="payment-details" aria-labelledby="payment-details-title">
-  <nav class="breadcrumb" aria-label="Breadcrumb">
-    <a routerLink="/" queryParamsHandling="preserve">
-      <svg aria-hidden="true" viewBox="0 0 16 16">
-        <path d="m9.75 3.5-4.5 4.5 4.5 4.5" />
-      </svg>
-      <span>Payments</span>
-    </a>
-  </nav>
+  <span class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+    {{ copyAnnouncement() }}
+  </span>
 
   <header class="payment-summary">
-    <div>
+    <div class="payment-summary__main">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/" queryParamsHandling="preserve">Payments</a>
+      </nav>
+
       <div class="payment-summary__title-row">
         <h1 id="payment-details-title">
-          {{ details.amount }} <span>{{ details.currency }}</span>
+          {{ details.amount }} <span class="payment-summary__currency">{{ details.currency }}</span>
         </h1>
         <span class="status-badge">
-          <svg aria-hidden="true" viewBox="0 0 14 14">
-            <path d="m4 4 6 6m0-6-6 6" />
+          <svg aria-hidden="true" viewBox="0 0 12 12" focusable="false">
+            <path d="m3.25 3.25 5.5 5.5m0-5.5-5.5 5.5" />
           </svg>
           {{ details.status }}
         </span>
       </div>
+
       <p>
         Charged to
         <a class="inline-link" routerLink="/mock">{{ details.customer.name }}</a>
       </p>
     </div>
 
-    <a class="secondary-action" routerLink="/mock">
-      <svg aria-hidden="true" viewBox="0 0 16 16">
-        <path d="M8 3v10M3 8h10" />
-      </svg>
-      Add to block list
-    </a>
+    <div
+      #actionsMenuRoot
+      class="payment-summary__actions"
+      role="group"
+      aria-label="Payment actions"
+    >
+      <a class="secondary-action" routerLink="/mock">
+        <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+          <path d="M8 3v10M3 8h10" />
+        </svg>
+        Add to block list
+      </a>
+      <button
+        #actionsMenuTrigger
+        class="icon-action"
+        type="button"
+        aria-label="More payment actions"
+        aria-haspopup="true"
+        [attr.aria-expanded]="actionsMenuOpen()"
+        title="More"
+        (click)="toggleActionsMenu()"
+      >
+        <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+          <circle cx="3" cy="8" r="1.25" />
+          <circle cx="8" cy="8" r="1.25" />
+          <circle cx="13" cy="8" r="1.25" />
+        </svg>
+      </button>
+
+      @if (actionsMenuOpen()) {
+        <nav class="actions-popover" aria-label="More payment actions">
+          <a routerLink="/mock" (click)="closeActionsMenu()">Add note</a>
+          <a routerLink="/mock" (click)="closeActionsMenu()">View receipt</a>
+          <a routerLink="/mock" (click)="closeActionsMenu()">Edit metadata</a>
+        </nav>
+      }
+    </div>
   </header>
 
   <div class="details-layout">
     <div class="details-main">
-      <section class="detail-section" aria-labelledby="recent-activity-title">
+      <section class="detail-section activity-section" aria-labelledby="recent-activity-title">
         <div class="section-heading">
           <h2 id="recent-activity-title">Recent activity</h2>
           <a class="small-action" routerLink="/mock">
-            <svg aria-hidden="true" viewBox="0 0 16 16">
-              <path d="M3.5 3.5h9v7h-5L4 13v-2.5h-.5z" />
+            <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+              <path d="M8 3v10M3 8h10" />
             </svg>
             Add note
           </a>
@@ -57,40 +88,89 @@
                 aria-hidden="true"
               >
                 @if (activity.kind === 'failed') {
-                  <svg viewBox="0 0 16 16">
-                    <path d="m5 5 6 6m0-6-6 6" />
-                  </svg>
-                } @else {
-                  <svg viewBox="0 0 16 16">
-                    <path d="M8 4v4l2.75 1.5" />
-                    <circle cx="8" cy="8" r="5" />
+                  <svg viewBox="0 0 12 12" focusable="false">
+                    <path d="m3.25 3.25 5.5 5.5m0-5.5-5.5 5.5" />
                   </svg>
                 }
               </span>
 
               <div class="activity-content">
-                <p class="activity-title">
-                  {{ activity.title }}
-                  @if (activity.actionLabel) {
-                    <a class="inline-link activity-action" routerLink="/mock">
-                      {{ activity.actionLabel }}
-                    </a>
-                  }
-                </p>
+                <div class="activity-item__summary">
+                  <p class="activity-title">
+                    {{ activity.title }}
+                    @if (activity.actionLabel) {
+                      <a class="inline-link activity-action" routerLink="/mock">
+                        {{ activity.actionLabel }}
+                      </a>
+                    }
+                  </p>
+                  <time class="activity-date" [attr.datetime]="activity.occurredAt">
+                    {{ activity.occurredShortLabel }}
+                  </time>
+                </div>
                 @if (activity.description) {
                   <p class="activity-description">{{ activity.description }}</p>
                 }
-                <time [attr.datetime]="activity.occurredAt">{{ activity.occurredLabel }}</time>
               </div>
             </li>
           }
         </ol>
       </section>
 
-      <section
-        class="detail-section detail-section--breakdown"
-        aria-labelledby="payment-breakdown-title"
-      >
+      <section class="detail-section checkout-section" aria-labelledby="checkout-summary-title">
+        <h2 id="checkout-summary-title">Checkout summary</h2>
+
+        <div class="checkout-customer">
+          <span>Customer</span>
+          <div>
+            <a class="inline-link" routerLink="/mock">{{ details.customer.email }}</a>
+            <span>{{ details.customer.name }}</span>
+            <span>{{ details.customer.country }}</span>
+          </div>
+        </div>
+
+        <div
+          class="checkout-table-wrapper"
+          role="region"
+          aria-label="Checkout items table"
+          tabindex="0"
+        >
+          <table class="checkout-table">
+            <caption class="sr-only">
+              Checkout items
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Items</th>
+                <th class="checkout-table__quantity" scope="col">Qty</th>
+                <th class="checkout-table__unit-price" scope="col">Unit price</th>
+                <th class="checkout-table__amount" scope="col">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <strong>{{ details.description }}</strong>
+                  <span>{{ details.statementDescriptor }}</span>
+                </td>
+                <td class="checkout-table__quantity numeric-value">1</td>
+                <td class="checkout-table__unit-price numeric-value">
+                  {{ details.breakdown.paymentAmount }}
+                </td>
+                <td class="checkout-table__amount numeric-value">
+                  {{ details.breakdown.paymentAmount }}
+                </td>
+              </tr>
+              <tr class="checkout-table__total">
+                <th colspan="3" scope="row">Total</th>
+                <td class="numeric-value">{{ details.breakdown.paymentAmount }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="detail-section breakdown-section" aria-labelledby="payment-breakdown-title">
         <h2 id="payment-breakdown-title">Payment breakdown</h2>
         <dl class="breakdown-list">
           <div>
@@ -98,7 +178,10 @@
             <dd>{{ details.breakdown.paymentAmount }}</dd>
           </div>
           <div>
-            <dt>Fees</dt>
+            <dt>
+              Stripe processing fees
+              <a class="inline-link breakdown-link" routerLink="/mock">Learn more</a>
+            </dt>
             <dd>{{ details.breakdown.fees }}</dd>
           </div>
           <div class="breakdown-list__total">
@@ -108,19 +191,8 @@
         </dl>
       </section>
 
-      <section class="detail-section detail-section--last" aria-labelledby="payment-method-title">
+      <section class="detail-section payment-method-section" aria-labelledby="payment-method-title">
         <h2 id="payment-method-title">Payment method</h2>
-        <div class="method-summary">
-          <app-payment-method-icon
-            category="card-brand"
-            [iconKey]="details.paymentMethod.brand"
-            tooltipId="detail-payment-method-brand"
-          />
-          <div>
-            <strong>{{ details.paymentMethod.summary }}</strong>
-            <span>Debit card</span>
-          </div>
-        </div>
 
         <dl class="method-grid">
           <div>
@@ -128,56 +200,214 @@
             <dd class="code-value">{{ details.paymentMethod.id }}</dd>
           </div>
           <div>
-            <dt>Owner</dt>
-            <dd>{{ details.paymentMethod.owner }}</dd>
-          </div>
-          <div>
             <dt>Number</dt>
             <dd class="numeric-value">{{ details.paymentMethod.number }}</dd>
-          </div>
-          <div>
-            <dt>Owner email</dt>
-            <dd>{{ details.paymentMethod.ownerEmail }}</dd>
           </div>
           <div>
             <dt>Fingerprint</dt>
             <dd class="code-value inline-link">{{ details.paymentMethod.fingerprint }}</dd>
           </div>
           <div>
-            <dt>Address</dt>
-            <dd>{{ details.paymentMethod.address }}</dd>
-          </div>
-          <div>
             <dt>Expires</dt>
             <dd class="numeric-value">{{ details.paymentMethod.expires }}</dd>
-          </div>
-          <div>
-            <dt>Origin</dt>
-            <dd>{{ details.paymentMethod.origin }}</dd>
           </div>
           <div>
             <dt>Type</dt>
             <dd>{{ details.paymentMethod.type }}</dd>
           </div>
           <div>
-            <dt>Zip check</dt>
-            <dd>{{ details.paymentMethod.zipCheck }}</dd>
-          </div>
-          <div>
             <dt>Issuer</dt>
             <dd>{{ details.paymentMethod.issuer }}</dd>
           </div>
+          <div>
+            <dt>Owner</dt>
+            <dd>{{ details.paymentMethod.owner }}</dd>
+          </div>
+          <div>
+            <dt>Owner email</dt>
+            <dd>{{ details.paymentMethod.ownerEmail }}</dd>
+          </div>
+          <div>
+            <dt>Address</dt>
+            <dd>{{ details.paymentMethod.address }}</dd>
+          </div>
+          <div>
+            <dt>Origin</dt>
+            <dd>{{ details.paymentMethod.origin }}</dd>
+          </div>
+          <div>
+            <dt>Zip check</dt>
+            <dd>{{ details.paymentMethod.zipCheck }}</dd>
+          </div>
         </dl>
+      </section>
+
+      <section class="detail-section compact-section" aria-labelledby="allowed-methods-title">
+        <div class="section-heading section-heading--start">
+          <h2 id="allowed-methods-title">Allowed payment methods</h2>
+          <svg class="section-info" aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+            <circle cx="8" cy="8" r="6" />
+            <path d="M8 7.25V11M8 4.75h.01" />
+          </svg>
+        </div>
+        <p class="section-copy">Card</p>
+      </section>
+
+      <section class="detail-section tax-section" aria-labelledby="tax-calculation-title">
+        <h2 id="tax-calculation-title">Tax calculation</h2>
+        <div class="empty-panel">
+          <p>No tax rates applied.</p>
+          <p>
+            <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+              <path
+                d="M8 1.75a4.25 4.25 0 0 0-2.7 7.53c.55.46.95 1.03 1.08 1.72h3.24c.13-.69.53-1.26 1.08-1.72A4.25 4.25 0 0 0 8 1.75Z"
+              />
+              <path d="M6.75 13h2.5M7.25 15h1.5" />
+            </svg>
+            Use Stripe Tax to automatically calculate tax on future invoices.
+            <a class="inline-link" routerLink="/mock">Get started</a>
+          </p>
+        </div>
+      </section>
+
+      <section class="detail-section risk-section" aria-labelledby="risk-analysis-title">
+        <h2 id="risk-analysis-title">Risk analysis</h2>
+        <div class="risk-tabs" role="tablist" aria-label="Risk analysis views">
+          <button
+            #riskFactorsTab
+            id="risk-tab-factors"
+            type="button"
+            role="tab"
+            [attr.aria-selected]="riskTab() === 'factors'"
+            [attr.tabindex]="riskTab() === 'factors' ? 0 : -1"
+            aria-controls="risk-panel"
+            (click)="selectRiskTab('factors')"
+            (keydown)="handleRiskTabKeydown($event)"
+          >
+            Risk factors
+          </button>
+          <button
+            #riskScoresTab
+            id="risk-tab-scores"
+            type="button"
+            role="tab"
+            [attr.aria-selected]="riskTab() === 'scores'"
+            [attr.tabindex]="riskTab() === 'scores' ? 0 : -1"
+            aria-controls="risk-panel"
+            (click)="selectRiskTab('scores')"
+            (keydown)="handleRiskTabKeydown($event)"
+          >
+            Risk scores <span>New</span>
+          </button>
+        </div>
+        <div
+          id="risk-panel"
+          class="risk-panel"
+          role="tabpanel"
+          [attr.aria-labelledby]="riskPanelLabelledBy()"
+        >
+          <p>{{ riskPanelMessage() }}</p>
+        </div>
+      </section>
+
+      <section class="detail-section related-payments-section" aria-labelledby="related-title">
+        <h2 id="related-title">Related payments</h2>
+        <p class="empty-row">There are no related payments from the last 6 months</p>
+      </section>
+
+      <section class="detail-section related-objects-section" aria-labelledby="objects-title">
+        <h2 id="objects-title">Related objects</h2>
+        <div class="related-object-grid">
+          <div>
+            <strong>Latest payment</strong>
+            <span class="code-value">
+              {{ details.paymentId }}
+              <button
+                class="copy-button"
+                type="button"
+                aria-label="Copy latest payment ID"
+                title="Copy"
+                (click)="copyValue(details.paymentId, 'Latest payment ID')"
+              >
+                <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+                  <path d="M6 5.5h6.5v8H6z" />
+                  <path d="M3.5 10.5v-8H10" />
+                </svg>
+              </button>
+            </span>
+          </div>
+          <div>
+            <strong>Payment method</strong>
+            <span class="code-value inline-link">{{ details.paymentMethod.id }}</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="detail-section receipt-section" aria-labelledby="receipts-title">
+        <div class="section-heading">
+          <h2 id="receipts-title">Receipt history</h2>
+          <div class="section-actions">
+            <a class="small-action small-action--text" routerLink="/mock">View receipt</a>
+            <a
+              class="icon-action"
+              routerLink="/mock"
+              aria-label="More receipt actions"
+              title="More"
+            >
+              <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+                <circle cx="3" cy="8" r="1.25" />
+                <circle cx="8" cy="8" r="1.25" />
+                <circle cx="13" cy="8" r="1.25" />
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div class="empty-panel empty-panel--compact">No receipts sent</div>
+      </section>
+
+      <section class="detail-section events-section" aria-labelledby="events-title">
+        <h2 id="events-title">Events</h2>
+        <ol class="event-list">
+          @for (activity of details.activity; track activity.occurredAt) {
+            <li>
+              <strong>{{ activity.title }}</strong>
+              <time [attr.datetime]="activity.occurredAt">{{ activity.occurredLabel }}</time>
+            </li>
+          }
+        </ol>
+      </section>
+
+      <section class="detail-section logs-section" aria-labelledby="logs-title">
+        <h2 id="logs-title">Logs</h2>
+        <div class="log-row">
+          <strong class="code-value">{{ logEndpoint }}</strong>
+          <span>402 ERR</span>
+          <time [attr.datetime]="details.updatedAt">{{ details.updatedLabel }}</time>
+        </div>
       </section>
     </div>
 
     <aside class="details-rail" aria-label="Payment and customer details">
-      <section aria-labelledby="details-title">
+      <section class="rail-section rail-details" aria-labelledby="details-title">
         <h2 id="details-title">Details</h2>
         <dl class="rail-list">
           <div>
             <dt>Payment ID</dt>
-            <dd class="code-value">{{ details.paymentId }}</dd>
+            <dd class="copy-value code-value">
+              <span>{{ details.paymentId }}</span>
+              <button
+                class="copy-button"
+                type="button"
+                aria-label="Copy payment ID"
+                title="Copy"
+                (click)="copyValue(details.paymentId, 'Payment ID')"
+              >
+                <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+                  <path d="M6 5.5h6.5v8H6z" />
+                  <path d="M3.5 10.5v-8H10" />
+                </svg>
+              </button>
+            </dd>
           </div>
           <div>
             <dt>Payment method</dt>
@@ -187,7 +417,13 @@
                 [iconKey]="details.paymentMethod.brand"
                 tooltipId="detail-rail-payment-method-brand"
               />
-              <span class="numeric-value">•••• 1453</span>
+              <span class="numeric-value">{{ details.paymentMethod.number }}</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Risk level</dt>
+            <dd>
+              <span class="risk-badge">{{ details.riskEvaluation }}</span>
             </dd>
           </div>
           <div>
@@ -202,23 +438,19 @@
             <dd>{{ details.statementDescriptor }}</dd>
           </div>
           <div>
-            <dt>Dates</dt>
-            <dd class="date-list">
-              <span>
-                <span>Created</span>
-                <time [attr.datetime]="details.createdAt">{{ details.createdLabel }}</time>
-              </span>
-              <span>
-                <span>Last updated</span>
-                <time [attr.datetime]="details.updatedAt">{{ details.updatedLabel }}</time>
-              </span>
+            <dt>Created</dt>
+            <dd>
+              <time class="rail-date" [attr.datetime]="details.createdAt">{{
+                details.createdLabel
+              }}</time>
             </dd>
           </div>
           <div>
-            <dt>Risk evaluation</dt>
-            <dd class="risk-label">
-              <span aria-hidden="true"></span>
-              {{ details.riskEvaluation }}
+            <dt>Last updated</dt>
+            <dd>
+              <time class="rail-date" [attr.datetime]="details.updatedAt">{{
+                details.updatedLabel
+              }}</time>
             </dd>
           </div>
           <div>
@@ -232,7 +464,7 @@
         </dl>
       </section>
 
-      <section class="customer-section" aria-labelledby="customer-title">
+      <section class="rail-section customer-section" aria-labelledby="customer-title">
         <h2 id="customer-title">Customer</h2>
         <dl class="rail-list">
           <div>
@@ -245,8 +477,20 @@
           </div>
           <div>
             <dt>Email</dt>
-            <dd>
-              <span class="email-chip">{{ details.customer.email }}</span>
+            <dd class="copy-value">
+              <span>{{ details.customer.email }}</span>
+              <button
+                class="copy-button"
+                type="button"
+                aria-label="Copy customer email"
+                title="Copy"
+                (click)="copyValue(details.customer.email, 'Customer email')"
+              >
+                <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+                  <path d="M6 5.5h6.5v8H6z" />
+                  <path d="M3.5 10.5v-8H10" />
+                </svg>
+              </button>
             </dd>
           </div>
           <div>
@@ -258,6 +502,23 @@
             <dd>{{ details.customer.country }}</dd>
           </div>
         </dl>
+      </section>
+
+      <section class="rail-section metadata-section" aria-labelledby="metadata-title">
+        <div class="section-heading">
+          <h2 id="metadata-title">Metadata</h2>
+          <a
+            class="icon-action"
+            routerLink="/mock"
+            aria-label="Edit metadata"
+            title="Edit metadata"
+          >
+            <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+              <path d="m3 11.5-.5 2 2-.5 7.75-7.75-1.5-1.5z" />
+            </svg>
+          </a>
+        </div>
+        <div class="empty-panel empty-panel--compact">No metadata</div>
       </section>
     </aside>
   </div>

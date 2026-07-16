@@ -4,6 +4,7 @@ export interface PaymentActivityItem {
   readonly actionLabel?: string;
   readonly description?: string;
   readonly occurredAt: string;
+  readonly occurredShortLabel: string;
   readonly occurredLabel: string;
 }
 
@@ -100,6 +101,7 @@ export const PAYMENT_DETAILS_DATA = {
       description:
         'The bank returned the decline code do_not_honor and did not provide any other information. We recommend that your customer contact their card issuer, REVOLUT LIMITED, for more information, or use another payment method.',
       occurredAt: '2023-08-16T15:43:00-03:00',
+      occurredShortLabel: 'Aug 16, 3:43 PM',
       occurredLabel: 'Aug 16, 2023, 3:43 PM',
     },
     {
@@ -108,12 +110,14 @@ export const PAYMENT_DETAILS_DATA = {
       description:
         'The bank returned the decline code do_not_honor and did not provide any other information. The payment remains incomplete.',
       occurredAt: '2023-08-16T08:57:00-03:00',
+      occurredShortLabel: 'Aug 16, 8:57 AM',
       occurredLabel: 'Aug 16, 2023, 8:57 AM',
     },
     {
       kind: 'started',
       title: 'Payment started',
       occurredAt: '2023-08-13T07:01:00-03:00',
+      occurredShortLabel: 'Aug 13, 7:01 AM',
       occurredLabel: 'Aug 13, 2023, 7:01 AM',
     },
   ],
