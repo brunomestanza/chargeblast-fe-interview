@@ -381,8 +381,10 @@
         <h2 id="logs-title">Logs</h2>
         @for (log of details.logs; track log.occurredAt) {
           <div class="log-row">
-            <strong>{{ log.method }} {{ log.endpoint }}</strong>
-            <span class="log-status" [class.log-status--ok]="log.ok">{{ log.status }}</span>
+            <div class="log-request">
+              <strong>{{ log.method }} {{ log.endpoint }}</strong>
+              <span class="log-status" [class.log-status--ok]="log.ok">{{ log.status }}</span>
+            </div>
             <time [attr.datetime]="log.occurredAt">{{ log.occurredLabel }}</time>
           </div>
         }

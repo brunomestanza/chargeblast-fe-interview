@@ -63,11 +63,21 @@
 }
 
 .log-row {
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
 }
 
-.log-row > span {
+/* Endpoint and status badge travel together on the left; the timestamp is the
+   grid's second column, pinned right. */
+.log-request {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-status {
+  flex: 0 0 auto;
   padding: 1px 5px;
   border-radius: 3px;
   color: #b4233f;
@@ -77,7 +87,7 @@
   line-height: 16px;
 }
 
-.log-row > span.log-status--ok {
+.log-status--ok {
   color: #237f52;
   background: #effbea;
   box-shadow: inset 0 0 0 1px #9ee192;
@@ -280,7 +290,7 @@
 @media (forced-colors: active) {
   .empty-panel,
   .risk-badge,
-  .log-row > span {
+  .log-status {
     border: 1px solid CanvasText;
     box-shadow: none;
   }
