@@ -77,6 +77,12 @@
   line-height: 16px;
 }
 
+.log-row > span.log-status--ok {
+  color: #237f52;
+  background: #effbea;
+  box-shadow: inset 0 0 0 1px #9ee192;
+}
+
 .rail-list {
   display: flex;
   margin: 0;

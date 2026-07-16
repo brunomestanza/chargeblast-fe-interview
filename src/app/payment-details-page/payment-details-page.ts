@@ -32,8 +32,6 @@ export class PaymentDetailsPage {
       ? 'Risk insights are only available for live mode data.'
       : `This payment has a ${this.details.riskEvaluation.toLowerCase()} risk evaluation.`,
   );
-  protected readonly logEndpoint =
-    'POST /v1/payment_intents/' + PAYMENT_DETAILS_DATA.paymentId + '/confirm';
   private readonly actionsMenuRoot = viewChild<ElementRef<HTMLElement>>('actionsMenuRoot');
   private readonly actionsMenuTrigger =
     viewChild<ElementRef<HTMLButtonElement>>('actionsMenuTrigger');

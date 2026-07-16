@@ -8,6 +8,22 @@ export interface PaymentActivityItem {
   readonly occurredLabel: string;
 }
 
+export interface PaymentEventItem {
+  readonly description: string;
+  readonly occurredAt: string;
+  /** Full timestamp Stripe uses in the event log, e.g. "16/08/2023 15:43:00". */
+  readonly occurredLabel: string;
+}
+
+export interface PaymentLogItem {
+  readonly method: string;
+  readonly endpoint: string;
+  readonly status: string;
+  readonly ok: boolean;
+  readonly occurredAt: string;
+  readonly occurredLabel: string;
+}
+
 export interface PaymentDetailsData {
   readonly amount: string;
   readonly currency: string;
@@ -19,6 +35,7 @@ export interface PaymentDetailsData {
   readonly createdLabel: string;
   readonly updatedAt: string;
   readonly updatedLabel: string;
+  readonly fundsAvailable: string;
   readonly riskEvaluation: string;
   readonly failureCode: string;
   readonly networkDeclineCode: string;
@@ -28,6 +45,7 @@ export interface PaymentDetailsData {
     readonly email: string;
     readonly phone: string;
     readonly country: string;
+    readonly isGuest: boolean;
   };
   readonly paymentMethod: {
     readonly id: string;
@@ -50,6 +68,8 @@ export interface PaymentDetailsData {
     readonly netAmount: string;
   };
   readonly activity: readonly PaymentActivityItem[];
+  readonly events: readonly PaymentEventItem[];
+  readonly logs: readonly PaymentLogItem[];
 }
 
 export const PAYMENT_DETAILS_DATA = {
@@ -63,6 +83,7 @@ export const PAYMENT_DETAILS_DATA = {
   createdLabel: 'Aug 13, 7:01 AM',
   updatedAt: '2023-08-16T15:43:00-03:00',
   updatedLabel: 'Aug 16, 3:43 PM',
+  fundsAvailable: '—',
   riskEvaluation: 'Normal',
   failureCode: 'card_declined',
   networkDeclineCode: '59',
@@ -72,6 +93,7 @@ export const PAYMENT_DETAILS_DATA = {
     email: 'sophiamarlea87@gmail.com',
     phone: '—',
     country: 'United Kingdom',
+    isGuest: true,
   },
   paymentMethod: {
     id: 'pm_1Pjk04A5MgunUWVeDhqyYrsR',
@@ -119,6 +141,33 @@ export const PAYMENT_DETAILS_DATA = {
       occurredAt: '2023-08-13T07:01:00-03:00',
       occurredShortLabel: 'Aug 13, 7:01 AM',
       occurredLabel: 'Aug 13, 2023, 7:01 AM',
+    },
+  ],
+  events: [
+    {
+      description: 'A payment attempt on pi_3JkvRcA5MgunUWVePmAl2PC for £34.99 GBP was declined',
+      occurredAt: '2023-08-16T15:43:00-03:00',
+      occurredLabel: '16/08/2023 15:43:00',
+    },
+    {
+      description: 'The payment pi_3JkvRcA5MgunUWVePmAl2PC for £34.99 GBP failed',
+      occurredAt: '2023-08-16T08:57:00-03:00',
+      occurredLabel: '16/08/2023 08:57:00',
+    },
+    {
+      description: 'A new payment pi_3JkvRcA5MgunUWVePmAl2PC for £34.99 GBP was created',
+      occurredAt: '2023-08-13T07:01:00-03:00',
+      occurredLabel: '13/08/2023 07:01:00',
+    },
+  ],
+  logs: [
+    {
+      method: 'POST',
+      endpoint: '/v1/payment_intents/pi_3JkvRcA5MgunUWVePmAl2PC/confirm',
+      status: '402 ERR',
+      ok: false,
+      occurredAt: '2023-08-16T15:43:00-03:00',
+      occurredLabel: '16/08/2023 15:43:00',
     },
   ],
 } as const satisfies PaymentDetailsData;

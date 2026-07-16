@@ -380,8 +380,14 @@
   line-height: 20px;
 }
 
+/* Stripe stacks the tax panel's two lines instead of running them together —
+   the shared row layout above suits the single-line empty states. */
+.tax-section .empty-panel {
+  flex-direction: column;
+}
+
 .empty-panel p + p {
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .empty-panel svg {
@@ -494,6 +500,13 @@
   font-size: 14px;
   font-weight: 700;
   line-height: 20px;
+}
+
+/* Stripe renders event descriptions and log endpoints at body weight — only
+   the related-objects labels above are bold. */
+.event-list strong,
+.log-row strong {
+  font-weight: 400;
 }
 
 .related-object-grid span {

@@ -6,7 +6,7 @@
   <header class="payment-summary">
     <div class="payment-summary__main">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a routerLink="/" queryParamsHandling="preserve">Payments</a>
+        <a routerLink="/" queryParamsHandling="preserve">Transactions</a>
       </nav>
 
       <div class="payment-summary__title-row">
@@ -368,10 +368,10 @@
       <section class="detail-section events-section" aria-labelledby="events-title">
         <h2 id="events-title">Events</h2>
         <ol class="event-list">
-          @for (activity of details.activity; track activity.occurredAt) {
+          @for (event of details.events; track event.occurredAt) {
             <li>
-              <strong>{{ activity.title }}</strong>
-              <time [attr.datetime]="activity.occurredAt">{{ activity.occurredLabel }}</time>
+              <strong>{{ event.description }}</strong>
+              <time [attr.datetime]="event.occurredAt">{{ event.occurredLabel }}</time>
             </li>
           }
         </ol>
@@ -379,11 +379,13 @@
 
       <section class="detail-section logs-section" aria-labelledby="logs-title">
         <h2 id="logs-title">Logs</h2>
-        <div class="log-row">
-          <strong class="code-value">{{ logEndpoint }}</strong>
-          <span>402 ERR</span>
-          <time [attr.datetime]="details.updatedAt">{{ details.updatedLabel }}</time>
-        </div>
+        @for (log of details.logs; track log.occurredAt) {
+          <div class="log-row">
+            <strong>{{ log.method }} {{ log.endpoint }}</strong>
+            <span class="log-status" [class.log-status--ok]="log.ok">{{ log.status }}</span>
+            <time [attr.datetime]="log.occurredAt">{{ log.occurredLabel }}</time>
+          </div>
+        }
       </section>
     </div>
 
@@ -438,6 +440,10 @@
             <dd>{{ details.statementDescriptor }}</dd>
           </div>
           <div>
+            <dt>Funds available</dt>
+            <dd>{{ details.fundsAvailable }}</dd>
+          </div>
+          <div>
             <dt>Created</dt>
             <dd>
               <time class="rail-date" [attr.datetime]="details.createdAt">{{
@@ -465,7 +471,12 @@
       </section>
 
       <section class="rail-section customer-section" aria-labelledby="customer-title">
-        <h2 id="customer-title">Customer</h2>
+        <div class="rail-heading-row">
+          <h2 id="customer-title">Customer</h2>
+          @if (details.customer.isGuest) {
+            <span class="guest-tag">Guest</span>
+          }
+        </div>
         <dl class="rail-list">
           <div>
             <dt>ID</dt>

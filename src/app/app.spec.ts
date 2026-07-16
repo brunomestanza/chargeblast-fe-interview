@@ -62,7 +62,7 @@ describe('App', () => {
       '.sidebar__link[aria-current="page"]',
     );
     const backLink = Array.from(detailsPage.querySelectorAll<HTMLAnchorElement>('a')).find(
-      (link) => link.textContent?.trim() === 'Payments',
+      (link) => link.textContent?.trim() === 'Transactions',
     );
 
     expect(router.url).toBe(`/payments/${selectedPaymentId}?view=compact`);
