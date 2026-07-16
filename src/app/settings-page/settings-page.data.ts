@@ -18,17 +18,17 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
     items: [
       {
         name: 'Personal details',
-        description: 'Manage your details, password, and active sessions.',
+        description: 'Contact details, password, authentication methods, and your active sessions.',
         icon: 'profile',
       },
       {
         name: 'Communication preferences',
-        description: 'Choose the emails and notifications you receive.',
+        description: 'Customize the emails, SMS, and push notifications you receive.',
         icon: 'communication',
       },
       {
         name: 'Developers',
-        description: 'Developer tools and integrations.',
+        description: 'Workbench, developer tools, and more.',
         icon: 'terminal',
       },
     ],

@@ -8,7 +8,9 @@
         @for (item of section.items; track item.name) {
           <li [class.settings-section__new-row]="item.startsRow === true">
             <a class="settings-item" routerLink="/mock">
-              <app-dashboard-icon [name]="item.icon" />
+              <span class="settings-item__icon" aria-hidden="true">
+                <app-dashboard-icon [name]="item.icon" />
+              </span>
               <span class="settings-item__copy">
                 <span class="settings-item__name">{{ item.name }}</span>
                 <span class="settings-item__description">{{ item.description }}</span>
