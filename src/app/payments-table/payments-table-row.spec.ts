@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { vi } from 'vitest';
 import { formatCreatedDate, formatRelativeTime } from './payment-display-format';
 import type { Payment } from './payment';
 import { PaymentsTable } from './payments-table';
@@ -8,14 +7,13 @@ import { payment, setupPaymentsTableTesting } from './testing/payments-table.tes
 describe('PaymentsTable rows', () => {
   setupPaymentsTableTesting();
 
-  it('renders payment details and accessible copy and relative-time controls', () => {
+  it('renders payment details and accessible relative-time controls', () => {
     const fixture = TestBed.createComponent(PaymentsTable);
     fixture.componentRef.setInput('payments', [payment]);
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    const copyButton = element.querySelector<HTMLButtonElement>('.copy-action');
-    const paymentLink = element.querySelector<HTMLAnchorElement>('.payment-id-link');
+    const row = element.querySelector<HTMLTableRowElement>('tbody tr[data-payment-id]');
     const time = element.querySelector('time');
     const relativeTimeTooltip = element.querySelector('.relative-tooltip');
     const paymentIcon = element.querySelector<HTMLElement>('.payment-icon__trigger');
@@ -25,10 +23,13 @@ describe('PaymentsTable rows', () => {
     expect(element.textContent).toContain('$249.00');
     expect(element.textContent).toContain('Succeeded');
     expect(element.textContent).toContain('•••• 4242');
-    expect(element.querySelector('.payment-id')?.textContent).toContain('…');
-    expect(paymentLink?.getAttribute('href')).toBe('/payments/' + payment.id);
-    expect(paymentLink?.getAttribute('aria-label')).toBe('View details for payment ' + payment.id);
-    expect(copyButton?.getAttribute('aria-label')).toBe('Copy payment ID ' + payment.id);
+    expect(element.textContent).toContain('Subscription update');
+    expect(row?.getAttribute('data-payment-id')).toBe(payment.id);
+    expect(
+      element
+        .querySelector<HTMLInputElement>('tbody .select-cell input')
+        ?.getAttribute('aria-label'),
+    ).toBe('Select payment ' + payment.id);
     expect(time?.getAttribute('datetime')).toBe(payment.createdAt);
     expect(relativeTimeTooltip?.textContent?.trim()).toBeTruthy();
     expect(time?.textContent).toContain(relativeTimeTooltip?.textContent?.trim());
@@ -121,26 +122,20 @@ describe('PaymentsTable rows', () => {
     expect(formatCreatedDate(createdAt, 'America/Los_Angeles')).toBe('Jul 12, 2026');
   });
 
-  it('copies the full payment ID and exposes confirmation feedback', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(window.navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText },
-    });
-
+  it('selects a row through its checkbox', () => {
     const fixture = TestBed.createComponent(PaymentsTable);
     fixture.componentRef.setInput('payments', [payment]);
     fixture.detectChanges();
 
-    const copyButton = fixture.nativeElement.querySelector('.copy-action') as HTMLButtonElement;
-    copyButton.click();
+    const checkbox = fixture.nativeElement.querySelector(
+      'tbody .select-cell input',
+    ) as HTMLInputElement;
 
-    expect(writeText).toHaveBeenCalledWith(payment.id);
-    await vi.waitFor(() => {
-      fixture.detectChanges();
-      expect(fixture.nativeElement.textContent).toContain('Copied');
-      expect(fixture.nativeElement.textContent).toContain('copied to clipboard');
-    });
+    expect(checkbox.checked).toBe(false);
+    checkbox.click();
+    fixture.detectChanges();
+
+    expect(checkbox.checked).toBe(true);
 
     fixture.destroy();
   });

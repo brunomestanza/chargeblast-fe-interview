@@ -1,6 +1,35 @@
 /* Column resizing remains on the table header. Column ordering now lives in the
    Edit columns popover, matching Stripe's table controls. */
 
+.select-column {
+  width: 44px;
+}
+
+.menu-column {
+  width: 48px;
+}
+
+.select-header {
+  padding: 0 8px 0 20px;
+}
+
+.select-header .row-select {
+  display: inline-flex;
+  align-items: center;
+}
+
+.select-header input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #533afd;
+  cursor: pointer;
+}
+
+.menu-header {
+  padding: 0;
+}
+
 .column-resizer {
   position: absolute;
   top: 0;

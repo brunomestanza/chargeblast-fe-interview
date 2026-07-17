@@ -24,6 +24,80 @@ td[data-column='amount'] {
   padding-right: 12px;
 }
 
+td[data-column='select'] {
+  width: 44px;
+  padding: 0 8px 0 20px;
+}
+
+.row-select {
+  display: inline-flex;
+  align-items: center;
+}
+
+.row-select input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #533afd;
+  cursor: pointer;
+}
+
+.row-menu-cell {
+  width: 48px;
+  padding-right: 16px !important;
+  text-align: right;
+}
+
+.row-menu {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-muted);
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.row-menu svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+:host(:hover) .row-menu {
+  opacity: 1;
+}
+
+.row-menu:focus-visible {
+  opacity: 1;
+  outline: 2px solid #303750;
+  outline-offset: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row-menu:hover {
+    background: #f1f3f6;
+    color: var(--color-ink);
+  }
+}
+
+.description {
+  color: var(--color-ink);
+}
+
+.muted-cell {
+  display: block;
+  overflow: hidden;
+  color: var(--color-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .created-cell {
   text-align: left;
 }
@@ -124,9 +198,9 @@ td[data-column='amount'] {
 }
 
 .amount-cell {
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 8px;
-  text-align: right;
+  text-align: left;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -170,13 +244,8 @@ td[data-column='amount'] {
   background: #eafcdd;
 }
 
-.status--pending {
-  border-color: #f2d06b;
-  color: #8a5d00;
-  background: #fff6d8;
-}
-
-.status--failed {
+.status--failed,
+.status--blocked {
   border-color: #f4b4ca;
   color: #b3093c;
   background: #fff0f5;
@@ -188,8 +257,26 @@ td[data-column='amount'] {
   background: #e9eef3;
 }
 
+.status--disputed {
+  border-color: #f4cf8f;
+  color: #8a4b00;
+  background: #fdf3e2;
+}
+
+.status--uncaptured {
+  border-color: #f2d06b;
+  color: #8a5d00;
+  background: #fff6d8;
+}
+
+.status--canceled {
+  border-color: #d4dbe3;
+  color: #4b5563;
+  background: #f3f5f7;
+}
+
 .payment-method {
-  justify-content: flex-end;
+  justify-content: flex-start;
   width: 100%;
   gap: 8px;
   min-width: 0;

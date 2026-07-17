@@ -11,14 +11,13 @@ import {
   viewChild,
   viewChildren,
 } from '@angular/core';
-import { PAYMENT_STATUS_LABELS, type PaymentStatus } from '../../payments/payment';
+import {
+  PAYMENT_STATUS_CARD_ORDER,
+  PAYMENT_STATUS_LABELS,
+  type PaymentStatus,
+} from '../../payments/payment';
 
-const PAYMENT_STATUS_SUMMARY_ORDER = [
-  'succeeded',
-  'refunded',
-  'pending',
-  'failed',
-] as const satisfies readonly PaymentStatus[];
+const PAYMENT_STATUS_SUMMARY_ORDER = PAYMENT_STATUS_CARD_ORDER;
 
 const COUNT_FORMATTER = new Intl.NumberFormat('en-US');
 
@@ -51,10 +50,7 @@ export class PaymentStatusSummary {
 
   protected readonly options = computed<readonly PaymentStatusSummaryOption[]>(() => {
     const counts = this.counts();
-    const allCount = PAYMENT_STATUS_SUMMARY_ORDER.reduce(
-      (total, status) => total + counts[status],
-      0,
-    );
+    const allCount = Object.values(counts).reduce((total, count) => total + count, 0);
 
     return [
       createSummaryOption(null, 'All', allCount),

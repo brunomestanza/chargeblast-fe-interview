@@ -270,7 +270,7 @@ describe('PaymentsTable URL synchronization', () => {
   it('canonicalizes invalid and duplicate filter values without losing unrelated URL state', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl(
-      '/?date-range=2026-07-14..2026-07-13&status=failed,unknown,failed,succeeded&payment-method=method:paypal,unknown,method:paypal,card:visa&amount-range=100..400&sort=status.asc,unknown.desc,status.desc&view=compact#payments-table',
+      '/?date-range=2026-07-14..2026-07-13&status=failed,unknown,failed,succeeded&payment-method=method:paypal,unknown,method:paypal,card:visa&amount-range=100..400&sort=amount.asc,unknown.desc,amount.desc&view=compact#payments-table',
     );
 
     const fixture = TestBed.createComponent(PaymentsTable);
@@ -286,7 +286,7 @@ describe('PaymentsTable URL synchronization', () => {
         status: 'failed,succeeded',
         'payment-method': 'method:paypal,card:visa',
         'amount-range': '100.00..400.00',
-        sort: 'status.asc',
+        sort: 'amount.asc',
         view: 'compact',
       },
       'payments-table',

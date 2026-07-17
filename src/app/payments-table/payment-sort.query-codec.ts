@@ -7,12 +7,13 @@ import {
 } from './payment-sort.contract';
 
 const PAYMENT_SORT_URL_KEYS: Readonly<Record<PaymentSortColumn, string>> = {
-  paymentId: 'payment-id',
-  customer: 'customer',
   amount: 'amount',
-  status: 'status',
   paymentMethod: 'payment-method',
+  description: 'description',
+  customer: 'customer',
   created: 'created',
+  refundedDate: 'refunded-date',
+  declineReason: 'decline-reason',
 };
 
 const PAYMENT_SORT_COLUMNS_BY_URL_KEY = new Map<string, PaymentSortColumn>(

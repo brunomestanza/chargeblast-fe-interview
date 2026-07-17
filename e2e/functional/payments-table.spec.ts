@@ -49,7 +49,7 @@ test('loading skeleton fills the table viewport and blocks scrolling', async ({ 
   const initialScrollLeft = await region.evaluate((element) => {
     const scroll = element as HTMLElement;
     scroll.scrollTop = 120;
-    scroll.scrollLeft = Math.min(80, scroll.scrollWidth - scroll.clientWidth);
+    scroll.scrollLeft = Math.min(30, scroll.scrollWidth - scroll.clientWidth);
     return scroll.scrollLeft;
   });
 
@@ -114,11 +114,8 @@ test('loading skeleton fills the table viewport and blocks scrolling', async ({ 
   await waitForPaymentsTable(page);
 });
 
-test('a payment ID links through to its details page', async ({ page }) => {
-  await page
-    .getByRole('link', { name: /^View details for payment/ })
-    .first()
-    .click();
+test('a table row links through to its details page', async ({ page }) => {
+  await page.locator('tbody tr[data-payment-id] .customer').first().click();
 
   await expect(page).toHaveURL(/\/payments\/pay_/);
 });

@@ -50,7 +50,9 @@ describe('PaymentsTable pagination', () => {
     nextButton.click();
     fixture.detectChanges();
 
-    expect(element.querySelector('tbody tr')?.textContent).toContain(payments[25].id);
+    expect(element.querySelector('tbody tr')?.getAttribute('data-payment-id')).toBe(
+      payments[25].id,
+    );
     expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
       'Viewing 26–50 of 51 payments',
     );
@@ -60,7 +62,9 @@ describe('PaymentsTable pagination', () => {
     fixture.detectChanges();
 
     expect(element.querySelectorAll('tbody tr')).toHaveLength(1);
-    expect(element.querySelector('tbody tr')?.textContent).toContain(payments[50].id);
+    expect(element.querySelector('tbody tr')?.getAttribute('data-payment-id')).toBe(
+      payments[50].id,
+    );
     expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 3 of 3');
     expect(nextButton.disabled).toBe(true);
 

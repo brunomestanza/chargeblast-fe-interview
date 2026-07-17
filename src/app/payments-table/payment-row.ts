@@ -21,6 +21,7 @@ export { formatCreatedDate, formatCreatedTime, formatRelativeTime } from './paym
   templateUrl: './payment-row.html',
   styleUrl: './payment-row.css',
   host: {
+    '[attr.data-payment-id]': 'payment().id',
     '(click)': 'openDetails($event)',
   },
 })
@@ -30,8 +31,10 @@ export class PaymentRow {
   readonly currentTime = input<number | null>(null);
   readonly timeZone = input('UTC');
   readonly columnOrder = input<readonly PaymentTableColumnKey[]>(PAYMENT_COLUMN_KEYS);
+  readonly selected = input(false);
   readonly copyRequested = output<string>();
   readonly detailsRequested = output<string>();
+  readonly selectionToggled = output<string>();
 
   protected readonly copied = computed(() => {
     const copyState = this.copyState();
@@ -44,6 +47,11 @@ export class PaymentRow {
   protected readonly amountLabel = computed(() => {
     const payment = this.payment();
     return formatCurrencyAmount(payment.amount, payment.currency);
+  });
+  protected readonly declineReasonLabel = computed(() => this.payment().declineReason ?? '—');
+  protected readonly refundedDateLabel = computed(() => {
+    const refundedAt = this.payment().refundedAt;
+    return refundedAt ? formatCreatedDate(refundedAt, this.timeZone()) : '—';
   });
   protected readonly createdDate = computed(() =>
     formatCreatedDate(this.payment().createdAt, this.timeZone()),
@@ -81,6 +89,16 @@ export class PaymentRow {
 
   protected requestCopy(): void {
     this.copyRequested.emit(this.payment().id);
+  }
+
+  protected toggleSelection(): void {
+    this.selectionToggled.emit(this.payment().id);
+  }
+
+  protected openRowActions(event: MouseEvent): void {
+    event.stopPropagation();
+    // The overflow menu is a placeholder; its single action opens the payment.
+    this.detailsRequested.emit(this.payment().id);
   }
 
   protected requestDetails(event: MouseEvent): void {

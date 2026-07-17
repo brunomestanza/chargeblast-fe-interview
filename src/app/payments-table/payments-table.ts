@@ -3,9 +3,11 @@ import {
   Component,
   ElementRef,
   afterNextRender,
+  computed,
   effect,
   inject,
   input,
+  signal,
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
@@ -95,6 +97,52 @@ export class PaymentsTable {
       this.view.startBrowserState();
       this.columns.start();
       this.viewport.start(this.tableScroll().nativeElement);
+    });
+  }
+
+  protected readonly selectedIds = signal<ReadonlySet<string>>(new Set<string>());
+
+  protected readonly pageAllSelected = computed(() => {
+    const rows = this.view.paginatedPayments();
+    const selected = this.selectedIds();
+    return rows.length > 0 && rows.every((payment) => selected.has(payment.id));
+  });
+
+  protected readonly pageSomeSelected = computed(() => {
+    const rows = this.view.paginatedPayments();
+    const selected = this.selectedIds();
+    return rows.some((payment) => selected.has(payment.id)) && !this.pageAllSelected();
+  });
+
+  protected isRowSelected(id: string): boolean {
+    return this.selectedIds().has(id);
+  }
+
+  protected toggleRowSelection(id: string): void {
+    this.selectedIds.update((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  protected toggleSelectAllOnPage(): void {
+    const rows = this.view.paginatedPayments();
+    const shouldDeselect = this.pageAllSelected();
+    this.selectedIds.update((current) => {
+      const next = new Set(current);
+      for (const payment of rows) {
+        if (shouldDeselect) {
+          next.delete(payment.id);
+        } else {
+          next.add(payment.id);
+        }
+      }
+      return next;
     });
   }
 

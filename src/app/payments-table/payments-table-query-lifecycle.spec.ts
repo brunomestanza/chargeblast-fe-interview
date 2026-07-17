@@ -87,9 +87,9 @@ describe('PaymentsTable query lifecycle', () => {
 
       for (const row of skeletonRows) {
         expect(row.getAttribute('aria-hidden')).toBe('true');
-        expect(row.querySelectorAll('td')).toHaveLength(6);
-        expect(row.querySelector('.skeleton-payment-id__value')).toBeTruthy();
-        expect(row.querySelector('.skeleton-copy')).toBeTruthy();
+        expect(row.querySelectorAll('td')).toHaveLength(9);
+        expect(row.querySelector('.skeleton-select')).toBeTruthy();
+        expect(row.querySelector('.skeleton-description')).toBeTruthy();
         expect(row.querySelector('.skeleton-customer')).toBeTruthy();
         expect(row.querySelector('.skeleton-amount__value')).toBeTruthy();
         expect(row.querySelector('.skeleton-amount__currency')).toBeTruthy();
@@ -267,7 +267,7 @@ describe('PaymentsTable query lifecycle', () => {
 
       expect(router.url).toBe('/?status=failed');
       expect(element.querySelectorAll('.payment-skeleton-row').length).toBeGreaterThan(0);
-      expect(getSortButton(element, 'Created').closest('th')?.getAttribute('aria-sort')).toBe(
+      expect(getSortButton(element, 'Date').closest('th')?.getAttribute('aria-sort')).toBe(
         'descending',
       );
 

@@ -20,46 +20,53 @@ export interface PaymentTableColumn {
 
 const PAYMENT_TABLE_COLUMNS: readonly PaymentTableColumn[] = [
   {
-    key: 'paymentId',
-    label: PAYMENT_TABLE_COLUMN_LABELS.paymentId,
-    align: 'left',
-    columnClass: 'payment-id-column',
-    defaultWidth: 248,
-  },
-  {
-    key: 'customer',
-    label: PAYMENT_TABLE_COLUMN_LABELS.customer,
-    align: 'left',
-    columnClass: 'customer-column',
-    defaultWidth: 260,
-  },
-  {
     key: 'amount',
     label: PAYMENT_TABLE_COLUMN_LABELS.amount,
-    align: 'right',
-    columnClass: 'amount-column',
-    defaultWidth: 150,
-  },
-  {
-    key: 'status',
-    label: PAYMENT_TABLE_COLUMN_LABELS.status,
     align: 'left',
-    columnClass: 'status-column',
-    defaultWidth: 130,
+    columnClass: 'amount-column',
+    defaultWidth: 210,
   },
   {
     key: 'paymentMethod',
     label: PAYMENT_TABLE_COLUMN_LABELS.paymentMethod,
     align: 'left',
     columnClass: 'payment-method-column',
-    defaultWidth: 190,
+    defaultWidth: 170,
+  },
+  {
+    key: 'description',
+    label: PAYMENT_TABLE_COLUMN_LABELS.description,
+    align: 'left',
+    columnClass: 'description-column',
+    defaultWidth: 180,
+  },
+  {
+    key: 'customer',
+    label: PAYMENT_TABLE_COLUMN_LABELS.customer,
+    align: 'left',
+    columnClass: 'customer-column',
+    defaultWidth: 240,
   },
   {
     key: 'created',
     label: PAYMENT_TABLE_COLUMN_LABELS.created,
     align: 'left',
     columnClass: 'created-column',
-    defaultWidth: 175,
+    defaultWidth: 160,
+  },
+  {
+    key: 'refundedDate',
+    label: PAYMENT_TABLE_COLUMN_LABELS.refundedDate,
+    align: 'left',
+    columnClass: 'refunded-date-column',
+    defaultWidth: 150,
+  },
+  {
+    key: 'declineReason',
+    label: PAYMENT_TABLE_COLUMN_LABELS.declineReason,
+    align: 'left',
+    columnClass: 'decline-reason-column',
+    defaultWidth: 170,
   },
 ];
 

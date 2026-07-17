@@ -13,11 +13,6 @@ import {
 
 const explicitSortCases = [
   {
-    label: 'Payment ID',
-    urlKey: 'payment-id',
-    expectedIds: ['pay_10', 'pay_20', 'pay_30', 'pay_40'],
-  },
-  {
     label: 'Customer',
     urlKey: 'customer',
     expectedIds: ['pay_20', 'pay_40', 'pay_10', 'pay_30'],
@@ -26,11 +21,6 @@ const explicitSortCases = [
     label: 'Amount',
     urlKey: 'amount',
     expectedIds: ['pay_40', 'pay_30', 'pay_10', 'pay_20'],
-  },
-  {
-    label: 'Status',
-    urlKey: 'status',
-    expectedIds: ['pay_10', 'pay_30', 'pay_20', 'pay_40'],
   },
   {
     label: 'Payment method',
@@ -55,12 +45,13 @@ describe('PaymentsTable sorting', () => {
     expect(element.querySelector('table')).toBeTruthy();
     expect(element.querySelector('caption')).toBeTruthy();
     expect(headers).toEqual([
-      'Payment ID',
-      'Customer',
       'Amount',
-      'Status',
       'Payment method',
-      'Created',
+      'Description',
+      'Customer',
+      'Date',
+      'Refunded date',
+      'Decline reason',
     ]);
     const columnHeaders = element.querySelectorAll<HTMLTableCellElement>('th[scope="col"]');
     const headerRowChildren = Array.from(element.querySelector('thead > tr')?.children ?? []);
@@ -68,26 +59,26 @@ describe('PaymentsTable sorting', () => {
       'th > button.sort-button[type="button"]',
     );
 
-    expect(columnHeaders).toHaveLength(6);
-    expect(headerRowChildren.map((child) => child.tagName)).toEqual(Array(6).fill('TH'));
-    expect(sortButtons).toHaveLength(6);
+    // Seven data columns plus the leading selection column and the trailing row-action column.
+    expect(columnHeaders).toHaveLength(9);
+    expect(headerRowChildren.map((child) => child.tagName)).toEqual(Array(9).fill('TH'));
+    expect(sortButtons).toHaveLength(7);
 
-    for (const header of columnHeaders) {
-      const sortButton = header.firstElementChild;
+    for (const sortButton of Array.from(sortButtons)) {
+      const header = sortButton.parentElement;
 
-      expect(sortButton?.tagName).toBe('BUTTON');
-      expect(sortButton?.parentElement).toBe(header);
-      expect(sortButton?.querySelector('button')).toBeNull();
-      expect(sortButton?.querySelector('.sort-button__label')).toBeTruthy();
-      expect(sortButton?.querySelector('.sort-indicator svg')).toBeTruthy();
+      expect(header?.tagName).toBe('TH');
+      expect(sortButton.querySelector('button')).toBeNull();
+      expect(sortButton.querySelector('.sort-button__label')).toBeTruthy();
+      expect(sortButton.querySelector('.sort-indicator svg')).toBeTruthy();
     }
 
     expect(element.querySelectorAll('th[aria-sort]')).toHaveLength(1);
-    expect(getSortButton(element, 'Created').closest('th')?.getAttribute('aria-sort')).toBe(
+    expect(getSortButton(element, 'Date').closest('th')?.getAttribute('aria-sort')).toBe(
       'descending',
     );
     expect(element.querySelector('.sort-priority')).toBeNull();
-    expect(getSortButton(element, 'Created').querySelector('path')?.getAttribute('d')).toBe(
+    expect(getSortButton(element, 'Date').querySelector('path')?.getAttribute('d')).toBe(
       'M3.25 5.5 7 9.25l3.75-3.75',
     );
     expect(getSortButton(element, 'Amount').getAttribute('aria-describedby')).toBe(
@@ -128,9 +119,9 @@ describe('PaymentsTable sorting', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     const router = TestBed.inject(Router);
-    const createdButton = getSortButton(element, 'Created');
+    const createdButton = getSortButton(element, 'Date');
     const customerButton = getSortButton(element, 'Customer');
-    const statusButton = getSortButton(element, 'Status');
+    const statusButton = getSortButton(element, 'Description');
 
     expect(renderedPaymentIds(element)).toEqual(['pay_3', 'pay_2', 'pay_1']);
     expect(router.url).toBe('/');
@@ -158,7 +149,7 @@ describe('PaymentsTable sorting', () => {
     );
     expect(customerButton.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
     expect(statusButton.closest('th')?.hasAttribute('aria-sort')).toBe(false);
-    expect(router.url).toBe('/?sort=customer.asc,status.asc');
+    expect(router.url).toBe('/?sort=customer.asc,description.asc');
 
     customerButton.click();
     fixture.detectChanges();
@@ -168,18 +159,19 @@ describe('PaymentsTable sorting', () => {
     expect(customerButton.querySelector('path')?.getAttribute('d')).toBe(
       'M3.25 5.5 7 9.25l3.75-3.75',
     );
-    expect(router.url).toBe('/?sort=customer.desc,status.asc');
+    expect(router.url).toBe('/?sort=customer.desc,description.asc');
 
     customerButton.click();
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(renderedPaymentIds(element)).toEqual(['pay_1', 'pay_2', 'pay_3']);
+    // Description is identical across rows, so the single remaining criterion leaves input order.
+    expect(renderedPaymentIds(element)).toEqual(['pay_3', 'pay_1', 'pay_2']);
     expect(statusButton.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
     expect(element.querySelector('[role="status"]')?.textContent).toContain(
-      'Sort order: Status ascending.',
+      'Sort order: Description ascending.',
     );
-    expect(router.url).toBe('/?sort=status.asc');
+    expect(router.url).toBe('/?sort=description.asc');
   });
 
   it.each(explicitSortCases)(
@@ -193,7 +185,7 @@ describe('PaymentsTable sorting', () => {
 
       const element = fixture.nativeElement as HTMLElement;
       const router = TestBed.inject(Router);
-      const createdButton = getSortButton(element, 'Created');
+      const createdButton = getSortButton(element, 'Date');
       const sortButton = getSortButton(element, label);
       const sortDescription = sortButton.parentElement?.querySelector('.visually-hidden');
 
@@ -224,25 +216,25 @@ describe('PaymentsTable sorting', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     const nextButton = element.querySelectorAll<HTMLButtonElement>('.pagination button')[1];
-    const paymentIdButton = getSortButton(element, 'Payment ID');
+    const amountButton = getSortButton(element, 'Amount');
 
     nextButton.click();
     fixture.detectChanges();
     expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 2 of 3');
 
-    paymentIdButton.click();
+    amountButton.click();
     fixture.detectChanges();
     expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 1 of 3');
     expect(renderedPaymentIds(element)[0]).toBe('pay_test_0001');
 
-    paymentIdButton.click();
+    amountButton.click();
     fixture.detectChanges();
     expect(renderedPaymentIds(element)[0]).toBe('pay_test_0051');
   });
 
   it('restores a multi-column queue from the URL and reacts to later URL changes', async () => {
     const router = TestBed.inject(Router);
-    await router.navigateByUrl('/?sort=status.asc,amount.desc');
+    await router.navigateByUrl('/?sort=description.asc,amount.desc');
 
     const fixture = TestBed.createComponent(PaymentsTable);
     fixture.componentRef.setInput('payments', [
@@ -255,17 +247,18 @@ describe('PaymentsTable sorting', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    const statusButton = getSortButton(element, 'Status');
+    const statusButton = getSortButton(element, 'Description');
     const amountButton = getSortButton(element, 'Amount');
 
+    // Description ties across the rows, so the Amount-descending tiebreak decides the order.
     expect(renderedPaymentIds(element)).toEqual([
       'pay_failed_large',
-      'pay_failed_small',
       'pay_succeeded',
+      'pay_failed_small',
     ]);
-    expect(getSortButton(element, 'Created').closest('th')?.hasAttribute('aria-sort')).toBe(false);
+    expect(getSortButton(element, 'Date').closest('th')?.hasAttribute('aria-sort')).toBe(false);
     expect(statusButton.closest('th')?.getAttribute('aria-sort')).toBe('ascending');
-    expect(element.querySelector('#payments-sort-description-status')?.textContent).toContain(
+    expect(element.querySelector('#payments-sort-description-description')?.textContent).toContain(
       'Primary sort, ascending.',
     );
     expect(element.querySelector('#payments-sort-description-amount')?.textContent).toContain(

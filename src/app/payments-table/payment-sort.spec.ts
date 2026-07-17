@@ -49,10 +49,10 @@ describe('payment sorting', () => {
       ]);
     }
 
-    const withStatus = cyclePaymentSort(DEFAULT_PAYMENT_SORT, 'status');
+    const withStatus = cyclePaymentSort(DEFAULT_PAYMENT_SORT, 'description');
 
     expect(cyclePaymentSort(withStatus, 'amount')).toEqual([
-      { column: 'status', direction: 'asc' },
+      { column: 'description', direction: 'asc' },
       { column: 'amount', direction: 'asc' },
     ]);
   });
@@ -61,11 +61,15 @@ describe('payment sorting', () => {
     expect(parsePaymentSort(null)).toEqual(DEFAULT_PAYMENT_SORT);
     expect(parsePaymentSort('')).toEqual(DEFAULT_PAYMENT_SORT);
     expect(parsePaymentSort('none')).toEqual([]);
-    expect(parsePaymentSort('status.asc,payment-method.desc,status.desc,unknown.asc')).toEqual([
-      { column: 'status', direction: 'asc' },
+    expect(
+      parsePaymentSort('description.asc,payment-method.desc,description.desc,unknown.asc'),
+    ).toEqual([
+      { column: 'description', direction: 'asc' },
       { column: 'paymentMethod', direction: 'desc' },
     ]);
-    expect(parsePaymentSort('none,status.asc')).toEqual([{ column: 'status', direction: 'asc' }]);
+    expect(parsePaymentSort('none,description.asc')).toEqual([
+      { column: 'description', direction: 'asc' },
+    ]);
     expect(serializePaymentSort(DEFAULT_PAYMENT_SORT)).toBeNull();
     expect(
       serializePaymentSort([
@@ -74,46 +78,48 @@ describe('payment sorting', () => {
       ]),
     ).toBe('created.desc,amount.asc');
     expect(
-      serializePaymentSort([...DEFAULT_PAYMENT_SORT, { column: 'status', direction: 'asc' }]),
-    ).toBe('created.desc,status.asc');
-    expect(serializePaymentSort([{ column: 'status', direction: 'asc' }])).toBe('status.asc');
+      serializePaymentSort([...DEFAULT_PAYMENT_SORT, { column: 'description', direction: 'asc' }]),
+    ).toBe('created.desc,description.asc');
+    expect(serializePaymentSort([{ column: 'description', direction: 'asc' }])).toBe(
+      'description.asc',
+    );
     expect(serializePaymentSort([])).toBe('none');
     expect(parsePaymentSort('none,unknown.asc')).toEqual([]);
     expect(parsePaymentSort('unknown.asc')).toEqual(DEFAULT_PAYMENT_SORT);
   });
 
   it('preserves explicit queue order and canonicalizes legacy empty-base URLs', () => {
-    expect(parsePaymentSort('created.desc,status.asc')).toEqual([
+    expect(parsePaymentSort('created.desc,description.asc')).toEqual([
       { column: 'created', direction: 'desc' },
-      { column: 'status', direction: 'asc' },
+      { column: 'description', direction: 'asc' },
     ]);
-    expect(parsePaymentSort('status.asc,created.desc')).toEqual([
-      { column: 'status', direction: 'asc' },
+    expect(parsePaymentSort('description.asc,created.desc')).toEqual([
+      { column: 'description', direction: 'asc' },
       { column: 'created', direction: 'desc' },
     ]);
     expect(parsePaymentSort('created.asc')).toEqual([{ column: 'created', direction: 'asc' }]);
     expect(parsePaymentSort('none,created.asc')).toEqual([{ column: 'created', direction: 'asc' }]);
-    expect(serializePaymentSort(parsePaymentSort('created.desc,status.asc'))).toBe(
-      'created.desc,status.asc',
+    expect(serializePaymentSort(parsePaymentSort('created.desc,description.asc'))).toBe(
+      'created.desc,description.asc',
     );
-    expect(serializePaymentSort(parsePaymentSort('none,status.asc'))).toBe('status.asc');
+    expect(serializePaymentSort(parsePaymentSort('none,description.asc'))).toBe('description.asc');
     expect(
       serializePaymentSort([
-        { column: 'status', direction: 'asc' },
+        { column: 'description', direction: 'asc' },
         { column: 'created', direction: 'desc' },
       ]),
-    ).toBe('status.asc,created.desc');
+    ).toBe('description.asc,created.desc');
   });
 
   it('round-trips queues with and without the default sort prefix', () => {
     const queues: readonly (readonly PaymentSortCriterion[])[] = [
       DEFAULT_PAYMENT_SORT,
-      [...DEFAULT_PAYMENT_SORT, { column: 'status', direction: 'asc' }],
+      [...DEFAULT_PAYMENT_SORT, { column: 'description', direction: 'asc' }],
       [],
-      [{ column: 'status', direction: 'asc' }],
+      [{ column: 'description', direction: 'asc' }],
       [{ column: 'created', direction: 'asc' }],
       [
-        { column: 'status', direction: 'asc' },
+        { column: 'description', direction: 'asc' },
         { column: 'created', direction: 'desc' },
       ],
     ];
@@ -123,18 +129,13 @@ describe('payment sorting', () => {
     }
   });
 
-  it('sorts Payment ID and Customer by their complete text values', () => {
+  it('sorts Customer by its complete text value', () => {
     const payments = [
       payment('pay_20', { customer: 'zoe@example.com' }),
       payment('pay_3', { customer: 'Amy@example.com' }),
       payment('pay_11', { customer: 'ben@example.com' }),
     ];
 
-    expect(paymentIds(payments, [{ column: 'paymentId', direction: 'asc' }])).toEqual([
-      'pay_3',
-      'pay_11',
-      'pay_20',
-    ]);
     expect(paymentIds(payments, [{ column: 'customer', direction: 'asc' }])).toEqual([
       'pay_3',
       'pay_11',
@@ -176,23 +177,17 @@ describe('payment sorting', () => {
     ]);
   });
 
-  it('sorts Status alphabetically and Created by its absolute timestamp', () => {
+  it('sorts Created by its absolute timestamp', () => {
     const payments = [
       payment('succeeded', { status: 'succeeded', createdAt: '2026-07-13T12:00:00Z' }),
       payment('failed', { status: 'failed', createdAt: '2026-07-13T10:00:00-03:00' }),
-      payment('pending', { status: 'pending', createdAt: '2026-07-13T11:30:00Z' }),
+      payment('disputed', { status: 'disputed', createdAt: '2026-07-13T11:30:00Z' }),
       payment('refunded', { status: 'refunded', createdAt: '2026-07-13T09:00:00Z' }),
     ];
 
-    expect(paymentIds(payments, [{ column: 'status', direction: 'asc' }])).toEqual([
-      'failed',
-      'pending',
-      'refunded',
-      'succeeded',
-    ]);
     expect(paymentIds(payments, [{ column: 'created', direction: 'asc' }])).toEqual([
       'refunded',
-      'pending',
+      'disputed',
       'succeeded',
       'failed',
     ]);
@@ -243,10 +238,10 @@ describe('payment sorting', () => {
 
     expect(
       paymentIds(payments, [
-        { column: 'status', direction: 'asc' },
+        { column: 'description', direction: 'asc' },
         { column: 'amount', direction: 'desc' },
       ]),
-    ).toEqual(['failed', 'largest-succeeded', 'first-succeeded', 'second-succeeded']);
+    ).toEqual(['largest-succeeded', 'first-succeeded', 'second-succeeded', 'failed']);
     expect(payments).toEqual(originalPayments);
   });
 });

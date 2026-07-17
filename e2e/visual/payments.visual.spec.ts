@@ -16,10 +16,7 @@ test('status filter popover matches the baseline', async ({ page }) => {
 
 test('payment details page matches the baseline', async ({ page }) => {
   await gotoPayments(page);
-  await page
-    .getByRole('link', { name: /^View details for payment/ })
-    .first()
-    .click();
+  await page.locator('tbody tr[data-payment-id] .customer').first().click();
   await expect(page).toHaveURL(/\/payments\/pay_/);
 
   await expect(page).toHaveScreenshot('payment-details.png', { fullPage: true });

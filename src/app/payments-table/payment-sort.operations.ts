@@ -61,19 +61,34 @@ export function sortPayments(
 
 function comparePayments(left: Payment, right: Payment, column: PaymentSortColumn): number {
   switch (column) {
-    case 'paymentId':
-      return TEXT_COLLATOR.compare(left.id, right.id);
-    case 'customer':
-      return TEXT_COLLATOR.compare(left.customer, right.customer);
     case 'amount':
       return compareAmounts(left, right);
-    case 'status':
-      return TEXT_COLLATOR.compare(left.status, right.status);
     case 'paymentMethod':
       return comparePaymentMethods(left, right);
+    case 'description':
+      return TEXT_COLLATOR.compare(left.description ?? '', right.description ?? '');
+    case 'customer':
+      return TEXT_COLLATOR.compare(left.customer, right.customer);
     case 'created':
       return Date.parse(left.createdAt) - Date.parse(right.createdAt);
+    case 'refundedDate':
+      return compareNullableDates(left.refundedAt ?? null, right.refundedAt ?? null);
+    case 'declineReason':
+      return TEXT_COLLATOR.compare(left.declineReason ?? '', right.declineReason ?? '');
   }
+}
+
+function compareNullableDates(left: string | null, right: string | null): number {
+  if (left === right) {
+    return 0;
+  }
+
+  // Rows without a date trail the dated ones, regardless of sort direction handling upstream.
+  if (left === null || right === null) {
+    return left === null ? 1 : -1;
+  }
+
+  return Date.parse(left) - Date.parse(right);
 }
 
 function compareAmounts(left: Payment, right: Payment): number {

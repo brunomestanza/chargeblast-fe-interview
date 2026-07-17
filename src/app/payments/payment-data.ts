@@ -4,8 +4,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+const PAYMENT_STATUSES: ReadonlySet<PaymentStatus> = new Set<PaymentStatus>([
+  'succeeded',
+  'failed',
+  'refunded',
+  'disputed',
+  'uncaptured',
+  'canceled',
+  'blocked',
+]);
+
 function isPaymentStatus(value: unknown): value is PaymentStatus {
-  return value === 'succeeded' || value === 'pending' || value === 'failed' || value === 'refunded';
+  return typeof value === 'string' && PAYMENT_STATUSES.has(value as PaymentStatus);
+}
+
+function isOptionalNullableString(value: unknown): value is string | null | undefined {
+  return value === null || value === undefined || typeof value === 'string';
 }
 
 function isLastFour(value: unknown): value is string {
@@ -53,9 +67,12 @@ function isPayment(value: unknown): value is Payment {
     typeof value['currency'] === 'string' &&
     /^[A-Z]{3}$/.test(value['currency']) &&
     isPaymentStatus(value['status']) &&
+    isOptionalNullableString(value['description']) &&
     isPaymentMethod(value['paymentMethod']) &&
     typeof createdAt === 'string' &&
-    !Number.isNaN(Date.parse(createdAt))
+    !Number.isNaN(Date.parse(createdAt)) &&
+    isOptionalNullableString(value['refundedAt']) &&
+    isOptionalNullableString(value['declineReason'])
   );
 }
 
@@ -101,8 +118,17 @@ export function rebasePaymentDates(
   const newestPaymentTime = Math.max(...paymentTimes);
   const dateOffset = referenceTime - newestPaymentTime;
 
-  return payments.map((payment, index) => ({
-    ...payment,
-    createdAt: new Date(paymentTimes[index] + dateOffset).toISOString(),
-  }));
+  return payments.map((payment, index) => {
+    const refundedAt = payment.refundedAt ?? null;
+    const refundedTime = refundedAt === null ? null : Date.parse(refundedAt);
+
+    return {
+      ...payment,
+      createdAt: new Date(paymentTimes[index] + dateOffset).toISOString(),
+      refundedAt:
+        refundedTime === null || Number.isNaN(refundedTime)
+          ? payment.refundedAt
+          : new Date(refundedTime + dateOffset).toISOString(),
+    };
+  });
 }

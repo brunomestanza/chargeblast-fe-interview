@@ -11,7 +11,11 @@ describe('PaymentSkeletonRow', () => {
     const fixture = TestBed.createComponent(PaymentSkeletonRow);
     fixture.detectChanges();
 
-    expect(renderedColumns(fixture.nativeElement as HTMLElement)).toEqual([...PAYMENT_COLUMN_KEYS]);
+    expect(renderedColumns(fixture.nativeElement as HTMLElement)).toEqual([
+      'select',
+      ...PAYMENT_COLUMN_KEYS,
+      'menu',
+    ]);
   });
 
   it('keeps its placeholders aligned with a reordered table', () => {
@@ -19,10 +23,11 @@ describe('PaymentSkeletonRow', () => {
     fixture.componentRef.setInput('columnOrder', [
       'created',
       'amount',
-      'status',
+      'description',
       'customer',
       'paymentMethod',
-      'paymentId',
+      'refundedDate',
+      'declineReason',
     ]);
     fixture.detectChanges();
 
@@ -30,15 +35,18 @@ describe('PaymentSkeletonRow', () => {
     const cells = row.querySelectorAll<HTMLTableCellElement>('td');
 
     expect(renderedColumns(row)).toEqual([
+      'select',
       'created',
       'amount',
-      'status',
+      'description',
       'customer',
       'paymentMethod',
-      'paymentId',
+      'refundedDate',
+      'declineReason',
+      'menu',
     ]);
-    expect(cells[0]?.querySelector('.skeleton-created')).toBeTruthy();
-    expect(cells[5]?.querySelector('.skeleton-payment-id')).toBeTruthy();
+    expect(cells[1]?.querySelector('.skeleton-created')).toBeTruthy();
+    expect(cells[2]?.querySelector('.skeleton-amount')).toBeTruthy();
   });
 });
 

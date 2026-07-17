@@ -31,28 +31,30 @@ describe('payment-columns', () => {
     });
 
     it('drops unknown keys and appends missing columns in canonical order', () => {
-      const normalized = normalizeColumnOrder(['amount', 'unknown', 'amount', 'status']);
+      const normalized = normalizeColumnOrder(['amount', 'unknown', 'amount', 'description']);
       expect(normalized).toEqual([
         'amount',
-        'status',
-        'paymentId',
-        'customer',
+        'description',
         'paymentMethod',
+        'customer',
         'created',
+        'refundedDate',
+        'declineReason',
       ]);
     });
   });
 
   describe('parseStoredColumnOrder', () => {
     it('parses a valid stored order', () => {
-      const stored = serializeColumnOrder(['created', 'amount', 'status'] as never);
+      const stored = serializeColumnOrder(['created', 'amount', 'description'] as never);
       expect(parseStoredColumnOrder(stored)).toEqual([
         'created',
         'amount',
-        'status',
-        'paymentId',
-        'customer',
+        'description',
         'paymentMethod',
+        'customer',
+        'refundedDate',
+        'declineReason',
       ]);
     });
 
@@ -65,10 +67,10 @@ describe('payment-columns', () => {
 
   describe('parseStoredColumnWidths', () => {
     it('keeps only valid, clamped numeric widths', () => {
-      const stored = serializeColumnWidths({ amount: 5_000, status: 40, created: 200 });
+      const stored = serializeColumnWidths({ amount: 5_000, customer: 40, created: 200 });
       expect(parseStoredColumnWidths(stored)).toEqual({
         amount: MAX_COLUMN_WIDTH,
-        status: MIN_COLUMN_WIDTH,
+        customer: MIN_COLUMN_WIDTH,
         created: 200,
       });
     });

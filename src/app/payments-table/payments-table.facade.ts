@@ -170,9 +170,12 @@ export class PaymentsTableFacade {
   readonly statusPaymentCounts = computed<Readonly<Record<PaymentStatus, number>>>(() => {
     const counts: Record<PaymentStatus, number> = {
       succeeded: 0,
-      pending: 0,
       failed: 0,
       refunded: 0,
+      disputed: 0,
+      uncaptured: 0,
+      canceled: 0,
+      blocked: 0,
     };
 
     for (const payment of this.paymentsMatchingNonStatusFilters()) {

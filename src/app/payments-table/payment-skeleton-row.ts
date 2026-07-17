@@ -5,38 +5,22 @@ import type { PaymentTableColumnKey } from './payment-table-column';
 @Component({
   selector: 'tr[appPaymentSkeletonRow]',
   template: `
+    <td class="select-cell" data-column="select">
+      <span class="skeleton-shape skeleton-select"></span>
+    </td>
+
     @for (columnKey of columnOrder(); track columnKey) {
       @switch (columnKey) {
-        @case ('paymentId') {
-          <td data-column="paymentId">
-            <div class="skeleton-payment-id">
-              <span class="skeleton-shape skeleton-payment-id__value"></span>
-              <span class="skeleton-copy" aria-hidden="true">
-                <span class="skeleton-copy__icon"></span>
-                <span class="skeleton-copy__label"></span>
-              </span>
-            </div>
-          </td>
-        }
-        @case ('customer') {
-          <td data-column="customer">
-            <span class="skeleton-shape skeleton-customer"></span>
-          </td>
-        }
         @case ('amount') {
           <td data-column="amount">
             <div class="skeleton-amount">
               <span class="skeleton-shape skeleton-amount__value"></span>
               <span class="skeleton-shape skeleton-amount__currency"></span>
+              <span class="skeleton-shape skeleton-status">
+                <span class="skeleton-status__label"></span>
+                <span class="skeleton-status__dot"></span>
+              </span>
             </div>
-          </td>
-        }
-        @case ('status') {
-          <td data-column="status">
-            <span class="skeleton-shape skeleton-status">
-              <span class="skeleton-status__label"></span>
-              <span class="skeleton-status__dot"></span>
-            </span>
           </td>
         }
         @case ('paymentMethod') {
@@ -54,6 +38,16 @@ import type { PaymentTableColumnKey } from './payment-table-column';
             </div>
           </td>
         }
+        @case ('description') {
+          <td data-column="description">
+            <span class="skeleton-shape skeleton-description"></span>
+          </td>
+        }
+        @case ('customer') {
+          <td data-column="customer">
+            <span class="skeleton-shape skeleton-customer"></span>
+          </td>
+        }
         @case ('created') {
           <td data-column="created">
             <div class="skeleton-created">
@@ -62,8 +56,22 @@ import type { PaymentTableColumnKey } from './payment-table-column';
             </div>
           </td>
         }
+        @case ('refundedDate') {
+          <td data-column="refundedDate">
+            <span class="skeleton-shape skeleton-muted"></span>
+          </td>
+        }
+        @case ('declineReason') {
+          <td data-column="declineReason">
+            <span class="skeleton-shape skeleton-muted"></span>
+          </td>
+        }
       }
     }
+
+    <td class="row-menu-cell" data-column="menu">
+      <span class="skeleton-shape skeleton-menu"></span>
+    </td>
   `,
   styleUrl: './payment-skeleton-row.css',
   host: {

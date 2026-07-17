@@ -105,13 +105,16 @@ describe('StatusFilter', () => {
     expect(element.querySelector('legend')?.textContent).toContain('Select payment statuses');
     expect(Array.from(checkboxes, (checkbox) => checkbox.value)).toEqual([
       'succeeded',
-      'pending',
       'failed',
       'refunded',
+      'disputed',
+      'uncaptured',
+      'canceled',
+      'blocked',
     ]);
     expect(
       Array.from(checkboxes, (checkbox) => checkbox.closest('label')?.textContent?.trim()),
-    ).toEqual(['Succeeded', 'Pending', 'Failed', 'Refunded']);
+    ).toEqual(['Succeeded', 'Failed', 'Refunded', 'Disputed', 'Uncaptured', 'Canceled', 'Blocked']);
     expect(document.activeElement).toBe(checkboxes[0]);
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
   });
@@ -173,7 +176,7 @@ describe('StatusFilter', () => {
   });
 
   it('discards a draft on Escape and restores focus to the trigger', () => {
-    const fixture = createFilter(['pending']);
+    const fixture = createFilter(['disputed']);
     const element = openFilter(fixture);
     const valueChange = vi.fn<(value: readonly PaymentStatus[]) => void>();
     fixture.componentInstance.valueChange.subscribe(valueChange);
@@ -192,7 +195,7 @@ describe('StatusFilter', () => {
 
     openFilter(fixture);
 
-    expect(findCheckbox(element, 'Pending').checked).toBe(true);
+    expect(findCheckbox(element, 'Disputed').checked).toBe(true);
     expect(findCheckbox(element, 'Failed').checked).toBe(false);
   });
 
@@ -213,7 +216,7 @@ describe('StatusFilter', () => {
   });
 
   it('discards drafts when pointer or focus moves outside', () => {
-    const fixture = createFilter(['pending']);
+    const fixture = createFilter(['disputed']);
     const element = openFilter(fixture);
     const outside = document.createElement('button');
     document.body.append(outside);

@@ -43,18 +43,17 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const router = TestBed.inject(Router);
     const firstRow = compiled.querySelector<HTMLTableRowElement>('tbody tr[appPaymentRow]')!;
-    const paymentLink = firstRow.querySelector<HTMLAnchorElement>('.payment-id-link')!;
-    const selectedPaymentId = paymentLink.getAttribute('title')!;
-
-    firstRow.querySelector<HTMLButtonElement>('.copy-action')?.click();
-    await Promise.resolve();
 
     expect(router.url).toBe('/?view=compact');
-    expect(paymentLink.getAttribute('href')).toBe(`/payments/${selectedPaymentId}`);
 
     firstRow.querySelector<HTMLElement>('.customer')?.click();
     await fixture.whenStable();
     fixture.detectChanges();
+
+    const selectedPaymentId = decodeURIComponent(
+      router.url.match(/\/payments\/([^?]+)/)?.[1] ?? '',
+    );
+    expect(selectedPaymentId).toBeTruthy();
 
     const detailsPage = compiled.querySelector<HTMLElement>('app-payment-details-page')!;
     const initialDetails = detailsPage.textContent?.replace(/\s+/g, ' ').trim();
@@ -91,13 +90,13 @@ describe('App', () => {
     expect(router.url).toBe('/?view=compact');
     expect(compiled.querySelector('app-payments-table')).toBeTruthy();
 
-    const returnedPaymentLink = compiled.querySelector<HTMLAnchorElement>('.payment-id-link')!;
-    const returnedPaymentId = returnedPaymentLink.getAttribute('title')!;
-    returnedPaymentLink.click();
+    const returnedRow = compiled.querySelector<HTMLTableRowElement>('tbody tr[appPaymentRow]')!;
+    returnedRow.querySelector<HTMLElement>('.customer')?.click();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(router.url).toBe(`/payments/${returnedPaymentId}?view=compact`);
+    expect(router.url).toContain('/payments/');
+    expect(router.url).toContain('view=compact');
     expect(compiled.querySelector('app-payment-details-page')).toBeTruthy();
   });
 

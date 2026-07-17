@@ -15,12 +15,15 @@ export const payment: Payment = {
   amount: 249,
   currency: 'USD',
   status: 'succeeded',
+  description: 'Subscription update',
   paymentMethod: {
     kind: 'card',
     brand: 'visa',
     lastFour: '4242',
   },
   createdAt: '2026-07-13T14:48:00-03:00',
+  refundedAt: null,
+  declineReason: null,
 };
 
 export const explicitSortPayments: readonly Payment[] = [
@@ -29,7 +32,7 @@ export const explicitSortPayments: readonly Payment[] = [
     id: 'pay_30',
     customer: 'zoe@example.com',
     amount: 200,
-    status: 'pending',
+    status: 'disputed',
     paymentMethod: { kind: 'standalone', method: 'ach', lastFour: '6789' },
     createdAt: '2026-07-13T16:00:00Z',
   },
@@ -72,6 +75,8 @@ export function createPayments(count: number): readonly Payment[] {
     ...payment,
     id: `pay_test_${String(index + 1).padStart(4, '0')}`,
     customer: `customer.${index + 1}@example.com`,
+    // Monotonic with the index so a plain Amount sort mirrors the id order.
+    amount: index + 1,
   }));
 }
 
@@ -108,8 +113,8 @@ export function getSortButton(element: HTMLElement, label: string): HTMLButtonEl
 }
 
 export function renderedPaymentIds(element: HTMLElement): readonly string[] {
-  return Array.from(element.querySelectorAll<HTMLElement>('.payment-id')).map(
-    (paymentId) => paymentId.getAttribute('title') ?? '',
+  return Array.from(element.querySelectorAll<HTMLElement>('tbody tr[data-payment-id]')).map(
+    (row) => row.getAttribute('data-payment-id') ?? '',
   );
 }
 

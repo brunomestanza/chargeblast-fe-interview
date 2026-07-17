@@ -300,7 +300,7 @@ describe('PaymentsTable text search', () => {
 
   it('restores text search immediately and canonicalizes it to the end of the URL', async () => {
     const router = TestBed.inject(Router);
-    await router.navigateByUrl('/?text-search=PAY_30&view=compact&status=pending#payments-table');
+    await router.navigateByUrl('/?text-search=PAY_30&view=compact&status=disputed#payments-table');
 
     const fixture = TestBed.createComponent(PaymentsTable);
     fixture.componentRef.setInput('payments', explicitSortPayments);
@@ -312,7 +312,7 @@ describe('PaymentsTable text search', () => {
 
     expect(element.querySelector<HTMLInputElement>('#payments-text-search')?.value).toBe('PAY_30');
     expect(renderedPaymentIds(element)).toEqual(['pay_30']);
-    expect(router.url).toBe('/?view=compact&status=pending&text-search=PAY_30#payments-table');
+    expect(router.url).toBe('/?view=compact&status=disputed&text-search=PAY_30#payments-table');
   });
 
   it('cancels a pending draft when external URL navigation restores the applied search', async () => {

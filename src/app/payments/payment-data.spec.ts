@@ -8,25 +8,31 @@ const payments: readonly Payment[] = [
     amount: 249,
     currency: 'USD',
     status: 'succeeded',
+    description: 'Subscription update',
     paymentMethod: {
       kind: 'card',
       brand: 'visa',
       lastFour: '4242',
     },
     createdAt: '2026-07-13T17:48:00.000Z',
+    refundedAt: null,
+    declineReason: null,
   },
   {
     id: 'pay_older',
     customer: 'liam.anderson@example.com',
     amount: 12840,
     currency: 'USD',
-    status: 'pending',
+    status: 'refunded',
+    description: 'Subscription update',
     paymentMethod: {
       kind: 'standalone',
       method: 'ach',
       lastFour: '6789',
     },
     createdAt: '2026-07-06T17:48:00.000Z',
+    refundedAt: '2026-07-08T17:48:00.000Z',
+    declineReason: null,
   },
 ];
 

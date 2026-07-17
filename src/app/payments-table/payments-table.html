@@ -100,6 +100,7 @@
         Earlier columns in the queue take priority.
       </caption>
       <colgroup>
+        <col class="select-column" data-column="select" />
         @for (column of columns.orderedColumns(); track column.key) {
           <col
             [class]="column.columnClass"
@@ -107,9 +108,21 @@
             [style.width.px]="columns.columnWidth(column.key)"
           />
         }
+        <col class="menu-column" data-column="menu" />
       </colgroup>
       <thead>
         <tr>
+          <th scope="col" class="column-header select-header" data-column="select">
+            <label class="row-select">
+              <input
+                type="checkbox"
+                [checked]="pageAllSelected()"
+                [indeterminate]="pageSomeSelected()"
+                (change)="toggleSelectAllOnPage()"
+                aria-label="Select all payments on this page"
+              />
+            </label>
+          </th>
           @for (column of columns.orderedColumns(); track column.key) {
             <th
               scope="col"
@@ -168,6 +181,9 @@
               ></span>
             </th>
           }
+          <th scope="col" class="column-header menu-header" data-column="menu">
+            <span class="visually-hidden">Row actions</span>
+          </th>
         </tr>
       </thead>
       @if (view.isLoading()) {
@@ -180,7 +196,7 @@
         <tbody>
           @if (view.paginatedPayments().length === 0) {
             <tr class="payments-empty">
-              <td colspan="6">No payments match the selected filters.</td>
+              <td colspan="9">No payments match the selected filters.</td>
             </tr>
           } @else {
             @for (payment of view.paginatedPayments(); track payment.id) {
@@ -191,8 +207,10 @@
                 [currentTime]="view.currentTime()"
                 [timeZone]="view.timeZone()"
                 [columnOrder]="columns.columnOrder()"
+                [selected]="isRowSelected(payment.id)"
                 (copyRequested)="view.copyPaymentId($event)"
                 (detailsRequested)="openPaymentDetails($event)"
+                (selectionToggled)="toggleRowSelection($event)"
               ></tr>
             }
           }

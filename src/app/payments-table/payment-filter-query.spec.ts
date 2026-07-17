@@ -115,10 +115,10 @@ describe('payment filter query codec', () => {
 
   describe('status', () => {
     it('parses known CSV values, preserving first-seen order', () => {
-      expect(parseStatusQuery(' failed,unknown,succeeded,failed,,pending ')).toEqual([
+      expect(parseStatusQuery(' failed,unknown,succeeded,failed,,disputed ')).toEqual([
         'failed',
         'succeeded',
-        'pending',
+        'disputed',
       ]);
     });
 

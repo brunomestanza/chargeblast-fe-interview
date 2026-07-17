@@ -51,7 +51,7 @@ test('table rows only offer tab stops that do something', async ({ page }) => {
     stops.push(stop);
   }
 
-  expect(new Set(stops)).toEqual(new Set(['a.payment-id', 'button.copy-action']));
+  expect(new Set(stops)).toEqual(new Set(['input.', 'button.row-menu']));
   expect(stops.length).toBe(rowCount * 2);
 });
 
@@ -82,10 +82,7 @@ test('empty search results have no accessibility violations', async ({ page }) =
 
 test('payment details page has no accessibility violations', async ({ page }) => {
   await gotoPayments(page);
-  await page
-    .getByRole('link', { name: /^View details for payment/ })
-    .first()
-    .click();
+  await page.locator('tbody tr[data-payment-id] .customer').first().click();
   await expect(page).toHaveURL(/\/payments\/pay_/);
 
   const results = await scan(page).analyze();
