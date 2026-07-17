@@ -22,6 +22,9 @@ td:last-child {
 
 td[data-column='amount'] {
   padding-right: 12px;
+  /* Keep the amount + currency + status badge from spilling into the next
+     column when a large value fills the fixed-width cell. */
+  overflow: hidden;
 }
 
 td[data-column='select'] {

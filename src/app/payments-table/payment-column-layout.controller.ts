@@ -24,7 +24,7 @@ const PAYMENT_TABLE_COLUMNS: readonly PaymentTableColumn[] = [
     label: PAYMENT_TABLE_COLUMN_LABELS.amount,
     align: 'left',
     columnClass: 'amount-column',
-    defaultWidth: 210,
+    defaultWidth: 280,
   },
   {
     key: 'paymentMethod',
