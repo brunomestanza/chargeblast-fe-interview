@@ -58,7 +58,7 @@ describe('DateRangeFilter', () => {
     expect(element.querySelector('#payments-date-range-filter-title')?.textContent).toBe(
       'Filtered by: date',
     );
-    expect(trigger.getAttribute('aria-label')).toBe('Add Date filter');
+    expect(trigger.getAttribute('aria-label')).toBe('Add Date and time filter');
     expect(Array.from(operator?.options ?? []).map((option) => option.text)).toEqual([
       'is in the last',
       'is equal to',

@@ -159,11 +159,11 @@ h1 {
   justify-content: space-between;
   width: 100%;
   min-width: 0;
-  min-height: 60px;
+  min-height: 40px;
   margin-top: 24px;
   margin-bottom: 16px;
-  padding: 16px;
-  gap: 32px;
+  padding: 8px 12px;
+  gap: 24px;
   border-radius: 8px;
   color: #3c4f69;
   background: #f4f7fa;
@@ -181,14 +181,14 @@ h1 {
   align-items: flex-start;
   flex: 1 1 auto;
   min-width: 0;
-  gap: 16px;
+  gap: 8px;
 }
 
 .invoice-suggestion__message svg {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 16px;
-  margin-top: 2px;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  margin-top: 3px;
   fill: #50617a;
 }
 
@@ -200,10 +200,6 @@ h1 {
   line-height: 20px;
 }
 
-.invoice-suggestion__message .invoice-suggestion__sparkle {
-  fill: #675dff;
-}
-
 .invoice-suggestion__badge {
   margin-right: 2px;
   color: #1a2c44;
@@ -212,7 +208,7 @@ h1 {
 
 .invoice-suggestion__actions {
   flex: 0 0 auto;
-  gap: 12px;
+  gap: 10px;
 }
 
 .invoice-suggestion__link {
@@ -225,14 +221,21 @@ h1 {
   touch-action: manipulation;
 }
 
+.invoice-suggestion__divider {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 20px;
+  background: #d9dee4;
+}
+
 .invoice-suggestion__dismiss {
   position: relative;
   z-index: 2;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-right: -8px;
-  padding: 8px;
+  width: 24px;
+  height: 24px;
+  margin-right: -4px;
+  padding: 6px;
   border: 0;
   border-radius: 6px;
   color: #545969;

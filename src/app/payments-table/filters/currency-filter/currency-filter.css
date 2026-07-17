@@ -1,0 +1,234 @@
+:host {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.currency-filter__popover {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 4px);
+  left: 0;
+  box-sizing: border-box;
+  width: 264px;
+  max-width: calc(100vw - 16px);
+  overflow: hidden;
+  color: #1a2c44;
+  background: #ffffff;
+  border: 1px solid #d4dee9;
+  border-radius: 8px;
+  box-shadow:
+    0 5px 15px rgba(0, 0, 0, 0.12),
+    0 15px 35px rgba(48, 49, 61, 0.08);
+  transform-origin: top left;
+  animation: currency-filter-enter 150ms cubic-bezier(0, 0.09, 0.4, 1);
+}
+
+h2 {
+  margin: 0;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.currency-filter__options {
+  display: grid;
+  max-height: 204px;
+  margin: 0;
+  padding: 0 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 0;
+}
+
+.currency-filter__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  padding-inline-start: 4px;
+  border-radius: 4px;
+  color: #1a2c44;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.currency-filter__option input {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  appearance: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.currency-filter__checkbox {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 14px;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px #d4dee9,
+    0 1px 1px rgba(0, 0, 0, 0.12),
+    0 2px 5px rgba(48, 49, 61, 0.08);
+  pointer-events: none;
+}
+
+.currency-filter__option input:checked + .currency-filter__checkbox {
+  background: #625afa;
+  box-shadow: 0 0 0 1px #625afa;
+}
+
+.currency-filter__checkmark {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  inset-inline-start: 4px;
+  width: 14px;
+  height: 14px;
+  fill: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.currency-filter__option input:checked ~ .currency-filter__checkmark {
+  opacity: 1;
+}
+
+.currency-filter__option input:focus-visible {
+  outline: none;
+}
+
+.currency-filter__option input:focus-visible + .currency-filter__checkbox {
+  outline: 2px solid #0196ed;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px #625afa;
+}
+
+.currency-filter__label {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.currency-filter__footer {
+  position: sticky;
+  z-index: 1;
+  bottom: 0;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.currency-filter__apply {
+  display: block;
+  width: 100%;
+  height: 28px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  background: #533afd;
+  box-shadow: 0 0 0 1px #533afd;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.currency-filter__apply:focus-visible {
+  outline: 2px solid #0196ed;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px #533afd;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .currency-filter__option:hover {
+    background: #f4f7fa;
+  }
+
+  .currency-filter__apply:hover {
+    background: #4b2de8;
+    box-shadow: 0 0 0 1px #4b2de8;
+  }
+}
+
+@keyframes currency-filter-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .currency-filter__popover {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  :host {
+    position: static;
+  }
+}
+
+@media (forced-colors: active) {
+  .currency-filter__popover {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .currency-filter__checkbox {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .currency-filter__apply {
+    border: 1px solid ButtonText;
+    color: ButtonText;
+    background: ButtonFace;
+    box-shadow: none;
+  }
+
+  .currency-filter__apply:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .currency-filter__option input:focus-visible + .currency-filter__checkbox {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

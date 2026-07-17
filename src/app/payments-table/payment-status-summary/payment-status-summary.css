@@ -25,13 +25,12 @@
 
 .payment-status-summary__option {
   display: flex;
-  flex: 1 0 168px;
-  align-items: flex-start;
-  justify-content: center;
-  flex-direction: column;
-  height: 66px;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: flex-start;
+  height: 44px;
   min-width: 80px;
-  padding: 11px;
+  padding: 0 14px;
   border: 0;
   border-radius: 8px;
   color: #3c4f69;
@@ -47,21 +46,12 @@
   touch-action: manipulation;
 }
 
-.payment-status-summary__label,
-.payment-status-summary__count {
+.payment-status-summary__label {
   display: block;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.payment-status-summary__count {
-  margin-top: 4px;
-  color: currentColor;
-  font-size: 16px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
 }
 
 .payment-status-summary__option--selected {

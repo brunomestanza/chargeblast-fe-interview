@@ -51,6 +51,10 @@
         [value]="view.amountRange()"
         (valueChange)="view.changeAmountRange($event)"
       />
+      <app-currency-filter
+        [value]="view.selectedCurrencies()"
+        (valueChange)="view.changeCurrencies($event)"
+      />
       <app-status-filter
         [value]="view.selectedStatuses()"
         (valueChange)="view.changeStatuses($event)"
@@ -59,6 +63,7 @@
         [value]="view.selectedPaymentMethods()"
         (valueChange)="view.changePaymentMethods($event)"
       />
+      <app-filter-button label="More filters" />
       <app-text-search-filter
         [value]="view.textSearchInput()"
         (valueChange)="view.changeTextSearch($event)"

@@ -8,6 +8,10 @@ import {
   type PaymentMethodFilterValue,
 } from './filters/payment-method-filter/payment-method-filter-options';
 import {
+  isCurrencyFilterValue,
+  type CurrencyFilterValue,
+} from './filters/currency-filter/currency-filter-options';
+import {
   formatUsdCentsForQuery,
   isValidAmountRange,
   parseUsdAmount,
@@ -18,6 +22,7 @@ import { PAYMENT_STATUS_OPTIONS, type PaymentStatus } from '../payments/payment'
 export const DATE_RANGE_QUERY_PARAM = 'date-range';
 export const STATUS_QUERY_PARAM = 'status';
 export const PAYMENT_METHOD_QUERY_PARAM = 'payment-method';
+export const CURRENCY_QUERY_PARAM = 'currency';
 export const AMOUNT_RANGE_QUERY_PARAM = 'amount-range';
 export const TEXT_SEARCH_QUERY_PARAM = 'text-search';
 
@@ -92,6 +97,14 @@ export function serializePaymentMethodQuery(
   methods: readonly PaymentMethodFilterValue[],
 ): string | null {
   return serializeCsvQuery(methods, isPaymentMethodFilterValue);
+}
+
+export function parseCurrencyQuery(value: string | null): readonly CurrencyFilterValue[] {
+  return parseCsvQuery(value, isCurrencyFilterValue);
+}
+
+export function serializeCurrencyQuery(currencies: readonly CurrencyFilterValue[]): string | null {
+  return serializeCsvQuery(currencies, isCurrencyFilterValue);
 }
 
 export function parseAmountRangeQuery(value: string | null): AmountRange | null {

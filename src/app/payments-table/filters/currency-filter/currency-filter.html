@@ -1,0 +1,52 @@
+<app-filter-button
+  label="Currency"
+  [value]="valueLabel()"
+  [expanded]="open()"
+  [controls]="popoverId()"
+  (editRequested)="toggleFilter()"
+  (clearRequested)="clearFilter()"
+/>
+
+@if (open()) {
+  <section
+    class="currency-filter__popover"
+    [id]="popoverId()"
+    role="dialog"
+    [attr.aria-labelledby]="popoverId() + '-title'"
+  >
+    <h2 [id]="popoverId() + '-title'">Filtered by: currency</h2>
+
+    <fieldset class="currency-filter__options">
+      <legend class="visually-hidden">Select currencies</legend>
+
+      @for (option of options; track option.value) {
+        <label class="currency-filter__option">
+          <input
+            #currencyCheckbox
+            type="checkbox"
+            name="payment-currency"
+            [value]="option.value"
+            [checked]="isSelected(option.value)"
+            (change)="updateCurrency(option.value, currencyCheckbox.checked)"
+          />
+          <span class="currency-filter__checkbox" aria-hidden="true"></span>
+          <svg
+            class="currency-filter__checkmark"
+            viewBox="0 0 14 14"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M9.846 3.801a.929.929 0 0 1 1.37 0 1.076 1.076 0 0 1 0 1.456l-4.64 4.94a.929.929 0 0 1-1.37 0L2.784 7.623a1.076 1.076 0 0 1 0-1.456.929.929 0 0 1 1.37 0L5.89 8.013l3.955-4.212Z"
+            />
+          </svg>
+          <span class="currency-filter__label">{{ option.label }}</span>
+        </label>
+      }
+    </fieldset>
+
+    <footer class="currency-filter__footer">
+      <button type="button" class="currency-filter__apply" (click)="applyFilter()">Apply</button>
+    </footer>
+  </section>
+}

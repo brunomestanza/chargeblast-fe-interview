@@ -1,9 +1,11 @@
 import type { AmountRange } from './filters/amount-range-filter/amount-range';
+import type { CurrencyFilterValue } from './filters/currency-filter/currency-filter-options';
 import type { DateRangeSelection } from './filters/date-range-filter/date-range-selection';
 import type { PaymentMethodFilterValue } from './filters/payment-method-filter/payment-method-filter-options';
 import type { PaymentStatus } from '../payments/payment';
 import {
   serializeAmountRangeQuery,
+  serializeCurrencyQuery,
   serializeDateRangeQuery,
   serializePaymentMethodQuery,
   serializeStatusQuery,
@@ -17,6 +19,7 @@ export interface PaymentViewState {
   readonly dateRange: DateRangeSelection | null;
   readonly selectedStatuses: readonly PaymentStatus[];
   readonly selectedPaymentMethods: readonly PaymentMethodFilterValue[];
+  readonly selectedCurrencies: readonly CurrencyFilterValue[];
   readonly amountRange: AmountRange | null;
   readonly textSearch: string | null;
 }
@@ -26,6 +29,7 @@ export const INITIAL_PAYMENT_VIEW_STATE: PaymentViewState = {
   dateRange: null,
   selectedStatuses: [],
   selectedPaymentMethods: [],
+  selectedCurrencies: [],
   amountRange: null,
   textSearch: null,
 };
@@ -36,6 +40,7 @@ export function paymentViewStateSignature(viewState: PaymentViewState): string {
     serializeDateRangeQuery(viewState.dateRange),
     serializeStatusQuery(viewState.selectedStatuses),
     serializePaymentMethodQuery(viewState.selectedPaymentMethods),
+    serializeCurrencyQuery(viewState.selectedCurrencies),
     serializeAmountRangeQuery(viewState.amountRange),
     serializeTextSearchQuery(viewState.textSearch),
   ]);

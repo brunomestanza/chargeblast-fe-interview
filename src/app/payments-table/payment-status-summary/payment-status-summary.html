@@ -21,12 +21,6 @@
         (keydown)="moveFocus($event, optionIndex)"
       >
         <span class="payment-status-summary__label">{{ option.label }}</span>
-        <span class="payment-status-summary__count">
-          {{ option.countLabel }}
-          <span class="visually-hidden">
-            {{ option.count === 1 ? 'payment' : 'payments' }}
-          </span>
-        </span>
       </button>
     }
   </div>

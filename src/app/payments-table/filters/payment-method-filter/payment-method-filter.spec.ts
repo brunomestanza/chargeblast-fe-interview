@@ -91,7 +91,7 @@ describe('PaymentMethodFilter', () => {
     const element = fixture.nativeElement as HTMLElement;
     const trigger = element.querySelector<HTMLButtonElement>('.filter-button__trigger')!;
 
-    expect(trigger.getAttribute('aria-label')).toBe('Add Payment Method filter');
+    expect(trigger.getAttribute('aria-label')).toBe('Add Payment method filter');
     expect(element.querySelector('.filter-button__clear')).toBeNull();
 
     openFilter(fixture);
@@ -183,7 +183,7 @@ describe('PaymentMethodFilter', () => {
       element
         .querySelector<HTMLButtonElement>('.filter-button__trigger')
         ?.getAttribute('aria-label'),
-    ).toBe('Edit Payment Method filter, currently Visa, Apple Pay, ACH Direct Debit, PayPal');
+    ).toBe('Edit Payment method filter, currently Visa, Apple Pay, ACH Direct Debit, PayPal');
   });
 
   it('discards a draft on Escape and restores focus to the trigger', () => {

@@ -59,9 +59,8 @@
 
 .top-navigation__search input {
   width: 100%;
-  max-width: 360px;
-  height: 36px;
-  padding: 7px 12px 7px 32px;
+  height: 32px;
+  padding: 6px 12px 6px 30px;
   border-radius: 8px;
   color: #1a1f36;
   background: #f5f6f8;
@@ -69,7 +68,6 @@
   font-size: 14px;
   line-height: 20px;
   outline: none;
-  transition: max-width 100ms ease;
 }
 
 .top-navigation__search input::placeholder {
@@ -80,10 +78,6 @@
 .top-navigation__search input:focus-visible {
   outline: 2px solid #303750;
   outline-offset: 2px;
-}
-
-.top-navigation__search:focus-within input {
-  max-width: 100%;
 }
 
 .top-navigation__actions {
@@ -116,19 +110,19 @@
 }
 
 .top-navigation__product-links {
-  height: 36px;
+  height: 28px;
   flex: 0 0 auto;
   padding: 0 2px;
-  border-radius: 18px;
+  border-radius: 14px;
   background: #ffffff;
   box-shadow: 0 0 0 1px #e7e8e9;
 }
 
 .top-navigation__product-links a {
   position: relative;
-  width: 40px;
-  height: 36px;
-  flex: 0 0 40px;
+  width: 30px;
+  height: 28px;
+  flex: 0 0 30px;
   justify-content: center;
   border-radius: 50%;
   color: #50556b;
@@ -141,8 +135,8 @@
 
 .top-navigation__product-links app-dashboard-icon,
 .top-navigation__product-links svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .top-navigation__product-links svg {
@@ -159,12 +153,12 @@
 
 .top-navigation__product-mark {
   display: grid;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 4px;
   color: #ffffff;
   background: #121722;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   line-height: 1;
   place-items: center;
@@ -172,14 +166,14 @@
 
 .top-navigation__utility-links {
   flex: 0 0 auto;
-  gap: 8px;
+  gap: 4px;
 }
 
 .top-navigation__utility-links a {
   position: relative;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
   justify-content: center;
   border-radius: 50%;
   color: #50556b;
@@ -191,8 +185,8 @@
 }
 
 .top-navigation__utility-links svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   fill: currentColor;
 }
 
@@ -213,9 +207,9 @@
 }
 
 .top-navigation__utility-links .top-navigation__create-link {
-  width: 36px;
-  height: 36px;
-  flex-basis: 36px;
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
   color: #ffffff;
   background: transparent;
 }

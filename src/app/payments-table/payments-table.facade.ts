@@ -17,10 +17,15 @@ import {
   paymentMethodFilterLabel,
   type PaymentMethodFilterValue,
 } from './filters/payment-method-filter/payment-method-filter-options';
+import {
+  currencyFilterLabel,
+  type CurrencyFilterValue,
+} from './filters/currency-filter/currency-filter-options';
 import { PaymentCsvDownloadAdapter } from './payment-csv-download.adapter';
 import {
   parseTextSearchQuery,
   serializeAmountRangeQuery,
+  serializeCurrencyQuery,
   serializeDateRangeQuery,
   serializePaymentMethodQuery,
   serializeStatusQuery,
@@ -99,6 +104,8 @@ export class PaymentsTableFacade {
   readonly selectedStatuses = this.requestedStatuses.asReadonly();
   private readonly requestedPaymentMethods = signal<readonly PaymentMethodFilterValue[]>([]);
   readonly selectedPaymentMethods = this.requestedPaymentMethods.asReadonly();
+  private readonly requestedCurrencies = signal<readonly CurrencyFilterValue[]>([]);
+  readonly selectedCurrencies = this.requestedCurrencies.asReadonly();
   private readonly requestedAmountRange = signal<AmountRange | null>(null);
   readonly amountRange = this.requestedAmountRange.asReadonly();
   private readonly textSearchInputState = signal('');
@@ -124,6 +131,7 @@ export class PaymentsTableFacade {
       this.requestedDateRange() !== null ||
       this.requestedStatuses().length > 0 ||
       this.requestedPaymentMethods().length > 0 ||
+      this.requestedCurrencies().length > 0 ||
       this.requestedAmountRange() !== null ||
       this.requestedTextSearch() !== null ||
       parseTextSearchQuery(this.textSearchInputState()) !== null,
@@ -145,12 +153,14 @@ export class PaymentsTableFacade {
     const appliedViewState = this.appliedViewState();
     const dateRange = this.effectiveDateRange();
     const selectedPaymentMethods = appliedViewState.selectedPaymentMethods;
+    const selectedCurrencies = appliedViewState.selectedCurrencies;
     const amountRange = appliedViewState.amountRange;
     const textSearch = createPaymentTextSearch(appliedViewState.textSearch);
 
     if (
       dateRange === null &&
       selectedPaymentMethods.length === 0 &&
+      selectedCurrencies.length === 0 &&
       amountRange === null &&
       textSearch === null
     ) {
@@ -162,6 +172,8 @@ export class PaymentsTableFacade {
       (payment) =>
         (dateRange === null || isTimestampInDateRange(payment.createdAt, dateRange, timeZone)) &&
         matchesPaymentMethodFilter(payment.paymentMethod, selectedPaymentMethods) &&
+        (selectedCurrencies.length === 0 ||
+          selectedCurrencies.includes(payment.currency as CurrencyFilterValue)) &&
         (amountRange === null || matchesAmountRange(payment, amountRange)) &&
         matchesPaymentTextSearch(payment, textSearch),
     );
@@ -443,6 +455,23 @@ export class PaymentsTableFacade {
     });
   }
 
+  changeCurrencies(currencies: readonly CurrencyFilterValue[]): void {
+    this.requestedCurrencies.set([...currencies]);
+    this.requestPayments(() => {
+      const paymentCount = this.paymentCountSummary();
+
+      if (currencies.length === 0) {
+        this.feedback.announceFilter(`Currency filter cleared. ${paymentCount} found.`);
+        return;
+      }
+
+      const currencyLabel = currencies.map(currencyFilterLabel).join(', ');
+      this.feedback.announceFilter(
+        `Currency filter applied: ${currencyLabel}. ${paymentCount} found.`,
+      );
+    });
+  }
+
   changeAmountRange(range: AmountRange | null): void {
     this.requestedAmountRange.set(range);
     this.requestPayments(() => {
@@ -479,6 +508,7 @@ export class PaymentsTableFacade {
     this.requestedDateRange.set(null);
     this.requestedStatuses.set([]);
     this.requestedPaymentMethods.set([]);
+    this.requestedCurrencies.set([]);
     this.requestedAmountRange.set(null);
     this.textSearchInputState.set('');
     this.requestedTextSearch.set(null);
@@ -494,6 +524,7 @@ export class PaymentsTableFacade {
     const nextDateRange = viewState.dateRange;
     const nextStatuses = viewState.selectedStatuses;
     const nextPaymentMethods = viewState.selectedPaymentMethods;
+    const nextCurrencies = viewState.selectedCurrencies;
     const nextAmountRange = viewState.amountRange;
     const nextTextSearch = viewState.textSearch;
     const sortChanged =
@@ -504,6 +535,8 @@ export class PaymentsTableFacade {
       serializeStatusQuery(this.requestedStatuses()) !== serializeStatusQuery(nextStatuses) ||
       serializePaymentMethodQuery(this.requestedPaymentMethods()) !==
         serializePaymentMethodQuery(nextPaymentMethods) ||
+      serializeCurrencyQuery(this.requestedCurrencies()) !==
+        serializeCurrencyQuery(nextCurrencies) ||
       serializeAmountRangeQuery(this.requestedAmountRange()) !==
         serializeAmountRangeQuery(nextAmountRange);
     const textSearchChanged =
@@ -519,6 +552,7 @@ export class PaymentsTableFacade {
       this.requestedDateRange.set(nextDateRange);
       this.requestedStatuses.set(nextStatuses);
       this.requestedPaymentMethods.set(nextPaymentMethods);
+      this.requestedCurrencies.set(nextCurrencies);
       this.requestedAmountRange.set(nextAmountRange);
     }
 
@@ -545,6 +579,7 @@ export class PaymentsTableFacade {
             nextDateRange,
             nextStatuses,
             nextPaymentMethods,
+            nextCurrencies,
             nextAmountRange,
             nextTextSearch,
           ),
@@ -571,6 +606,7 @@ export class PaymentsTableFacade {
     dateRange: DateRangeSelection | null,
     statuses: readonly PaymentStatus[],
     paymentMethods: readonly PaymentMethodFilterValue[],
+    currencies: readonly CurrencyFilterValue[],
     amountRange: AmountRange | null,
     textSearch: string | null,
   ): string {
@@ -586,6 +622,10 @@ export class PaymentsTableFacade {
 
     if (paymentMethods.length > 0) {
       filters.push('Payment method ' + paymentMethods.map(paymentMethodFilterLabel).join(', '));
+    }
+
+    if (currencies.length > 0) {
+      filters.push('Currency ' + currencies.map(currencyFilterLabel).join(', '));
     }
 
     if (amountRange !== null) {
@@ -681,6 +721,7 @@ export class PaymentsTableFacade {
       dateRange: this.requestedDateRange(),
       selectedStatuses: [...this.requestedStatuses()],
       selectedPaymentMethods: [...this.requestedPaymentMethods()],
+      selectedCurrencies: [...this.requestedCurrencies()],
       amountRange: this.requestedAmountRange(),
       textSearch: this.requestedTextSearch(),
     };

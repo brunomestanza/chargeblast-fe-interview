@@ -16,7 +16,9 @@ import { ExportPaymentsButton } from './export-payments-button/export-payments-b
 import { ExportSuccessToast } from './export-success-toast/export-success-toast';
 import { AmountRangeFilter } from './filters/amount-range-filter/amount-range-filter';
 import { CleanFiltersButton } from './filters/clean-filters-button/clean-filters-button';
+import { CurrencyFilter } from './filters/currency-filter/currency-filter';
 import { DateRangeFilter } from './filters/date-range-filter/date-range-filter';
+import { FilterButton } from './filters/filter-button/filter-button';
 import { PaymentMethodFilter } from './filters/payment-method-filter/payment-method-filter';
 import { StatusFilter } from './filters/status-filter/status-filter';
 import { TextSearchFilter } from './filters/text-search-filter/text-search-filter';
@@ -44,6 +46,8 @@ export { TEXT_SEARCH_DEBOUNCE_MS } from './payments-table.facade';
     StatusFilter,
     PaymentMethodFilter,
     AmountRangeFilter,
+    CurrencyFilter,
+    FilterButton,
     TextSearchFilter,
     CleanFiltersButton,
     EditColumnsButton,

@@ -4,16 +4,19 @@ import { ActivatedRoute, NavigationEnd, Router, type ParamMap } from '@angular/r
 import { filter, take } from 'rxjs';
 import {
   AMOUNT_RANGE_QUERY_PARAM,
+  CURRENCY_QUERY_PARAM,
   DATE_RANGE_QUERY_PARAM,
   PAYMENT_METHOD_QUERY_PARAM,
   STATUS_QUERY_PARAM,
   TEXT_SEARCH_QUERY_PARAM,
   parseAmountRangeQuery,
+  parseCurrencyQuery,
   parseDateRangeQuery,
   parsePaymentMethodQuery,
   parseStatusQuery,
   parseTextSearchQuery,
   serializeAmountRangeQuery,
+  serializeCurrencyQuery,
   serializeDateRangeQuery,
   serializePaymentMethodQuery,
   serializeStatusQuery,
@@ -29,6 +32,7 @@ const MANAGED_VIEW_QUERY_PARAMS = new Set([
   DATE_RANGE_QUERY_PARAM,
   STATUS_QUERY_PARAM,
   PAYMENT_METHOD_QUERY_PARAM,
+  CURRENCY_QUERY_PARAM,
   AMOUNT_RANGE_QUERY_PARAM,
   TEXT_SEARCH_QUERY_PARAM,
 ]);
@@ -57,6 +61,7 @@ export function parsePaymentViewQuery(queryParams: ParamMap, today: string): Pay
     dateRange: parseDateRangeQuery(queryParams.get(DATE_RANGE_QUERY_PARAM), today),
     selectedStatuses: parseStatusQuery(queryParams.get(STATUS_QUERY_PARAM)),
     selectedPaymentMethods: parsePaymentMethodQuery(queryParams.get(PAYMENT_METHOD_QUERY_PARAM)),
+    selectedCurrencies: parseCurrencyQuery(queryParams.get(CURRENCY_QUERY_PARAM)),
     amountRange: parseAmountRangeQuery(queryParams.get(AMOUNT_RANGE_QUERY_PARAM)),
     textSearch: parseTextSearchQuery(queryParams.get(TEXT_SEARCH_QUERY_PARAM)),
   };
@@ -86,6 +91,11 @@ export function hasCanonicalPaymentViewQuery(
       queryParams,
       PAYMENT_METHOD_QUERY_PARAM,
       serializePaymentMethodQuery(viewState.selectedPaymentMethods),
+    ) &&
+    isCanonicalQueryParam(
+      queryParams,
+      CURRENCY_QUERY_PARAM,
+      serializeCurrencyQuery(viewState.selectedCurrencies),
     ) &&
     isCanonicalQueryParam(
       queryParams,
@@ -211,6 +221,11 @@ export class PaymentViewUrlAdapter {
       queryParams,
       PAYMENT_METHOD_QUERY_PARAM,
       serializePaymentMethodQuery(viewState.selectedPaymentMethods),
+    );
+    appendQueryParam(
+      queryParams,
+      CURRENCY_QUERY_PARAM,
+      serializeCurrencyQuery(viewState.selectedCurrencies),
     );
     appendQueryParam(
       queryParams,
