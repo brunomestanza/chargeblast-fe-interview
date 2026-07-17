@@ -11,19 +11,49 @@
 
       <div class="payment-summary__title-row">
         <h1 id="payment-details-title">
-          {{ details.amount }} <span class="payment-summary__currency">{{ details.currency }}</span>
+          {{ details().amount }}
+          <span class="payment-summary__currency">{{ details().currency }}</span>
         </h1>
-        <span class="status-badge">
-          <svg aria-hidden="true" viewBox="0 0 12 12" focusable="false">
-            <path d="m3.25 3.25 5.5 5.5m0-5.5-5.5 5.5" />
+        <span
+          class="status-badge"
+          [class]="'status-badge status-badge--' + details().statusVariant"
+        >
+          {{ details().status }}
+          <svg class="status-badge__icon" aria-hidden="true" viewBox="0 0 16 16" focusable="false">
+            @switch (details().statusVariant) {
+              @case ('succeeded') {
+                <path d="m3.25 8.15 3.05 3.1 6.45-6.5" />
+              }
+              @case ('failed') {
+                <path d="m4.5 4.5 7 7m0-7-7 7" />
+              }
+              @case ('canceled') {
+                <path d="m4.5 4.5 7 7m0-7-7 7" />
+              }
+              @case ('refunded') {
+                <path d="M5.5 5.25H3v-2.5" />
+                <path d="M3.25 5.25A5.25 5.25 0 1 1 3.4 11" />
+              }
+              @case ('uncaptured') {
+                <circle cx="8" cy="8" r="5.25" />
+                <path d="M8 5v3.25l2.25 1.25" />
+              }
+              @case ('disputed') {
+                <circle cx="8" cy="8" r="5.25" />
+                <path d="M8 5.25v3.25M8 10.75h.01" />
+              }
+              @case ('blocked') {
+                <circle cx="8" cy="8" r="5.25" />
+                <path d="M5.5 8h5" />
+              }
+            }
           </svg>
-          {{ details.status }}
         </span>
       </div>
 
       <p>
         Charged to
-        <a class="inline-link" routerLink="/mock">{{ details.customer.name }}</a>
+        <a class="inline-link" routerLink="/mock">{{ details().customer.name }}</a>
       </p>
     </div>
 
@@ -80,7 +110,7 @@
         </div>
 
         <ol class="activity-list">
-          @for (activity of details.activity; track activity.occurredAt) {
+          @for (activity of details().activity; track activity.occurredAt) {
             <li class="activity-item">
               <span
                 class="activity-icon"
@@ -123,9 +153,9 @@
         <div class="checkout-customer">
           <span>Customer</span>
           <div>
-            <a class="inline-link" routerLink="/mock">{{ details.customer.email }}</a>
-            <span>{{ details.customer.name }}</span>
-            <span>{{ details.customer.country }}</span>
+            <a class="inline-link" routerLink="/mock">{{ details().customer.email }}</a>
+            <span>{{ details().customer.name }}</span>
+            <span>{{ details().customer.country }}</span>
           </div>
         </div>
 
@@ -150,20 +180,20 @@
             <tbody>
               <tr>
                 <td>
-                  <strong>{{ details.description }}</strong>
-                  <span>{{ details.statementDescriptor }}</span>
+                  <strong>{{ details().description }}</strong>
+                  <span>{{ details().statementDescriptor }}</span>
                 </td>
                 <td class="checkout-table__quantity numeric-value">1</td>
                 <td class="checkout-table__unit-price numeric-value">
-                  {{ details.breakdown.paymentAmount }}
+                  {{ details().breakdown.paymentAmount }}
                 </td>
                 <td class="checkout-table__amount numeric-value">
-                  {{ details.breakdown.paymentAmount }}
+                  {{ details().breakdown.paymentAmount }}
                 </td>
               </tr>
               <tr class="checkout-table__total">
                 <th colspan="3" scope="row">Total</th>
-                <td class="numeric-value">{{ details.breakdown.paymentAmount }}</td>
+                <td class="numeric-value">{{ details().breakdown.paymentAmount }}</td>
               </tr>
             </tbody>
           </table>
@@ -175,18 +205,18 @@
         <dl class="breakdown-list">
           <div>
             <dt>Payment amount</dt>
-            <dd>{{ details.breakdown.paymentAmount }}</dd>
+            <dd>{{ details().breakdown.paymentAmount }}</dd>
           </div>
           <div>
             <dt>
               Stripe processing fees
               <a class="inline-link breakdown-link" routerLink="/mock">Learn more</a>
             </dt>
-            <dd>{{ details.breakdown.fees }}</dd>
+            <dd>{{ details().breakdown.fees }}</dd>
           </div>
           <div class="breakdown-list__total">
             <dt>Net amount</dt>
-            <dd>{{ details.breakdown.netAmount }}</dd>
+            <dd>{{ details().breakdown.netAmount }}</dd>
           </div>
         </dl>
       </section>
@@ -197,47 +227,47 @@
         <dl class="method-grid">
           <div>
             <dt>ID</dt>
-            <dd class="code-value">{{ details.paymentMethod.id }}</dd>
+            <dd class="code-value">{{ details().paymentMethod.id }}</dd>
           </div>
           <div>
             <dt>Number</dt>
-            <dd class="numeric-value">{{ details.paymentMethod.number }}</dd>
+            <dd class="numeric-value">{{ details().paymentMethod.number }}</dd>
           </div>
           <div>
             <dt>Fingerprint</dt>
-            <dd class="code-value inline-link">{{ details.paymentMethod.fingerprint }}</dd>
+            <dd class="code-value inline-link">{{ details().paymentMethod.fingerprint }}</dd>
           </div>
           <div>
             <dt>Expires</dt>
-            <dd class="numeric-value">{{ details.paymentMethod.expires }}</dd>
+            <dd class="numeric-value">{{ details().paymentMethod.expires }}</dd>
           </div>
           <div>
             <dt>Type</dt>
-            <dd>{{ details.paymentMethod.type }}</dd>
+            <dd>{{ details().paymentMethod.type }}</dd>
           </div>
           <div>
             <dt>Issuer</dt>
-            <dd>{{ details.paymentMethod.issuer }}</dd>
+            <dd>{{ details().paymentMethod.issuer }}</dd>
           </div>
           <div>
             <dt>Owner</dt>
-            <dd>{{ details.paymentMethod.owner }}</dd>
+            <dd>{{ details().paymentMethod.owner }}</dd>
           </div>
           <div>
             <dt>Owner email</dt>
-            <dd>{{ details.paymentMethod.ownerEmail }}</dd>
+            <dd>{{ details().paymentMethod.ownerEmail }}</dd>
           </div>
           <div>
             <dt>Address</dt>
-            <dd>{{ details.paymentMethod.address }}</dd>
+            <dd>{{ details().paymentMethod.address }}</dd>
           </div>
           <div>
             <dt>Origin</dt>
-            <dd>{{ details.paymentMethod.origin }}</dd>
+            <dd>{{ details().paymentMethod.origin }}</dd>
           </div>
           <div>
             <dt>Zip check</dt>
-            <dd>{{ details.paymentMethod.zipCheck }}</dd>
+            <dd>{{ details().paymentMethod.zipCheck }}</dd>
           </div>
         </dl>
       </section>
@@ -321,13 +351,13 @@
           <div>
             <strong>Latest payment</strong>
             <span class="code-value">
-              {{ details.paymentId }}
+              {{ details().paymentId }}
               <button
                 class="copy-button"
                 type="button"
                 aria-label="Copy latest payment ID"
                 title="Copy"
-                (click)="copyValue(details.paymentId, 'Latest payment ID')"
+                (click)="copyValue(details().paymentId, 'Latest payment ID')"
               >
                 <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
                   <path d="M6 5.5h6.5v8H6z" />
@@ -338,7 +368,7 @@
           </div>
           <div>
             <strong>Payment method</strong>
-            <span class="code-value inline-link">{{ details.paymentMethod.id }}</span>
+            <span class="code-value inline-link">{{ details().paymentMethod.id }}</span>
           </div>
         </div>
       </section>
@@ -368,7 +398,7 @@
       <section class="detail-section events-section" aria-labelledby="events-title">
         <h2 id="events-title">Events</h2>
         <ol class="event-list">
-          @for (event of details.events; track event.occurredAt) {
+          @for (event of details().events; track event.occurredAt) {
             <li>
               <strong>{{ event.description }}</strong>
               <time [attr.datetime]="event.occurredAt">{{ event.occurredLabel }}</time>
@@ -379,7 +409,7 @@
 
       <section class="detail-section logs-section" aria-labelledby="logs-title">
         <h2 id="logs-title">Logs</h2>
-        @for (log of details.logs; track log.occurredAt) {
+        @for (log of details().logs; track log.occurredAt) {
           <div class="log-row">
             <div class="log-request">
               <strong>{{ log.method }} {{ log.endpoint }}</strong>
@@ -398,13 +428,13 @@
           <div>
             <dt>Payment ID</dt>
             <dd class="copy-value code-value">
-              <span>{{ details.paymentId }}</span>
+              <span>{{ details().paymentId }}</span>
               <button
                 class="copy-button"
                 type="button"
                 aria-label="Copy payment ID"
                 title="Copy"
-                (click)="copyValue(details.paymentId, 'Payment ID')"
+                (click)="copyValue(details().paymentId, 'Payment ID')"
               >
                 <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
                   <path d="M6 5.5h6.5v8H6z" />
@@ -417,57 +447,57 @@
             <dt>Payment method</dt>
             <dd class="rail-payment-method">
               <app-payment-method-icon
-                category="card-brand"
-                [iconKey]="details.paymentMethod.brand"
+                [category]="details().paymentMethod.iconCategory"
+                [iconKey]="details().paymentMethod.iconKey"
                 tooltipId="detail-rail-payment-method-brand"
               />
-              <span class="numeric-value">{{ details.paymentMethod.number }}</span>
+              <span class="numeric-value">{{ details().paymentMethod.number }}</span>
             </dd>
           </div>
           <div>
             <dt>Risk level</dt>
             <dd>
-              <span class="risk-badge">{{ details.riskEvaluation }}</span>
+              <span class="risk-badge">{{ details().riskEvaluation }}</span>
             </dd>
           </div>
           <div>
             <dt>Description</dt>
             <dd>
-              {{ details.description }}
+              {{ details().description }}
               <a class="inline-link" routerLink="/mock">Edit</a>
             </dd>
           </div>
           <div>
             <dt>Statement descriptor</dt>
-            <dd>{{ details.statementDescriptor }}</dd>
+            <dd>{{ details().statementDescriptor }}</dd>
           </div>
           <div>
             <dt>Funds available</dt>
-            <dd>{{ details.fundsAvailable }}</dd>
+            <dd>{{ details().fundsAvailable }}</dd>
           </div>
           <div>
             <dt>Created</dt>
             <dd>
-              <time class="rail-date" [attr.datetime]="details.createdAt">{{
-                details.createdLabel
+              <time class="rail-date" [attr.datetime]="details().createdAt">{{
+                details().createdLabel
               }}</time>
             </dd>
           </div>
           <div>
             <dt>Last updated</dt>
             <dd>
-              <time class="rail-date" [attr.datetime]="details.updatedAt">{{
-                details.updatedLabel
+              <time class="rail-date" [attr.datetime]="details().updatedAt">{{
+                details().updatedLabel
               }}</time>
             </dd>
           </div>
           <div>
             <dt>Failure code</dt>
-            <dd class="code-value inline-link">{{ details.failureCode }}</dd>
+            <dd class="code-value inline-link">{{ details().failureCode }}</dd>
           </div>
           <div>
             <dt>Network decline code</dt>
-            <dd class="numeric-value">{{ details.networkDeclineCode }}</dd>
+            <dd class="numeric-value">{{ details().networkDeclineCode }}</dd>
           </div>
         </dl>
       </section>
@@ -475,29 +505,29 @@
       <section class="rail-section customer-section" aria-labelledby="customer-title">
         <div class="rail-heading-row">
           <h2 id="customer-title">Customer</h2>
-          @if (details.customer.isGuest) {
+          @if (details().customer.isGuest) {
             <span class="guest-tag">Guest</span>
           }
         </div>
         <dl class="rail-list">
           <div>
             <dt>ID</dt>
-            <dd class="code-value inline-link">{{ details.customer.id }}</dd>
+            <dd class="code-value inline-link">{{ details().customer.id }}</dd>
           </div>
           <div>
             <dt>Name</dt>
-            <dd>{{ details.customer.name }}</dd>
+            <dd>{{ details().customer.name }}</dd>
           </div>
           <div>
             <dt>Email</dt>
             <dd class="copy-value">
-              <span>{{ details.customer.email }}</span>
+              <span>{{ details().customer.email }}</span>
               <button
                 class="copy-button"
                 type="button"
                 aria-label="Copy customer email"
                 title="Copy"
-                (click)="copyValue(details.customer.email, 'Customer email')"
+                (click)="copyValue(details().customer.email, 'Customer email')"
               >
                 <svg aria-hidden="true" viewBox="0 0 16 16" focusable="false">
                   <path d="M6 5.5h6.5v8H6z" />
@@ -508,11 +538,11 @@
           </div>
           <div>
             <dt>Phone</dt>
-            <dd>{{ details.customer.phone }}</dd>
+            <dd>{{ details().customer.phone }}</dd>
           </div>
           <div>
             <dt>Country</dt>
-            <dd>{{ details.customer.country }}</dd>
+            <dd>{{ details().customer.country }}</dd>
           </div>
         </dl>
       </section>

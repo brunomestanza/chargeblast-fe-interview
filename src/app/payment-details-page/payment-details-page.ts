@@ -1,8 +1,8 @@
-import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PaymentClipboardAdapter } from '../payments-table/payment-clipboard.adapter';
 import { PaymentMethodIcon } from '../payments/payment-method-icon';
-import { PAYMENT_DETAILS_DATA, type PaymentDetailsData } from './payment-details.data';
+import { resolvePaymentDetails } from './payment-details.data';
 
 type RiskTab = 'factors' | 'scores';
 
@@ -22,7 +22,12 @@ type RiskTab = 'factors' | 'scores';
   },
 })
 export class PaymentDetailsPage {
-  protected readonly details: PaymentDetailsData = PAYMENT_DETAILS_DATA;
+  readonly paymentId = input<string>();
+
+  private readonly timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  protected readonly details = computed(() =>
+    resolvePaymentDetails(this.paymentId(), this.timeZone),
+  );
   protected readonly riskTab = signal<RiskTab>('factors');
   protected readonly actionsMenuOpen = signal(false);
   protected readonly copyAnnouncement = signal('');
@@ -30,7 +35,7 @@ export class PaymentDetailsPage {
   protected readonly riskPanelMessage = computed(() =>
     this.riskTab() === 'factors'
       ? 'Risk insights are only available for live mode data.'
-      : `This payment has a ${this.details.riskEvaluation.toLowerCase()} risk evaluation.`,
+      : `This payment has a ${this.details().riskEvaluation.toLowerCase()} risk evaluation.`,
   );
   private readonly actionsMenuRoot = viewChild<ElementRef<HTMLElement>>('actionsMenuRoot');
   private readonly actionsMenuTrigger =

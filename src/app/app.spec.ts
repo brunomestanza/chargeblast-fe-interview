@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { App } from './app';
 import { routes } from './app.routes';
 import { PAGE_SIZE_STORAGE_KEY } from './payments-table/payment-table-preferences.adapter';
@@ -9,7 +9,7 @@ describe('App', () => {
     window.localStorage.removeItem(PAGE_SIZE_STORAGE_KEY);
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes)],
+      providers: [provideRouter(routes, withComponentInputBinding())],
     }).compileComponents();
   });
 
@@ -38,13 +38,15 @@ describe('App', () => {
     expect(newestPaymentTime).toBeLessThanOrEqual(Date.now());
   });
 
-  it('should open fixed payment details from a table row and preserve the table view', async () => {
+  it('should open the selected payment details from a table row and preserve the table view', async () => {
     const fixture = await createApp('/?view=compact');
     const compiled = fixture.nativeElement as HTMLElement;
     const router = TestBed.inject(Router);
     const firstRow = compiled.querySelector<HTMLTableRowElement>('tbody tr[appPaymentRow]')!;
+    const selectedRowAmount = firstRow.querySelector('.amount-value')?.textContent?.trim() ?? '';
 
     expect(router.url).toBe('/?view=compact');
+    expect(selectedRowAmount).toBeTruthy();
 
     firstRow.querySelector<HTMLElement>('.customer')?.click();
     await fixture.whenStable();
@@ -65,23 +67,22 @@ describe('App', () => {
     );
 
     expect(router.url).toBe(`/payments/${selectedPaymentId}?view=compact`);
-    expect(detailsPage.querySelector('h1')?.textContent).toContain('£34.99');
+    expect(detailsPage.querySelector('h1')?.textContent).toContain(selectedRowAmount);
     expect(detailsPage.textContent).toContain('Recent activity');
     expect(activeSidebarLink?.textContent?.trim()).toBe('Transactions');
     expect(backLink?.getAttribute('href')).toBe('/?view=compact');
     expect(document.activeElement).toBe(compiled.querySelector('#main-content'));
     expect(document.title).toBe('Payment details | Chargeblast');
 
-    await router.navigateByUrl('/payments/a-different-payment?view=compact');
+    await router.navigateByUrl('/payments/pay_3RxPkTJx7yL2kA4fY1gW?view=compact');
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const nextDetails = compiled
-      .querySelector<HTMLElement>('app-payment-details-page')
-      ?.textContent?.replace(/\s+/g, ' ')
-      .trim();
+    const nextDetailsPage = compiled.querySelector<HTMLElement>('app-payment-details-page');
+    const nextDetails = nextDetailsPage?.textContent?.replace(/\s+/g, ' ').trim();
 
-    expect(nextDetails).toBe(initialDetails);
+    expect(nextDetails).not.toBe(initialDetails);
+    expect(nextDetailsPage?.querySelector('h1')?.textContent).toContain('BRL');
 
     backLink?.click();
     await fixture.whenStable();
@@ -158,13 +159,7 @@ describe('App', () => {
       'Product catalog',
     ]);
     expect(labelsOf(groups[1])).toEqual(['Payments analytics', 'Reports', 'Sigma', 'Radar']);
-    expect(labelsOf(groups[2])).toEqual([
-      'Connect',
-      'Payments',
-      'Billing',
-      'Reporting',
-      'More',
-    ]);
+    expect(labelsOf(groups[2])).toEqual(['Connect', 'Payments', 'Billing', 'Reporting', 'More']);
     expect(labelsOf(groups[3])).toEqual(['Developers']);
 
     expect(

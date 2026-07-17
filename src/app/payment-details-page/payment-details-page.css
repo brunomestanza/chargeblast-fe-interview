@@ -110,27 +110,64 @@ h1 {
 
 .status-badge {
   display: inline-flex;
-  height: 20px;
+  min-height: 20px;
   flex: 0 0 auto;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   padding: 1px 6px;
+  border: 1px solid transparent;
   border-radius: 4px;
-  color: #c92043;
-  background: #fff0f3;
-  box-shadow: inset 0 0 0 1px #ffb8c6;
   font-size: 12px;
   font-weight: 400;
   line-height: 16px;
 }
 
-.status-badge svg {
-  width: 10px;
-  height: 10px;
+.status-badge__icon {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-width: 1.5;
+}
+
+.status-badge--succeeded {
+  border-color: #a8f170;
+  color: #217005;
+  background: #eafcdd;
+}
+
+.status-badge--failed,
+.status-badge--blocked {
+  border-color: #f4b4ca;
+  color: #b3093c;
+  background: #fff0f5;
+}
+
+.status-badge--refunded {
+  border-color: #cbd5e1;
+  color: #3c4f69;
+  background: #e9eef3;
+}
+
+.status-badge--disputed {
+  border-color: #f4cf8f;
+  color: #8a4b00;
+  background: #fdf3e2;
+}
+
+.status-badge--uncaptured {
+  border-color: #f2d06b;
+  color: #8a5d00;
+  background: #fff6d8;
+}
+
+.status-badge--canceled {
+  border-color: #d4dbe3;
+  color: #4b5563;
+  background: #f3f5f7;
 }
 
 .payment-summary__actions,

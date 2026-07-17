@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { PAYMENT_DETAILS_DATA } from './payment-details.data';
 import { PaymentDetailsPage } from './payment-details-page';
+
+const SELECTED_PAYMENT_ID = 'pay_3RxPkTJx7yL2kA4fY1gW';
 
 describe('PaymentDetailsPage', () => {
   beforeEach(async () => {
@@ -11,8 +12,9 @@ describe('PaymentDetailsPage', () => {
     }).compileComponents();
   });
 
-  it('renders the fixed payment data with semantic detail sections', () => {
+  it('renders details derived from the selected payment with semantic sections', () => {
     const fixture = TestBed.createComponent(PaymentDetailsPage);
+    fixture.componentRef.setInput('paymentId', SELECTED_PAYMENT_ID);
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
@@ -20,10 +22,14 @@ describe('PaymentDetailsPage', () => {
       heading.textContent?.trim(),
     );
 
-    expect(element.querySelector('h1')?.textContent).toContain('£34.99 GBP');
-    expect(element.textContent).toContain(PAYMENT_DETAILS_DATA.paymentId);
-    expect(element.textContent).toContain(PAYMENT_DETAILS_DATA.customer.email);
-    expect(element.querySelectorAll('.activity-list > li')).toHaveLength(3);
+    const title = element.querySelector('h1')?.textContent ?? '';
+    expect(title).toContain('BRL');
+    expect(title).toContain('729.90');
+    expect(element.querySelector('.status-badge')?.textContent?.trim()).toContain('Uncaptured');
+    expect(element.querySelector('.status-badge')?.className).toContain('status-badge--uncaptured');
+    expect(element.textContent).toContain(SELECTED_PAYMENT_ID);
+    expect(element.textContent).toContain('sophia.costa@example.com.br');
+    expect(element.querySelectorAll('.activity-list > li').length).toBeGreaterThan(0);
     expect(sectionHeadings).toEqual([
       'Recent activity',
       'Checkout summary',
