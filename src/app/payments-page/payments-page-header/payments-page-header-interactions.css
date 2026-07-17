@@ -145,8 +145,8 @@
   }
 }
 
-@container (max-width: 260px) {
-  .transactions-header__tab--all-activity {
+@container (max-width: 520px) {
+  .transactions-header__tab--overflow {
     display: none;
   }
 
