@@ -129,6 +129,13 @@
     min-height: 20px;
   }
 
+  /* The dismiss button moves to the top-right corner on mobile, so the
+     divider that separates it from "Get started" on desktop has nothing
+     left to divide and must be hidden. */
+  .invoice-suggestion__divider {
+    display: none;
+  }
+
   .invoice-suggestion__dismiss {
     position: absolute;
     top: 10px;

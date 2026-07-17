@@ -98,6 +98,8 @@
   }
 
   .dashboard-shell__content:has(app-payments-page) {
+    height: auto;
+    min-height: calc(100dvh - var(--top-navigation-height));
     padding: 16px var(--dashboard-page-inline-gutter);
   }
 }

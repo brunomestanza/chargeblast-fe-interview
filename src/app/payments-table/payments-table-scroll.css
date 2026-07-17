@@ -31,3 +31,16 @@ th {
   top: 0;
   z-index: 1;
 }
+
+/* On mobile the whole page scrolls instead of the table having its own short
+   scroll viewport, so the rows are no longer squeezed into leftover height. */
+@media (max-width: 720px) {
+  .table-scroll {
+    flex: 0 0 auto;
+    overflow-y: visible;
+  }
+
+  th {
+    position: static;
+  }
+}

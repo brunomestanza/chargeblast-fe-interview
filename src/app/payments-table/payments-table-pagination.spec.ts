@@ -21,7 +21,7 @@ describe('PaymentsTable pagination', () => {
 
     expect(element.querySelector('#payments-page-size')).toBeNull();
     expect(element.querySelectorAll('tbody tr')).toHaveLength(25);
-    expect(paginationRange(element)).toBe('Viewing 1–25 of 126 results');
+    expect(paginationRange(element)).toBe('Viewing 1–25 over 126 results');
     expect(buttons[0]?.disabled).toBe(true);
     expect(buttons[1]?.disabled).toBe(false);
   });
@@ -45,7 +45,7 @@ describe('PaymentsTable pagination', () => {
     expect(element.querySelector('tbody tr')?.getAttribute('data-payment-id')).toBe(
       payments[25].id,
     );
-    expect(paginationRange(element)).toBe('Viewing 26–50 of 51 results');
+    expect(paginationRange(element)).toBe('Viewing 26–50 over 51 results');
     expect(previousButton.disabled).toBe(false);
 
     nextButton.click();
@@ -55,13 +55,13 @@ describe('PaymentsTable pagination', () => {
     expect(element.querySelector('tbody tr')?.getAttribute('data-payment-id')).toBe(
       payments[50].id,
     );
-    expect(paginationRange(element)).toBe('Viewing 51–51 of 51 results');
+    expect(paginationRange(element)).toBe('Viewing 51–51 over 51 results');
     expect(nextButton.disabled).toBe(true);
 
     previousButton.click();
     fixture.detectChanges();
 
-    expect(paginationRange(element)).toBe('Viewing 26–50 of 51 results');
+    expect(paginationRange(element)).toBe('Viewing 26–50 over 51 results');
   });
 
   it('keeps the current page within bounds when the payment list shrinks', async () => {
@@ -78,12 +78,12 @@ describe('PaymentsTable pagination', () => {
     fixture.detectChanges();
     nextButton.click();
     fixture.detectChanges();
-    expect(paginationRange(element)).toBe('Viewing 51–51 of 51 results');
+    expect(paginationRange(element)).toBe('Viewing 51–51 over 51 results');
 
     fixture.componentRef.setInput('payments', createPayments(10));
     fixture.detectChanges();
 
-    expect(paginationRange(element)).toBe('Viewing 1–10 of 10 results');
+    expect(paginationRange(element)).toBe('Viewing 1–10 over 10 results');
     expect(element.querySelectorAll('tbody tr')).toHaveLength(10);
   });
 });

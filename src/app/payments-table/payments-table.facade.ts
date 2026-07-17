@@ -235,7 +235,7 @@ export class PaymentsTableFacade {
     const lastPayment = Math.min(firstPayment + this.pageSizeState() - 1, paymentCount);
     const resultLabel = paymentCount === 1 ? 'result' : 'results';
 
-    return `Viewing ${firstPayment}–${lastPayment} of ${paymentCount} ${resultLabel}`;
+    return `Viewing ${firstPayment}–${lastPayment} over ${paymentCount} ${resultLabel}`;
   });
 
   private readonly sortStateByColumn = computed(

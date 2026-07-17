@@ -221,13 +221,13 @@ describe('PaymentsTable sorting', () => {
     nextButton.click();
     fixture.detectChanges();
     expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
-      'Viewing 26–50 of 51 results',
+      'Viewing 26–50 over 51 results',
     );
 
     amountButton.click();
     fixture.detectChanges();
     expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
-      'Viewing 1–25 of 51 results',
+      'Viewing 1–25 over 51 results',
     );
     expect(renderedPaymentIds(element)[0]).toBe('pay_test_0001');
 

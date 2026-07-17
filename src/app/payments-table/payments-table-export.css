@@ -51,11 +51,26 @@
 
   .filter-toolbar__filters {
     flex-basis: 100%;
+    flex-wrap: nowrap;
+    /* Stay out of the popovers' positioning chain so they anchor to
+       .filter-toolbar and escape this rail's horizontal scroll clip. */
+    position: static;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .filter-toolbar__filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-toolbar__filters > * {
+    flex: 0 0 auto;
   }
 
   .filter-toolbar__filters app-text-search-filter {
-    flex-basis: 100%;
-    min-width: 100%;
+    flex: 0 0 200px;
+    min-width: 200px;
   }
 
   .filter-toolbar__actions {
