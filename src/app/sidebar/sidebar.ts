@@ -10,6 +10,12 @@ import {
 import { filter } from 'rxjs';
 import { AccountSwitcher } from './account-switcher/account-switcher';
 import { DashboardIcon } from './dashboard-icon';
+import type { DashboardIconName } from './dashboard-icon.types';
+
+interface SidebarShortcut {
+  readonly label: string;
+  readonly icon: DashboardIconName;
+}
 
 @Component({
   selector: 'app-sidebar',
@@ -21,13 +27,30 @@ export class Sidebar {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly paymentsRouteActive = signal(this.isPaymentsUrl(this.router.url));
+  protected readonly transactionsRouteActive = signal(this.isTransactionsUrl(this.router.url));
   protected readonly routeMatchOptions: IsActiveMatchOptions = {
     paths: 'exact',
     queryParams: 'ignored',
     matrixParams: 'ignored',
     fragment: 'ignored',
   };
+
+  /* Stripe pins one shortcut and lists the rest as recently visited, which is why
+     only the first of these carries the pin glyph. */
+  protected readonly shortcuts: readonly SidebarShortcut[] = [
+    { label: 'Payments analytics', icon: 'pin' },
+    { label: 'Reports', icon: 'clock' },
+    { label: 'Sigma', icon: 'clock' },
+    { label: 'Radar', icon: 'clock' },
+  ];
+
+  protected readonly products: readonly SidebarShortcut[] = [
+    { label: 'Connect', icon: 'layers' },
+    { label: 'Payments', icon: 'wallet' },
+    { label: 'Billing', icon: 'receipt' },
+    { label: 'Reporting', icon: 'reporting' },
+    { label: 'More', icon: 'more' },
+  ];
 
   constructor() {
     this.router.events
@@ -36,11 +59,11 @@ export class Sidebar {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((event) =>
-        this.paymentsRouteActive.set(this.isPaymentsUrl(event.urlAfterRedirects)),
+        this.transactionsRouteActive.set(this.isTransactionsUrl(event.urlAfterRedirects)),
       );
   }
 
-  private isPaymentsUrl(url: string): boolean {
+  private isTransactionsUrl(url: string): boolean {
     const path = url.split(/[?#]/)[0] ?? '';
     return path === '/' || path.startsWith('/payments/');
   }

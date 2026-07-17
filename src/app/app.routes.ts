@@ -19,6 +19,11 @@ export const routes: Routes = [
     title: 'Payment details | Chargeblast',
   },
   {
+    path: 'home',
+    loadComponent: loadMockPage,
+    title: 'Home | Chargeblast',
+  },
+  {
     path: 'customers',
     loadComponent: loadMockPage,
     title: 'Customers | Chargeblast',

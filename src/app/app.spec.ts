@@ -67,7 +67,7 @@ describe('App', () => {
     expect(router.url).toBe(`/payments/${selectedPaymentId}?view=compact`);
     expect(detailsPage.querySelector('h1')?.textContent).toContain('£34.99');
     expect(detailsPage.textContent).toContain('Recent activity');
-    expect(activeSidebarLink?.textContent?.trim()).toBe('Payments');
+    expect(activeSidebarLink?.textContent?.trim()).toBe('Transactions');
     expect(backLink?.getAttribute('href')).toBe('/?view=compact');
     expect(document.activeElement).toBe(compiled.querySelector('#main-content'));
     expect(document.title).toBe('Payment details | Chargeblast');
@@ -138,38 +138,55 @@ describe('App', () => {
     );
   });
 
-  it('should render only the requested primary sections and mark the active route', async () => {
+  it('should render the reference navigation groups in order and mark the active route', async () => {
     const fixture = await createApp('/customers');
     const compiled = fixture.nativeElement as HTMLElement;
-    const links = Array.from(
-      compiled.querySelectorAll<HTMLAnchorElement>('.sidebar__navigation a'),
-    );
+    const groups = Array.from(compiled.querySelectorAll<HTMLElement>('.sidebar__navigation'));
+    const labelsOf = (group: HTMLElement) =>
+      Array.from(group.querySelectorAll<HTMLAnchorElement>('a')).map((link) =>
+        link.textContent?.trim(),
+      );
 
-    expect(links.map((link) => link.textContent?.trim())).toEqual([
-      'Payments',
-      'Customers',
-      'Balances',
-      'Product Catalog',
-    ]);
-    expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      '/',
-      '/customers',
-      '/balances',
-      '/product-catalog',
-    ]);
-    expect(links.filter((link) => link.getAttribute('aria-current') === 'page')).toHaveLength(1);
     expect(
-      links.find((link) => link.getAttribute('aria-current') === 'page')?.textContent?.trim(),
-    ).toBe('Customers');
+      groups.map((group) => group.querySelector('.sidebar__section-heading')?.textContent?.trim()),
+    ).toEqual([undefined, 'Shortcuts', 'Products', undefined]);
+    expect(labelsOf(groups[0])).toEqual([
+      'Home',
+      'Balances',
+      'Transactions',
+      'Customers',
+      'Product catalog',
+    ]);
+    expect(labelsOf(groups[1])).toEqual(['Payments analytics', 'Reports', 'Sigma', 'Radar']);
+    expect(labelsOf(groups[2])).toEqual([
+      'Connect',
+      'Payments',
+      'Billing',
+      'Reporting',
+      'More',
+    ]);
+    expect(labelsOf(groups[3])).toEqual(['Developers']);
+
+    expect(
+      Array.from(groups[0].querySelectorAll<HTMLAnchorElement>('a')).map((link) =>
+        link.getAttribute('href'),
+      ),
+    ).toEqual(['/home', '/balances', '/', '/customers', '/product-catalog']);
+
+    const active = compiled.querySelectorAll<HTMLAnchorElement>(
+      '.sidebar__link[aria-current="page"]',
+    );
+    expect(active).toHaveLength(1);
+    expect(active[0].textContent?.trim()).toBe('Customers');
   });
 
-  it('should keep Payments active when the table view is represented in the URL', async () => {
+  it('should keep Transactions active when the table view is represented in the URL', async () => {
     const fixture = await createApp('/?view=compact');
     const activeLink = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
       '.sidebar__link[aria-current="page"]',
     );
 
-    expect(activeLink?.textContent?.trim()).toBe('Payments');
+    expect(activeLink?.textContent?.trim()).toBe('Transactions');
   });
 
   it('should open the complete settings page from the top navigation gear', async () => {
