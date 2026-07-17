@@ -200,6 +200,16 @@ h1 {
   line-height: 20px;
 }
 
+.invoice-suggestion__message .invoice-suggestion__sparkle {
+  fill: #675dff;
+}
+
+.invoice-suggestion__badge {
+  margin-right: 2px;
+  color: #1a2c44;
+  font-weight: 600;
+}
+
 .invoice-suggestion__actions {
   flex: 0 0 auto;
   gap: 12px;
