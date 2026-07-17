@@ -216,14 +216,14 @@ export class PaymentsTableFacade {
     const paymentCount = this.filteredPayments().length;
 
     if (paymentCount === 0) {
-      return 'Viewing 0 of 0 payments';
+      return 'Viewing 0 of 0 results';
     }
 
     const firstPayment = (this.currentPageState() - 1) * this.pageSizeState() + 1;
     const lastPayment = Math.min(firstPayment + this.pageSizeState() - 1, paymentCount);
-    const paymentLabel = paymentCount === 1 ? 'payment' : 'payments';
+    const resultLabel = paymentCount === 1 ? 'result' : 'results';
 
-    return `Viewing ${firstPayment}–${lastPayment} of ${paymentCount} ${paymentLabel}`;
+    return `Viewing ${firstPayment}–${lastPayment} of ${paymentCount} ${resultLabel}`;
   });
 
   private readonly sortStateByColumn = computed(

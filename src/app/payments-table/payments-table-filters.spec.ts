@@ -45,7 +45,7 @@ describe('PaymentsTable filters', () => {
     expect(renderedPaymentIds(element)).toEqual(['pay_recent']);
     expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('1 payment');
     expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
-      'Viewing 1–1 of 1 payment',
+      'Viewing 1–1 of 1 result',
     );
     expect(element.querySelector('.filter-button__value')?.textContent?.trim()).toBe(
       'Last 30 days',
@@ -82,7 +82,7 @@ describe('PaymentsTable filters', () => {
     );
     expect(element.querySelector('.payments-panel__count')?.textContent?.trim()).toBe('2 payments');
     expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
-      'Viewing 1–2 of 2 payments',
+      'Viewing 1–2 of 2 results',
     );
     expect(element.textContent).toContain(
       'Status filter applied: Succeeded, Failed. 2 payments found.',

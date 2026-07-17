@@ -220,11 +220,15 @@ describe('PaymentsTable sorting', () => {
 
     nextButton.click();
     fixture.detectChanges();
-    expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 2 of 3');
+    expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
+      'Viewing 26–50 of 51 results',
+    );
 
     amountButton.click();
     fixture.detectChanges();
-    expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 1 of 3');
+    expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
+      'Viewing 1–25 of 51 results',
+    );
     expect(renderedPaymentIds(element)[0]).toBe('pay_test_0001');
 
     amountButton.click();

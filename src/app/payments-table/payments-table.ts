@@ -25,7 +25,7 @@ import { PaymentColumnLayoutController } from './payment-column-layout.controlle
 import { PaymentCsvDownloadAdapter } from './payment-csv-download.adapter';
 import type { Payment } from '../payments/payment';
 import { PaymentQueryLifecycleController } from './payment-query-lifecycle.controller';
-import { PaymentTablePreferencesAdapter, isPageSize } from './payment-table-preferences.adapter';
+import { PaymentTablePreferencesAdapter } from './payment-table-preferences.adapter';
 import { PaymentTableFeedbackController } from './payment-table-feedback.controller';
 import { PaymentTableViewportController } from './payment-table-viewport.controller';
 import { PaymentViewUrlAdapter } from './payment-view-url.adapter';
@@ -148,14 +148,6 @@ export class PaymentsTable {
 
   protected changeSort(column: PaymentSortColumn): void {
     this.view.changeSort(column);
-  }
-
-  protected changePageSize(event: Event): void {
-    const pageSize = Number((event.target as HTMLSelectElement).value);
-
-    if (isPageSize(pageSize)) {
-      this.view.changePageSize(pageSize);
-    }
   }
 
   protected clearAllFilters(event: MouseEvent): void {

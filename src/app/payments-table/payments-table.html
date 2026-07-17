@@ -221,25 +221,12 @@
 
   <footer class="pagination">
     <div class="pagination__summary">
-      <div class="page-size-control">
-        <label for="payments-page-size">Rows per page</label>
-        <select
-          id="payments-page-size"
-          aria-controls="payments-table"
-          (change)="changePageSize($event)"
-        >
-          @for (option of view.pageSizeOptions; track option) {
-            <option [value]="option" [selected]="option === view.pageSize()">{{ option }}</option>
-          }
-        </select>
-      </div>
       <p id="payments-pagination-range" aria-live="polite" aria-atomic="true">
         {{ view.paginationRangeLabel() }}
       </p>
     </div>
 
     <nav class="pagination__navigation" aria-label="Payments pagination">
-      <span class="pagination__page">Page {{ view.currentPage() }} of {{ view.pageCount() }}</span>
       <button
         type="button"
         aria-controls="payments-table"

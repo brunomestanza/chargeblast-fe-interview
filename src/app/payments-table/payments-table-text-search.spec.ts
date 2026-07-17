@@ -217,7 +217,7 @@ describe('PaymentsTable text search', () => {
         '0 payments',
       );
       expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
-        'Viewing 0 of 0 payments',
+        'Viewing 0 of 0 results',
       );
       expect(router.url.endsWith('text-search=3R#payments-table')).toBe(true);
       expect(element.textContent).toContain('Text search filter applied: 3R. 0 payments found.');

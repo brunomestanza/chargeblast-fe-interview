@@ -138,17 +138,6 @@ describe('App', () => {
     );
   });
 
-  it('should restore the stored page size when the user opens the page', async () => {
-    window.localStorage.setItem(PAGE_SIZE_STORAGE_KEY, '50');
-
-    const fixture = await createApp('/');
-
-    const compiled = fixture.nativeElement as HTMLElement;
-
-    expect(compiled.querySelector<HTMLSelectElement>('#payments-page-size')?.value).toBe('50');
-    expect(compiled.querySelectorAll('tbody tr')).toHaveLength(50);
-  });
-
   it('should render only the requested primary sections and mark the active route', async () => {
     const fixture = await createApp('/customers');
     const compiled = fixture.nativeElement as HTMLElement;

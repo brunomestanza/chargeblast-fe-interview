@@ -234,7 +234,9 @@ describe('PaymentsTable URL synchronization', () => {
 
     nextButton.click();
     fixture.detectChanges();
-    expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 2 of 3');
+    expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
+      'Viewing 26–50 of 51 results',
+    );
 
     const router = TestBed.inject(Router);
     await router.navigateByUrl(
@@ -242,7 +244,9 @@ describe('PaymentsTable URL synchronization', () => {
     );
     fixture.detectChanges();
 
-    expect(element.querySelector('.pagination__page')?.textContent?.trim()).toBe('Page 1 of 1');
+    expect(element.querySelector('#payments-pagination-range')?.textContent?.trim()).toBe(
+      'Viewing 1–2 of 2 results',
+    );
     expect(renderedPaymentIds(element)).toEqual([
       'pay_failed_paypal_large',
       'pay_failed_paypal_small',
